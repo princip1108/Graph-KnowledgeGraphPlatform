@@ -1,0 +1,38 @@
+{
+  "name": "Web技术栈图谱",
+  "description": "现代Web开发技术栈及其关系",
+  "nodes": [
+    {"name": "HTML", "type": "基础", "importance": 10},
+    {"name": "CSS", "type": "基础", "importance": 10},
+    {"name": "JavaScript", "type": "基础", "importance": 10},
+    {"name": "TypeScript", "type": "语言", "importance": 8},
+    {"name": "React", "type": "前端框架", "importance": 9},
+    {"name": "Vue", "type": "前端框架", "importance": 8},
+    {"name": "Angular", "type": "前端框架", "importance": 7},
+    {"name": "Node.js", "type": "运行时", "importance": 9},
+    {"name": "Express", "type": "后端框架", "importance": 7},
+    {"name": "Next.js", "type": "全栈框架", "importance": 8},
+    {"name": "TailwindCSS", "type": "CSS框架", "importance": 7},
+    {"name": "MySQL", "type": "数据库", "importance": 8},
+    {"name": "MongoDB", "type": "数据库", "importance": 7},
+    {"name": "Redis", "type": "缓存", "importance": 7},
+    {"name": "Docker", "type": "容器", "importance": 8},
+    {"name": "Nginx", "type": "服务器", "importance": 7}
+  ],
+  "relations": [
+    {"source": "TypeScript", "target": "JavaScript", "type": "编译为"},
+    {"source": "React", "target": "JavaScript", "type": "基于"},
+    {"source": "Vue", "target": "JavaScript", "type": "基于"},
+    {"source": "Angular", "target": "TypeScript", "type": "基于"},
+    {"source": "Next.js", "target": "React", "type": "基于"},
+    {"source": "Node.js", "target": "JavaScript", "type": "运行"},
+    {"source": "Express", "target": "Node.js", "type": "基于"},
+    {"source": "TailwindCSS", "target": "CSS", "type": "扩展"},
+    {"source": "React", "target": "TailwindCSS", "type": "配合"},
+    {"source": "Node.js", "target": "MySQL", "type": "连接"},
+    {"source": "Node.js", "target": "MongoDB", "type": "连接"},
+    {"source": "Node.js", "target": "Redis", "type": "连接"},
+    {"source": "Docker", "target": "Node.js", "type": "部署"},
+    {"source": "Nginx", "target": "Node.js", "type": "代理"}
+  ]
+}

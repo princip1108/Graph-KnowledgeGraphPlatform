@@ -1,0 +1,39 @@
+{
+  "name": "中国历史朝代图谱",
+  "description": "中国主要朝代及其更替关系",
+  "nodes": [
+    {"name": "夏朝", "type": "朝代", "importance": 6},
+    {"name": "商朝", "type": "朝代", "importance": 7},
+    {"name": "周朝", "type": "朝代", "importance": 8},
+    {"name": "秦朝", "type": "朝代", "importance": 9},
+    {"name": "汉朝", "type": "朝代", "importance": 10},
+    {"name": "三国", "type": "时期", "importance": 8},
+    {"name": "晋朝", "type": "朝代", "importance": 6},
+    {"name": "隋朝", "type": "朝代", "importance": 7},
+    {"name": "唐朝", "type": "朝代", "importance": 10},
+    {"name": "宋朝", "type": "朝代", "importance": 9},
+    {"name": "元朝", "type": "朝代", "importance": 7},
+    {"name": "明朝", "type": "朝代", "importance": 9},
+    {"name": "清朝", "type": "朝代", "importance": 9},
+    {"name": "秦始皇", "type": "人物", "importance": 10},
+    {"name": "刘邦", "type": "人物", "importance": 8},
+    {"name": "李世民", "type": "人物", "importance": 9}
+  ],
+  "relations": [
+    {"source": "夏朝", "target": "商朝", "type": "被取代"},
+    {"source": "商朝", "target": "周朝", "type": "被取代"},
+    {"source": "周朝", "target": "秦朝", "type": "被取代"},
+    {"source": "秦朝", "target": "汉朝", "type": "被取代"},
+    {"source": "汉朝", "target": "三国", "type": "分裂为"},
+    {"source": "三国", "target": "晋朝", "type": "统一为"},
+    {"source": "晋朝", "target": "隋朝", "type": "演变"},
+    {"source": "隋朝", "target": "唐朝", "type": "被取代"},
+    {"source": "唐朝", "target": "宋朝", "type": "演变"},
+    {"source": "宋朝", "target": "元朝", "type": "被取代"},
+    {"source": "元朝", "target": "明朝", "type": "被取代"},
+    {"source": "明朝", "target": "清朝", "type": "被取代"},
+    {"source": "秦始皇", "target": "秦朝", "type": "建立"},
+    {"source": "刘邦", "target": "汉朝", "type": "建立"},
+    {"source": "李世民", "target": "唐朝", "type": "统治"}
+  ]
+}

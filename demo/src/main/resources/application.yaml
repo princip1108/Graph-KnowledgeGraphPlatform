@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: graph+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+  # MySQL 数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/graph_db?serverTimezone=UTC
+    username: root
+    password: Princip-1108
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  # Neo4j 图数据库配置
+  neo4j:
+    uri: neo4j://localhost:7687
+    authentication:
+      username: neo4j
+      password: princip1108
+
+# 文件上传配置
+app:
+  upload:
+    # 上传文件存储目录
+    # 本地开发：使用相对路径 uploads（在项目运行目录下）
+    # 服务器部署：通过环境变量 APP_UPLOAD_BASE_PATH 覆盖，如 /data/uploads
+    base-path: ${APP_UPLOAD_BASE_PATH:uploads}
+  # Spring Mail 邮件服务配置 (暂时注释)
+  # mail:
+  #   host: smtp.example.com
+  #   port: 587
+  #   username: your-email@example.com
+  #   password: your-password
+  #   properties:
+  #     mail:
+  #       smtp:
+  #         auth: true
+  #         starttls:
+  #           enable: true
+  #           required: true

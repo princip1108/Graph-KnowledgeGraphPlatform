@@ -1,0 +1,202 @@
+### ============================================
+### 知识图谱平台 API 测试文件
+### 使用 IntelliJ IDEA HTTP Client 或 VS Code REST Client
+### ============================================
+
+### 变量定义
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### ============================================
+### 1. 用户认证
+### ============================================
+
+### 1.1 用户注册
+POST {{baseUrl}}/register
+Content-Type: application/x-www-form-urlencoded
+
+userName=testuser&email=test@example.com&password=123456
+
+### 1.2 用户登录
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=test@example.com&password=123456
+
+### 1.3 检查登录状态
+GET {{baseUrl}}/user/api/check-auth
+
+### ============================================
+### 2. 图谱 CRUD 接口
+### ============================================
+
+### 2.1 创建图谱
+POST {{baseUrl}}/api/graph
+Content-Type: {{contentType}}
+
+{
+  "name": "测试知识图谱",
+  "description": "这是一个用于测试的知识图谱",
+  "status": "DRAFT"
+}
+
+### 2.2 获取我的图谱列表
+GET {{baseUrl}}/api/graph/my?page=0&size=10
+
+### 2.3 获取图谱详情 (替换 {graphId} 为实际ID)
+GET {{baseUrl}}/api/graph/1
+
+### 2.4 更新图谱
+PUT {{baseUrl}}/api/graph/1
+Content-Type: {{contentType}}
+
+{
+  "name": "更新后的图谱名称",
+  "description": "更新后的描述",
+  "status": "PUBLISHED"
+}
+
+### 2.5 更新图谱状态（发布）
+PATCH {{baseUrl}}/api/graph/1/status
+Content-Type: {{contentType}}
+
+{
+  "status": "PUBLISHED"
+}
+
+### 2.6 获取公开图谱列表
+GET {{baseUrl}}/api/graph/public?page=0&size=12
+
+### 2.7 搜索图谱
+GET {{baseUrl}}/api/graph/search?keyword=测试&page=0&size=10
+
+### 2.8 获取热门图谱
+GET {{baseUrl}}/api/graph/popular?limit=10
+
+### 2.9 删除图谱
+DELETE {{baseUrl}}/api/graph/1
+
+### ============================================
+### 3. 节点接口
+### ============================================
+
+### 3.1 创建单个节点
+POST {{baseUrl}}/api/graph/1/nodes
+Content-Type: {{contentType}}
+
+{
+  "name": "人工智能",
+  "type": "概念",
+  "importance": 5
+}
+
+### 3.2 批量创建节点
+POST {{baseUrl}}/api/graph/1/nodes/batch
+Content-Type: {{contentType}}
+
+[
+  {"name": "机器学习", "type": "技术", "importance": 4},
+  {"name": "深度学习", "type": "技术", "importance": 4},
+  {"name": "神经网络", "type": "技术", "importance": 3},
+  {"name": "自然语言处理", "type": "应用", "importance": 3}
+]
+
+### 3.3 获取图谱所有节点
+GET {{baseUrl}}/api/graph/1/nodes
+
+### 3.4 获取单个节点 (替换 {nodeId} 为实际UUID)
+GET {{baseUrl}}/api/graph/1/nodes/abc123
+
+### 3.5 搜索节点
+GET {{baseUrl}}/api/graph/1/nodes/search?keyword=学习
+
+### 3.6 根据类型获取节点
+GET {{baseUrl}}/api/graph/1/nodes/type/技术
+
+### 3.7 获取节点类型列表
+GET {{baseUrl}}/api/graph/1/node-types
+
+### 3.8 获取节点邻居
+GET {{baseUrl}}/api/graph/1/nodes/abc123/neighbors?direction=all
+
+### 3.9 更新节点
+PUT {{baseUrl}}/api/graph/1/nodes/abc123
+Content-Type: {{contentType}}
+
+{
+  "name": "人工智能(AI)",
+  "type": "核心概念",
+  "importance": 10
+}
+
+### 3.10 删除节点
+DELETE {{baseUrl}}/api/graph/1/nodes/abc123
+
+### ============================================
+### 4. 关系接口
+### ============================================
+
+### 4.1 创建关系
+POST {{baseUrl}}/api/graph/1/relations
+Content-Type: {{contentType}}
+
+{
+  "sourceNodeId": "source-node-uuid",
+  "targetNodeId": "target-node-uuid",
+  "type": "包含"
+}
+
+### 4.2 批量创建关系
+POST {{baseUrl}}/api/graph/1/relations/batch
+Content-Type: {{contentType}}
+
+[
+  {"sourceNodeId": "node1-uuid", "targetNodeId": "node2-uuid", "type": "包含"},
+  {"sourceNodeId": "node2-uuid", "targetNodeId": "node3-uuid", "type": "属于"},
+  {"sourceNodeId": "node1-uuid", "targetNodeId": "node4-uuid", "type": "应用于"}
+]
+
+### 4.3 获取图谱所有关系
+GET {{baseUrl}}/api/graph/1/relations
+
+### 4.4 根据类型获取关系
+GET {{baseUrl}}/api/graph/1/relations/type/包含
+
+### 4.5 获取关系类型列表
+GET {{baseUrl}}/api/graph/1/relation-types
+
+### 4.6 获取关系类型统计
+GET {{baseUrl}}/api/graph/1/relation-stats
+
+### 4.7 删除关系
+DELETE {{baseUrl}}/api/graph/1/relations/relation-uuid
+
+### ============================================
+### 5. 用户接口
+### ============================================
+
+### 5.1 获取当前用户资料
+GET {{baseUrl}}/user/api/profile
+
+### 5.2 更新用户资料
+PUT {{baseUrl}}/user/api/profile
+Content-Type: {{contentType}}
+
+{
+  "userName": "新用户名",
+  "bio": "这是我的个人简介",
+  "institution": "某大学"
+}
+
+### ============================================
+### 6. 管理员接口 (需要 ADMIN 角色)
+### ============================================
+
+### 6.1 获取所有用户
+GET {{baseUrl}}/api/admin/users
+
+### 6.2 获取用户统计
+GET {{baseUrl}}/api/admin/stats/users
+
+### 6.3 管理员删除图谱
+DELETE {{baseUrl}}/api/graph/admin/1

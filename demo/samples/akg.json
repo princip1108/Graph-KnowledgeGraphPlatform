@@ -1,0 +1,30 @@
+{
+  "name": "akg",
+  "description": "涵盖机器学习、深度学习、自然语言处理等AI核心领域",
+  "nodes": [
+    {"name": "人工智能", "type": "领域", "importance": 10},
+    {"name": "机器学习", "type": "技术", "importance": 8},
+    {"name": "深度学习", "type": "技术", "importance": 8},
+    {"name": "自然语言处理", "type": "应用", "importance": 7},
+    {"name": "计算机视觉", "type": "应用", "importance": 7},
+    {"name": "神经网络", "type": "模型", "importance": 6},
+    {"name": "CNN", "type": "模型", "importance": 5},
+    {"name": "RNN", "type": "模型", "importance": 5},
+    {"name": "Transformer", "type": "模型", "importance": 6},
+    {"name": "GPT", "type": "模型", "importance": 7},
+    {"name": "BERT", "type": "模型", "importance": 6}
+  ],
+  "relations": [
+    {"source": "人工智能", "target": "机器学习", "type": "包含"},
+    {"source": "人工智能", "target": "深度学习", "type": "包含"},
+    {"source": "深度学习", "target": "神经网络", "type": "基于"},
+    {"source": "神经网络", "target": "CNN", "type": "演化"},
+    {"source": "神经网络", "target": "RNN", "type": "演化"},
+    {"source": "神经网络", "target": "Transformer", "type": "演化"},
+    {"source": "Transformer", "target": "GPT", "type": "衍生"},
+    {"source": "Transformer", "target": "BERT", "type": "衍生"},
+    {"source": "CNN", "target": "计算机视觉", "type": "应用于"},
+    {"source": "RNN", "target": "自然语言处理", "type": "应用于"},
+    {"source": "GPT", "target": "自然语言处理", "type": "应用于"}
+  ]
+}

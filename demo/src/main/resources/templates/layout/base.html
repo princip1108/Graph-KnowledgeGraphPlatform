@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" data-theme="corporate">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} ?: 'Graph+知识图谱平台'">Graph+知识图谱平台</title>
+    
+    <!-- DaisyUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5.0.0/dist/full.min.css" rel="stylesheet" type="text/css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    
+    <!-- 公共样式 -->
+    <th:block th:replace="~{fragments/common_styles :: styles}"></th:block>
+    
+    <!-- 页面特定样式 -->
+    <th:block th:replace="${pageStyles} ?: ~{}"></th:block>
+</head>
+<body class="bg-base-100 min-h-screen">
+    <!-- 头部导航 -->
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+    
+    <!-- 主要内容区域 -->
+    <main class="min-h-screen">
+        <th:block th:replace="${content} ?: ~{}"></th:block>
+    </main>
+    
+    <!-- 底部 -->
+    <th:block th:replace="~{fragments/footer :: footer}"></th:block>
+    
+    <!-- 公共脚本 -->
+    <th:block th:replace="~{fragments/common_scripts :: scripts}"></th:block>
+    
+    <!-- 页面特定脚本 -->
+    <th:block th:replace="${pageScripts} ?: ~{}"></th:block>
+</body>
+</html>

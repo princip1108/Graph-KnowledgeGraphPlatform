@@ -1,0 +1,35 @@
+{
+  "name": "MCu",
+  "description": "漫威电影宇宙主要角色及关系",
+  "nodes": [
+    {"name": "钢铁侠", "type": "英雄", "importance": 10},
+    {"name": "美国队长", "type": "英雄", "importance": 10},
+    {"name": "雷神", "type": "英雄", "importance": 9},
+    {"name": "绿巨人", "type": "英雄", "importance": 8},
+    {"name": "黑寡妇", "type": "英雄", "importance": 8},
+    {"name": "鹰眼", "type": "英雄", "importance": 7},
+    {"name": "蜘蛛侠", "type": "英雄", "importance": 9},
+    {"name": "奇异博士", "type": "英雄", "importance": 8},
+    {"name": "黑豹", "type": "英雄", "importance": 8},
+    {"name": "复仇者联盟", "type": "组织", "importance": 10},
+    {"name": "神盾局", "type": "组织", "importance": 7},
+    {"name": "灭霸", "type": "反派", "importance": 10},
+    {"name": "洛基", "type": "反派", "importance": 8},
+    {"name": "无限宝石", "type": "物品", "importance": 9}
+  ],
+  "relations": [
+    {"source": "钢铁侠", "target": "复仇者联盟", "type": "创建"},
+    {"source": "美国队长", "target": "复仇者联盟", "type": "领导"},
+    {"source": "雷神", "target": "复仇者联盟", "type": "加入"},
+    {"source": "绿巨人", "target": "复仇者联盟", "type": "加入"},
+    {"source": "黑寡妇", "target": "复仇者联盟", "type": "加入"},
+    {"source": "鹰眼", "target": "复仇者联盟", "type": "加入"},
+    {"source": "蜘蛛侠", "target": "钢铁侠", "type": "师从"},
+    {"source": "黑寡妇", "target": "神盾局", "type": "效力"},
+    {"source": "鹰眼", "target": "神盾局", "type": "效力"},
+    {"source": "雷神", "target": "洛基", "type": "兄弟"},
+    {"source": "灭霸", "target": "无限宝石", "type": "收集"},
+    {"source": "复仇者联盟", "target": "灭霸", "type": "对抗"},
+    {"source": "奇异博士", "target": "无限宝石", "type": "守护"}
+  ]
+}

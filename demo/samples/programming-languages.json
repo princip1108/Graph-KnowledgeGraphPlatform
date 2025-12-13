@@ -1,0 +1,35 @@
+{
+  "name": "编程语言知识图谱",
+  "description": "主流编程语言及其关系、应用领域",
+  "nodes": [
+    {"name": "Java", "type": "语言", "importance": 9},
+    {"name": "Python", "type": "语言", "importance": 9},
+    {"name": "JavaScript", "type": "语言", "importance": 9},
+    {"name": "C++", "type": "语言", "importance": 8},
+    {"name": "Go", "type": "语言", "importance": 7},
+    {"name": "Rust", "type": "语言", "importance": 6},
+    {"name": "Spring Boot", "type": "框架", "importance": 7},
+    {"name": "Django", "type": "框架", "importance": 6},
+    {"name": "React", "type": "框架", "importance": 8},
+    {"name": "Vue", "type": "框架", "importance": 7},
+    {"name": "后端开发", "type": "领域", "importance": 8},
+    {"name": "前端开发", "type": "领域", "importance": 8},
+    {"name": "数据科学", "type": "领域", "importance": 7},
+    {"name": "系统编程", "type": "领域", "importance": 6}
+  ],
+  "relations": [
+    {"source": "Java", "target": "Spring Boot", "type": "使用"},
+    {"source": "Python", "target": "Django", "type": "使用"},
+    {"source": "JavaScript", "target": "React", "type": "使用"},
+    {"source": "JavaScript", "target": "Vue", "type": "使用"},
+    {"source": "Java", "target": "后端开发", "type": "应用于"},
+    {"source": "Python", "target": "后端开发", "type": "应用于"},
+    {"source": "Python", "target": "数据科学", "type": "应用于"},
+    {"source": "JavaScript", "target": "前端开发", "type": "应用于"},
+    {"source": "C++", "target": "系统编程", "type": "应用于"},
+    {"source": "Rust", "target": "系统编程", "type": "应用于"},
+    {"source": "Go", "target": "后端开发", "type": "应用于"},
+    {"source": "C++", "target": "Java", "type": "影响"},
+    {"source": "C++", "target": "Rust", "type": "影响"}
+  ]
+}

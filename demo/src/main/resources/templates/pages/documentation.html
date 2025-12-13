@@ -1,0 +1,1472 @@
+﻿
+                <!DOCTYPE html>
+                <html lang="zh">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>文档</title>
+                  <style>
+                    *,
+                    *::before,
+                    *::after {
+                      box-sizing: border-box;
+                      margin: 0;
+                    }
+                    .iframe-outer {
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      bottom: 0;
+                      right: 0;
+                      display: flex;
+                      justify-content: center;
+                      background-color: #E0E0E0;
+                    }
+                    .iframe-wrapper {
+                      width: 100%;
+                      height: 100%;
+                      margin: 0 auto;
+                      transform-origin: center top;
+                      flex-shrink: 0;
+                    }
+                    #dynamicIframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  </style>
+                  <script>
+                const width = 1920
+                const height = 1080
+                const resolutionRatio = width && height ? width / height : 1
+                const pageNameMap = {
+                  'home_page': '首页',
+    'login_register_page': '登录注册',
+    'registration_success_page': '注册成功',
+    'password_reset_page': '找回密码',
+    'graph_list_page': '图谱列表页',
+    'graph_detail_page': '图谱详情页',
+    'user_profile_page': '个人中心',
+    'documentation_page': '文档',
+    'about_page': '关于我们',
+    'feedback_page': '用户反馈',
+    'page_998124': '管理',
+    'page_998125': '论坛'
+                }
+                function setIframeSize(w, h) {
+                  const currentContainerRadio = w / h
+                  let widthValue = w
+                  let heightValue = h
+                  let zoom = 1
+                  if (currentContainerRadio > resolutionRatio) {
+                    widthValue = h * resolutionRatio
+                    heightValue = h
+                  } else {
+                    widthValue = w
+                    heightValue = w / resolutionRatio
+                  }
+                  zoom = width ? widthValue / width : 1
+                  return {
+                    width: widthValue / zoom + 'px',
+                    height: heightValue / zoom + 'px',
+                    zoom,
+                  }
+                }
+                function adjustIframeSize() {
+                  const iframeWrapper = document.querySelector(".iframe-wrapper")
+                  if (!iframeWrapper) return
+                  iframeWrapper.style.width = '100%'
+                  iframeWrapper.style.height = window.innerHeight + 'px'
+                  iframeWrapper.style.transform = ''
+                }
+                function sanitizeFilename(name) {
+                  return name.replace(/[\/:*?"<>|]/g, '_')
+                }
+                function handlePostMessage(event) {
+                  if (!event.data) {
+                    return
+                  }
+                  const { type, targetPageId, params } = event.data
+                  const pagePathMap = {
+                    'home_page': '../graph/home.html',
+                    'login_register_page': '../user/login_register.html',
+                    'registration_success_page': '../user/registration_success.html',
+                    'password_reset_page': '../user/password_reset.html',
+                    'graph_list_page': '../graph/graph_list.html',
+                    'graph_detail_page': '../graph/graph_detail.html',
+                    'user_profile_page': '../user/profile.html',
+                    'documentation_page': '../pages/documentation.html',
+                    'about_page': '../pages/about.html',
+                    'feedback_page': '../community/feedback.html',
+                    'page_998124': '../admin/dashboard.html',
+                    'page_998125': '../community/forum_list.html'
+                  };
+                  let targetPath = pagePathMap[targetPageId];
+                  if (type === "iframeNavigation" && targetPath) {
+                    if (params && params.graphId) {
+                      targetPath += '?id=' + params.graphId;
+                    }
+                    window.location.href = targetPath
+                  }
+                }
+                window.addEventListener('message', handlePostMessage)
+                window.onload = adjustIframeSize
+                window.onresize = adjustIframeSize
+                window.onunload = () => {
+                  window.removeEventListener('message', handlePostMessage)
+                }
+              </script>
+                </head>
+                <body>
+                  <div class="iframe-outer">
+                    <div class="iframe-wrapper">
+                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用文档 - Graph+知识图谱平台</title>
+    <link href="/assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
+    <script src="/assets/static/libs/tailwind-browser@4.js"></script>
+    <link href="/assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
+    <script src="/assets/3/3.1.1/iconify.min.js"></script>
+    <style>
+/* daisyUI Theme Variables Customization
+* Based on the selected daisyUI theme and UI guidance requirements,
+* customize only the CSS variables that need to be different from the theme defaults.
+*/
+:root {
+/* Corporate theme customization for knowledge graph platform */
+--color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
+--color-primary-content: rgba(255, 255, 255, 1);
+--color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
+--color-secondary-content: rgba(255, 255, 255, 1);
+--color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
+--color-accent-content: rgba(255, 255, 255, 1);
+--color-base-100: rgba(255, 255, 255, 1);
+--color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
+--color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
+--color-base-content: rgba(55, 65, 81, 1); /* #374151 */
+--color-success: rgba(16, 185, 129, 1);
+--color-warning: rgba(245, 158, 11, 1);
+--color-error: rgba(239, 68, 68, 1);
+--color-info: rgba(59, 130, 246, 1);
+--radius-box: 0.375rem; /* 6px for micro-rounded corners */
+--radius-field: 0.375rem;
+--border: 1px;
+}
+
+/* Global component styles */
+.transition-width {
+transition: width 0.3s ease-in-out;
+}
+
+.nav-hover {
+transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.shadow-soft {
+box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header height consistency */
+.header-height {
+height: 64px;
+}
+
+/* Focus styles for accessibility */
+.focus-primary:focus {
+outline: 2px solid var(--color-primary);
+outline-offset: 2px;
+}
+
+/* Academic style enhancements */
+.academic-border {
+border: var(--border) solid var(--color-base-300);
+}
+
+.hover-lift {
+transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional grid spacing */
+.academic-grid {
+gap: 1.5rem;
+}
+
+/* Clean divider lines */
+.academic-divider {
+border-color: var(--color-base-300);
+border-width: var(--border);
+}
+</style> <style>
+/* 文档页面特定样式 */
+
+/* 文档导航链接样式 */
+.doc-nav-link {
+    transition: all 0.15s ease-in-out;
+    border-radius: var(--radius-field);
+}
+
+.doc-nav-link:hover {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+    transform: translateX(4px);
+}
+
+/* 代码块样式增强 */
+.mockup-code {
+    background-color: var(--color-base-300);
+    border: var(--border) solid var(--color-base-content, var(--color-base-200));
+}
+
+.mockup-code pre {
+    background-color: transparent;
+}
+
+/* 步骤指示器样式 */
+.steps .step-primary:before {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+}
+
+/* FAQ 搜索结果高亮 */
+.faq-highlight {
+    background-color: var(--color-warning);
+    color: var(--color-warning-content);
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+/* 平滑滚动到锚点 */
+html {
+    scroll-behavior: smooth;
+}
+
+/* 内容区域的响应式间距 */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    aside {
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+    
+    .flex {
+        flex-direction: column;
+    }
+}
+
+/* 提示框样式 */
+.info-box {
+    border-left: 4px solid var(--color-info);
+    background-color: rgba(var(--color-info), 0.1);
+    padding: 1rem;
+    border-radius: var(--radius-box);
+    margin: 1rem 0;
+}
+
+/* 代码高亮 */
+code {
+    background-color: var(--color-base-200);
+    color: var(--color-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: &#39;Courier New&#39;, monospace;
+}
+
+/* 图片阴影增强 */
+article img {
+    transition: transform 0.2s ease-in-out;
+}
+
+article img:hover {
+    transform: scale(1.02);
+}
+
+/* 目录粘性定位优化 */
+aside .sticky {
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+/* 搜索框焦点样式 */
+#docSearchInput:focus,
+#faqSearchInput:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary), 0.2);
+}
+
+/* FAQ 手风琴动画优化 */
+.collapse-content {
+    transition: all 0.3s ease-in-out;
+}
+
+/* 阅读进度指示器 */
+.reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    z-index: 1000;
+    transition: width 0.1s ease-out;
+}
+
+/* 术语解释气泡样式 */
+.term-popover {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dotted var(--color-primary);
+}
+
+.term-popover:hover::after {
+    content: attr(data-definition);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-base-content);
+    color: var(--color-base-100);
+    padding: 8px 12px;
+    border-radius: var(--radius-box);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 响应式表格 */
+@media (max-width: 640px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .table-responsive th,
+    .table-responsive td {
+        padding: 0.5rem;
+    }
+    .header-height { height: 56px; }
+}
+</style>
+  <script src="/assets/static/libs/25_6/holder.js"></script></head>
+  <body class="min-h-screen bg-base-100 flex flex-col">
+    <div data-section-id="common_header" data-section-type="common_header">
+  <div id="ioyi" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 ioyi spark-custom-ioyi ioyi">
+    <!-- Left section: Logo -->
+    <div class="navbar-start">
+      <div class="flex items-center gap-4">
+        <button class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;home_page&#39;)">
+          <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
+          Graph+知识图谱平台
+        </button>
+      </div>
+      <!-- Mobile menu (visible on small screens) -->
+      <div class="dropdown lg:hidden">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
+        </div>
+        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Center section: Main navigation -->
+    <div class="navbar-center hidden lg:flex">
+      <ul class="menu menu-horizontal px-1 gap-2">
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Right section: User controls -->
+    <div class="navbar-end">
+      <!-- Login/Register buttons for logged-out users -->
+      <div data-user-control="logged-out" class="flex items-center gap-2" style="display: none;">
+        <button class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;login_register_page&#39;)">
+          登录</button><button class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100" onclick="navigateTo(&#39;login_register_page&#39;)">
+          注册
+        </button>
+      </div>
+      <!-- User profile dropdown for logged-in users -->
+      <div data-user-control="logged-in" id="i1f4j" class="dropdown dropdown-end" style="display: none;">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
+          <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
+            <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
+            <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
+          </div>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
+          <li class="menu-title"><span>用户中心</span></li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
+          </li>
+          <div class="divider my-1"></div>
+          <li>
+            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 主内容区域 -->
+    <div class="flex-1 flex flex-col">
+      <!-- 文档页英雄区 -->
+      <section class="hero bg-gradient-to-br from-base-100 to-base-200 py-16">
+        <div class="hero-content text-center max-w-4xl">
+          <div>
+            <h1 class="text-4xl font-bold text-base-content mb-4 flex items-center justify-center gap-3">
+              <span class="iconify text-primary" data-icon="heroicons:document-text" data-width="36"></span>
+              使用文档
+            </h1>
+            <p class="text-lg text-base-content/70 mb-8 max-w-2xl mx-auto">
+              提供系统的使用教程和常见问题解答，帮助您快速掌握平台各项功能，解决日常使用中的疑问
+            </p>
+            <!-- 搜索框 -->
+            <div class="join w-full max-w-lg mx-auto">
+              <input type="text" placeholder="搜索文档内容..." id="docSearchInput" class="input input-bordered join-item w-full focus-primary"><button id="docSearchBtn" class="btn btn-primary join-item">
+                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+                搜索
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- 文档内容区 -->
+      <section class="flex-1 bg-base-100">
+        <div class="container mx-auto px-4 py-8">
+          <div class="flex gap-8">
+            <!-- 左侧导航侧边栏 -->
+            <aside class="w-80 shrink-0">
+              <div class="bg-base-200 rounded-lg p-6 sticky top-4">
+                <h3 class="text-lg font-semibold text-base-content mb-4 flex items-center gap-2">
+                  <span class="iconify text-primary" data-icon="heroicons:list-bullet" data-width="20"></span>
+                  文档目录
+                </h3>
+                <!-- 文档目录菜单 -->
+                <ul class="menu bg-base-100 rounded-box">
+                  <li>
+                    <details open="">
+                      <summary class="font-medium">
+                        <span class="iconify" data-icon="heroicons:play" data-width="16"></span>
+                        快速开始
+                      </summary>
+                      <ul>
+                        <li>
+                          <a href="#quick-start" class="doc-nav-link">平台介绍</a>
+                        </li>
+                        <li>
+                          <a href="#account-setup" class="doc-nav-link">账户设置</a>
+                        </li>
+                        <li>
+                          <a href="#first-steps" class="doc-nav-link">首次使用</a>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                  <li>
+                    <details>
+                      <summary class="font-medium">
+                        <span class="iconify" data-icon="heroicons:plus-circle" data-width="16"></span>
+                        图谱创建指南
+                      </summary>
+                      <ul>
+                        <li>
+                          <a href="#create-graph" class="doc-nav-link">创建新图谱</a>
+                        </li>
+                        <li>
+                          <a href="#graph-settings" class="doc-nav-link">图谱配置</a>
+                        </li>
+                        <li>
+                          <a href="#node-management" class="doc-nav-link">节点管理</a>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                  <li>
+                    <details>
+                      <summary class="font-medium">
+                        <span class="iconify" data-icon="heroicons:arrow-up-tray" data-width="16"></span>
+                        数据导入
+                      </summary>
+                      <ul>
+                        <li>
+                          <a href="#import-formats" class="doc-nav-link">支持格式</a>
+                        </li>
+                        <li>
+                          <a href="#import-process" class="doc-nav-link">导入流程</a>
+                        </li>
+                        <li>
+                          <a href="#data-validation" class="doc-nav-link">数据验证</a>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                  <li>
+                    <details>
+                      <summary class="font-medium">
+                        <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
+                        可视化配置
+                      </summary>
+                      <ul>
+                        <li>
+                          <a href="#layout-options" class="doc-nav-link">布局选项</a>
+                        </li>
+                        <li>
+                          <a href="#style-customization" class="doc-nav-link">样式定制</a>
+                        </li>
+                        <li>
+                          <a href="#interaction-settings" class="doc-nav-link">交互设置</a>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                  <li>
+                    <details>
+                      <summary class="font-medium">
+                        <span class="iconify" data-icon="heroicons:magnifying-glass-plus" data-width="16"></span>
+                        高级搜索技巧
+                      </summary>
+                      <ul>
+                        <li>
+                          <a href="#search-syntax" class="doc-nav-link">搜索语法</a>
+                        </li>
+                        <li>
+                          <a href="#filter-options" class="doc-nav-link">筛选选项</a>
+                        </li>
+                        <li>
+                          <a href="#saved-searches" class="doc-nav-link">保存搜索</a>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                  <li>
+                    <details>
+                      <summary class="font-medium">
+                        <span class="iconify" data-icon="heroicons:code-bracket" data-width="16"></span>
+                        API接口文档
+                      </summary>
+                      <ul>
+                        <li>
+                          <a href="#api-overview" class="doc-nav-link">API概览</a>
+                        </li>
+                        <li>
+                          <a href="#authentication" class="doc-nav-link">身份验证</a>
+                        </li>
+                        <li>
+                          <a href="#endpoints" class="doc-nav-link">接口端点</a>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                </ul>
+              </div>
+            </aside>
+            <!-- 右侧主内容区 -->
+            <main class="flex-1 min-w-0">
+              <!-- 入门指南部分 -->
+              <div class="bg-base-200 rounded-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-base-content mb-4 flex items-center gap-3">
+                  <span class="iconify text-accent" data-icon="heroicons:academic-cap" data-width="28"></span>
+                  入门指南
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="card bg-base-100 shadow-soft hover-lift">
+                    <div class="card-body">
+                      <div class="flex items-center gap-3 mb-3">
+                        <span class="iconify text-primary" data-icon="heroicons:rocket-launch" data-width="24"></span>
+                        <h3 class="card-title text-lg">快速上手</h3>
+                      </div>
+                      <p class="text-base-content/70 mb-4">
+                        5分钟了解平台核心功能，快速创建您的第一个知识图谱
+                      </p>
+                      <div class="card-actions">
+                        <button class="btn btn-primary btn-sm" onclick="scrollToSection(&#39;quick-start&#39;)">
+                          开始学习
+                          <span class="iconify" data-icon="heroicons:arrow-right" data-width="16"></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card bg-base-100 shadow-soft hover-lift">
+                    <div class="card-body">
+                      <div class="flex items-center gap-3 mb-3">
+                        <span class="iconify text-secondary" data-icon="heroicons:video-camera" data-width="24"></span>
+                        <h3 class="card-title text-lg">视频教程</h3>
+                      </div>
+                      <p class="text-base-content/70 mb-4">
+                        通过视频演示深入了解各项功能的具体操作方法
+                      </p>
+                      <div class="card-actions">
+                        <button class="btn btn-secondary btn-sm">
+                          观看视频
+                          <span class="iconify" data-icon="heroicons:play" data-width="16"></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- 详细教程内容 -->
+              <div class="space-y-8">
+                <!-- 快速开始 -->
+                <article id="quick-start" class="bg-base-100 rounded-lg p-6 academic-border">
+                  <h2 class="text-2xl font-bold text-base-content mb-6 flex items-center gap-3">
+                    <span class="iconify text-primary" data-icon="heroicons:play" data-width="28"></span>
+                    快速开始
+                  </h2>
+                  <div class="prose max-w-none">
+                    <h3 class="text-xl font-semibold mb-4">平台介绍</h3>
+                    <p class="text-base-content/80 mb-4">
+                      知识图谱平台是一个强大的数据可视化和分析工具，帮助您构建、管理和探索复杂的知识网络。
+                      平台支持多种数据格式导入，提供丰富的可视化选项和交互功能。
+                    </p>
+                    <div class="bg-info/10 border-l-4 border-info p-4 mb-6">
+                      <div class="flex items-start gap-3">
+                        <span class="iconify text-info mt-1" data-icon="heroicons:information-circle" data-width="20"></span>
+                        <div>
+                          <h4 class="font-semibold text-info mb-2">提示</h4>
+                          <p class="text-sm text-base-content/70">
+                            建议新用户先完成账户设置，然后按照教程创建第一个示例图谱来熟悉平台功能。
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <h4 class="text-lg font-semibold mb-3">主要功能特性</h4>
+                    <ul class="list-disc list-inside space-y-2 text-base-content/80 mb-6">
+                      <li>支持多种数据格式导入（CSV、JSON、XML等）</li>
+                      <li>丰富的图谱布局算法和可视化选项</li>
+                      <li>强大的搜索和筛选功能</li>
+                      <li>实时协作和分享功能</li>
+                      <li>完整的API接口支持</li>
+                    </ul>
+                    <div class="mockup-code mb-6">
+                      <pre data-prefix="$"><code>curl -X GET "https://api.example.com/graphs" \</code></pre>
+                      <pre data-prefix="&amp;gt;" class="text-warning"><code>  -H "Authorization: Bearer YOUR_TOKEN"</code></pre>
+                      <pre data-prefix="&amp;gt;" class="text-success"><code>  -H "Content-Type: application/json"</code></pre>
+                    </div>
+                    <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/05da18b1-b340-462f-9c27-50fe143da636.png" alt="平台概览截图展示主要界面和功能模块" class="w-full rounded-lg shadow-soft mb-6">
+                  </div>
+                </article>
+                <!-- 图谱创建指南 -->
+                <article id="create-graph" class="bg-base-100 rounded-lg p-6 academic-border">
+                  <h2 class="text-2xl font-bold text-base-content mb-6 flex items-center gap-3">
+                    <span class="iconify text-primary" data-icon="heroicons:plus-circle" data-width="28"></span>
+                    图谱创建指南
+                  </h2>
+                  <div class="prose max-w-none">
+                    <p class="text-base-content/80 mb-6">
+                      创建知识图谱是使用平台的第一步。本指南将详细介绍如何从零开始创建一个完整的知识图谱。
+                    </p>
+                    <div class="steps steps-vertical lg:steps-horizontal mb-8">
+                      <div class="step step-primary">创建项目</div>
+                      <div class="step step-primary">导入数据</div>
+                      <div class="step">配置可视化</div>
+                      <div class="step">发布分享</div>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">创建新图谱</h3>
+                    <p class="text-base-content/80 mb-4">
+                      点击"创建图谱"按钮开始创建新的知识图谱项目。您需要提供项目名称、描述和选择合适的模板。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/53eb2087-7c1a-46ec-bf58-8d0f17e78c6e.png" alt="创建图谱第一步界面截图" class="w-full rounded-lg shadow-soft"><img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/320a1267-9911-43f7-b5cc-10d9aae5105d.png" alt="图谱模板选择界面截图" class="w-full rounded-lg shadow-soft">
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <!-- 常见问题解答 FAQ -->
+              <div class="mt-12">
+                <h2 class="text-2xl font-bold text-base-content mb-6 flex items-center gap-3">
+                  <span class="iconify text-primary" data-icon="heroicons:question-mark-circle" data-width="28"></span>
+                  常见问题解答
+                </h2>
+                <!-- FAQ 搜索 -->
+                <div class="mb-6">
+                  <div class="join w-full max-w-md">
+                    <input type="text" placeholder="搜索FAQ..." id="faqSearchInput" class="input input-bordered input-sm join-item w-full"><button id="faqSearchBtn" class="btn btn-primary btn-sm join-item">
+                      <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                    </button>
+                  </div>
+                </div>
+                <!-- FAQ 手风琴 -->
+                <div id="faqAccordion" class="space-y-2">
+                  <div class="collapse collapse-arrow bg-base-200">
+                    <input type="radio" name="faq-accordion" checked="checked">
+                    <div class="collapse-title font-medium flex items-center gap-2">
+                      <span class="iconify text-primary" data-icon="heroicons:user-circle" data-width="20"></span>
+                      如何注册和创建账户？
+                    </div>
+                    <div class="collapse-content">
+                      <div class="pt-2">
+                        <p class="text-base-content/80 mb-3">
+                          注册账户非常简单，只需要提供邮箱地址和设置密码即可。具体步骤如下：
+                        </p>
+                        <ol class="list-decimal list-inside space-y-2 text-base-content/70">
+                          <li>点击页面右上角的"注册"按钮</li>
+                          <li>填写有效的邮箱地址</li>
+                          <li>设置安全密码（至少8位，包含字母和数字）</li>
+                          <li>验证邮箱地址</li>
+                          <li>完成个人信息设置</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="collapse collapse-arrow bg-base-200">
+                    <input type="radio" name="faq-accordion">
+                    <div class="collapse-title font-medium flex items-center gap-2">
+                      <span class="iconify text-primary" data-icon="heroicons:arrow-up-tray" data-width="20"></span>
+                      支持哪些数据格式导入？
+                    </div>
+                    <div class="collapse-content">
+                      <div class="pt-2">
+                        <p class="text-base-content/80 mb-3">
+                          平台支持多种常见的数据格式，包括：
+                        </p>
+                        <div class="grid grid-cols-2 gap-4">
+                          <div>
+                            <h4 class="font-semibold mb-2">结构化数据</h4>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-base-content/70">
+                              <li>CSV 文件</li>
+                              <li>Excel (.xlsx, .xls)</li>
+                              <li>JSON 格式</li>
+                              <li>XML 文件</li>
+                            </ul>
+                          </div>
+                          <div>
+                            <h4 class="font-semibold mb-2">图数据格式</h4>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-base-content/70">
+                              <li>GraphML</li>
+                              <li>GEXF</li>
+                              <li>DOT 格式</li>
+                              <li>RDF/TTL</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="collapse collapse-arrow bg-base-200">
+                    <input type="radio" name="faq-accordion">
+                    <div class="collapse-title font-medium flex items-center gap-2">
+                      <span class="iconify text-primary" data-icon="heroicons:share" data-width="20"></span>
+                      如何分享我的知识图谱？
+                    </div>
+                    <div class="collapse-content">
+                      <div class="pt-2">
+                        <p class="text-base-content/80 mb-3">
+                          您可以通过多种方式分享您的知识图谱：
+                        </p>
+                        <div class="space-y-3">
+                          <div class="flex items-start gap-3">
+                            <span class="iconify text-success mt-1" data-icon="heroicons:link" data-width="16"></span>
+                            <div>
+                              <h5 class="font-medium">公开链接</h5>
+                              <p class="text-sm text-base-content/70">
+                                生成公开访问链接，任何人都可以查看
+                              </p>
+                            </div>
+                          </div>
+                          <div class="flex items-start gap-3">
+                            <span class="iconify text-info mt-1" data-icon="heroicons:user-group" data-width="16"></span>
+                            <div>
+                              <h5 class="font-medium">协作分享</h5>
+                              <p class="text-sm text-base-content/70">
+                                邀请特定用户协作编辑
+                              </p>
+                            </div>
+                          </div>
+                          <div class="flex items-start gap-3">
+                            <span class="iconify text-warning mt-1" data-icon="heroicons:code-bracket" data-width="16"></span>
+                            <div>
+                              <h5 class="font-medium">嵌入代码</h5>
+                              <p class="text-sm text-base-content/70">
+                                获取嵌入代码，在其他网站中展示
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="collapse collapse-arrow bg-base-200">
+                    <input type="radio" name="faq-accordion">
+                    <div class="collapse-title font-medium flex items-center gap-2">
+                      <span class="iconify text-primary" data-icon="heroicons:cog-6-tooth" data-width="20"></span>
+                      如何自定义图谱的视觉样式？
+                    </div>
+                    <div class="collapse-content">
+                      <div class="pt-2">
+                        <p class="text-base-content/80 mb-4">
+                          平台提供了丰富的样式自定义选项，您可以根据需要调整图谱的外观：
+                        </p>
+                        <div class="tabs tabs-boxed mb-4">
+                          <a class="tab tab-active">节点样式</a><a class="tab">边样式</a><a class="tab">布局设置</a>
+                        </div>
+                        <p class="text-sm text-base-content/70">
+                          在图谱编辑器中，点击右侧的"样式"面板即可访问所有自定义选项。
+                          您可以调整颜色、大小、形状、标签显示等多个属性。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="collapse collapse-arrow bg-base-200">
+                    <input type="radio" name="faq-accordion">
+                    <div class="collapse-title font-medium flex items-center gap-2">
+                      <span class="iconify text-primary" data-icon="heroicons:exclamation-triangle" data-width="20"></span>
+                      遇到技术问题怎么办？
+                    </div>
+                    <div class="collapse-content">
+                      <div class="pt-2">
+                        <p class="text-base-content/80 mb-3">
+                          如果您遇到技术问题，可以通过以下方式获得帮助：
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div class="card bg-base-100 border academic-border">
+                            <div class="card-body p-4">
+                              <h5 class="font-medium flex items-center gap-2 mb-2">
+                                <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right" data-width="16"></span>
+                                在线客服
+                              </h5>
+                              <p class="text-sm text-base-content/70">
+                                工作日 9:00-18:00 提供实时支持
+                              </p>
+                            </div>
+                          </div>
+                          <div class="card bg-base-100 border academic-border">
+                            <div class="card-body p-4">
+                              <h5 class="font-medium flex items-center gap-2 mb-2">
+                                <span class="iconify text-primary" data-icon="heroicons:envelope" data-width="16"></span>
+                                邮件支持
+                              </h5>
+                              <p class="text-sm text-base-content/70">
+                                support@example.com
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="mt-4">
+                          <button class="btn btn-primary btn-sm" onclick="navigateTo(&#39;feedback_page&#39;)">
+                            提交问题反馈
+                            <span class="iconify" data-icon="heroicons:arrow-right" data-width="16"></span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- 相关链接 -->
+              <div class="mt-12 bg-base-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-base-content mb-4 flex items-center gap-2">
+                  <span class="iconify text-primary" data-icon="heroicons:link" data-width="20"></span>
+                  相关链接
+                </h3>
+                <div class="flex flex-wrap gap-4">
+                  <button class="btn btn-outline btn-sm" onclick="navigateTo(&#39;about_page&#39;)">
+                    <span class="iconify" data-icon="heroicons:information-circle" data-width="16"></span>
+                    关于我们</button><button class="btn btn-outline btn-sm" onclick="navigateTo(&#39;feedback_page&#39;)">
+                    <span class="iconify" data-icon="heroicons:chat-bubble-left-ellipsis" data-width="16"></span>
+                    意见反馈</button><button class="btn btn-outline btn-sm" onclick="navigateTo(&#39;home_page&#39;)">
+                    <span class="iconify" data-icon="heroicons:home" data-width="16"></span>
+                    返回首页
+                  </button>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </section>
+    </div>
+    <!-- 底部页脚 --><div data-section-id="common_footer" data-section-type="common_footer">
+<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
+<div class="grid grid-flow-col gap-4">
+<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
+<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
+<a class="link link-hover focus-primary">隐私政策</a>
+<a class="link link-hover focus-primary">服务条款</a>
+</div>
+<div class="grid grid-flow-col gap-4">
+<a class="link link-hover focus-primary" aria-label="官方微信">
+<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
+</a>
+<a class="link link-hover focus-primary" aria-label="企业QQ">
+<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
+</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
+<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+</a>
+</div>
+<div class="text-center">
+<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
+<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
+</div>
+</footer>
+</div><script>
+(function() {
+&#39;use strict&#39;;
+
+// Initialize global namespace
+window.APP_GLOBALS = window.APP_GLOBALS || {};
+
+// Global navigation utility
+window.navigateTo = function(targetPageId) {
+const isInIframe = window.self !== window.top;
+const targetFileName = `${targetPageId}.html`;
+
+if (isInIframe) {
+window.parent.postMessage({
+type: &#39;iframeNavigation&#39;,
+targetPageId: targetPageId
+}, &#39;*&#39;);
+} else {
+window.location.href = targetFileName;
+}
+};
+
+// User authentication state management
+window.APP_GLOBALS.user = {
+isLoggedIn: false,
+userInfo: null,
+
+login: function(userInfo) {
+this.isLoggedIn = true;
+this.userInfo = userInfo;
+localStorage.setItem(&#39;userState&#39;, JSON.stringify({
+isLoggedIn: true,
+userInfo: userInfo
+}));
+this.updateUserInterface();
+},
+
+logout: function() {
+this.isLoggedIn = false;
+this.userInfo = null;
+localStorage.removeItem(&#39;userState&#39;);
+fetch(&#39;/api/auth/logout&#39;, { method: &#39;POST&#39;, credentials: &#39;include&#39; })
+.finally(() =&gt; {
+this.updateUserInterface();
+window.top.location.href = &#39;/graph/home.html&#39;;
+});
+},
+
+updateUserInterface: function() {
+const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
+userControls.forEach(control => {
+const controlType = control.getAttribute(&#39;data-user-control&#39;);
+if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else {
+control.style.display = &#39;&#39;;
+}
+});
+if (this.isLoggedIn &amp;&amp; this.userInfo) {
+const avatarText = document.getElementById(&#39;nav-avatar-text&#39;);
+const avatarImg = document.getElementById(&#39;nav-avatar-img&#39;);
+if (avatarText &amp;&amp; avatarImg) {
+if (this.userInfo.avatar) {
+avatarText.classList.add(&#39;hidden&#39;);
+avatarImg.src = this.userInfo.avatar;
+avatarImg.classList.remove(&#39;hidden&#39;);
+} else {
+avatarText.textContent = (this.userInfo.userName || &#39;用&#39;).substring(0, 1);
+avatarText.classList.remove(&#39;hidden&#39;);
+avatarImg.classList.add(&#39;hidden&#39;);
+}
+}
+}
+},
+
+init: function() {
+const savedState = localStorage.getItem(&#39;userState&#39;);
+if (savedState) {
+const state = JSON.parse(savedState);
+this.isLoggedIn = state.isLoggedIn;
+this.userInfo = state.userInfo;
+this.updateUserInterface();
+}
+fetch(&#39;/user/api/check-auth&#39;, { credentials: &#39;include&#39; })
+.then(res => res.json())
+.then(data => {
+const wasLoggedIn = this.isLoggedIn;
+if (data.authenticated) {
+this.isLoggedIn = true;
+this.userInfo = data.user || { userName: data.username };
+localStorage.setItem(&#39;userState&#39;, JSON.stringify({ isLoggedIn: true, userInfo: this.userInfo }));
+} else {
+this.isLoggedIn = false;
+this.userInfo = null;
+localStorage.removeItem(&#39;userState&#39;);
+}
+if (wasLoggedIn !== this.isLoggedIn || !savedState) this.updateUserInterface();
+})
+.catch(() => {});
+}
+};
+
+// Search functionality
+window.APP_GLOBALS.search = {
+history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
+recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
+
+addToHistory: function(query) {
+if (query &amp;&amp; !this.history.includes(query)) {
+this.history.unshift(query);
+this.history = this.history.slice(0, 10); // Keep only last 10 searches
+localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
+}
+},
+
+getSearchSuggestions: function() {
+return this.history.length > 0 ? this.history : this.recommendations;
+},
+
+performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
+this.addToHistory(query);
+// Navigate to search results or graph detail based on context
+navigateTo(targetPage);
+}
+};
+
+// Notification utilities
+window.showNotification = function(message, type = &#39;info&#39;) {
+const notification = document.createElement(&#39;div&#39;);
+notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+notification.innerHTML = `
+<div class="flex items-center gap-2">
+<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
+<span>${message}</span>
+</div>
+`;
+document.body.appendChild(notification);
+
+setTimeout(() => {
+notification.remove();
+}, 5000);
+};
+
+// Favorites management
+window.APP_GLOBALS.favorites = {
+items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+
+add: function(graphId, graphData) {
+if (!this.items.find(item => item.id === graphId)) {
+this.items.push({
+id: graphId,
+data: graphData,
+addedAt: new Date().toISOString()
+});
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+}
+},
+
+remove: function(graphId) {
+this.items = this.items.filter(item => item.id !== graphId);
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+},
+
+isFavorited: function(graphId) {
+return this.items.some(item => item.id === graphId);
+},
+
+toggle: function(graphId, graphData) {
+if (this.isFavorited(graphId)) {
+this.remove(graphId);
+} else {
+this.add(graphId, graphData);
+}
+}
+};
+
+// Initialize components when DOM is loaded
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+window.APP_GLOBALS.user.init();
+});
+
+})();
+</script><script>
+(function() {
+    &#39;use strict&#39;;
+
+    // DOM 加载完成后执行初始化
+    document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+        initDocumentationPage();
+        initSearchFunctionality();
+        initFAQSearch();
+        initReadingProgress();
+        initSmoothScrolling();
+        initTooltips();
+    });
+
+    // 初始化文档页面
+    function initDocumentationPage() {
+        // 设置当前页面的导航状态
+        const currentNavItem = document.querySelector(&#39;[data-page="documentation_page"]&#39;);
+        if (currentNavItem) {
+            currentNavItem.classList.add(&#39;active&#39;);
+        }
+
+        // 初始化侧边栏导航点击事件
+        const navLinks = document.querySelectorAll(&#39;.doc-nav-link&#39;);
+        navLinks.forEach(link => {
+            link.addEventListener(&#39;click&#39;, function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute(&#39;href&#39;).substring(1);
+                scrollToSection(targetId);
+                
+                // 更新活跃状态
+                navLinks.forEach(l => l.classList.remove(&#39;active&#39;));
+                this.classList.add(&#39;active&#39;);
+            });
+        });
+    }
+
+    // 初始化文档搜索功能
+    function initSearchFunctionality() {
+        const searchInput = document.getElementById(&#39;docSearchInput&#39;);
+        const searchBtn = document.getElementById(&#39;docSearchBtn&#39;);
+
+        if (searchInput &amp;&amp; searchBtn) {
+            // 搜索按钮点击事件
+            searchBtn.addEventListener(&#39;click&#39;, function() {
+                performDocumentSearch();
+            });
+
+            // 回车键搜索
+            searchInput.addEventListener(&#39;keypress&#39;, function(e) {
+                if (e.key === &#39;Enter&#39;) {
+                    performDocumentSearch();
+                }
+            });
+
+            // 实时搜索建议
+            searchInput.addEventListener(&#39;input&#39;, function() {
+                const query = this.value.trim();
+                if (query.length > 2) {
+                    showSearchSuggestions(query);
+                } else {
+                    hideSearchSuggestions();
+                }
+            });
+        }
+    }
+
+    // 执行文档搜索
+    function performDocumentSearch() {
+        const searchInput = document.getElementById(&#39;docSearchInput&#39;);
+        const query = searchInput.value.trim();
+        
+        if (query) {
+            // 显示搜索中状态
+            const searchBtn = document.getElementById(&#39;docSearchBtn&#39;);
+            const originalContent = searchBtn.innerHTML;
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = &#39;<span class="loading loading-spinner loading-xs"></span> 搜索中...&#39;;
+
+            // 模拟搜索过程
+            setTimeout(() => {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = originalContent;
+                
+                // 高亮搜索结果
+                highlightSearchResults(query);
+                
+                // 显示搜索结果通知
+                if (window.showNotification) {
+                    window.showNotification(`找到 ${Math.floor(Math.random() * 10) + 1} 个相关结果`, &#39;success&#39;);
+                }
+            }, 800);
+
+            // 记录搜索历史
+            if (window.APP_GLOBALS &amp;&amp; window.APP_GLOBALS.search) {
+                window.APP_GLOBALS.search.addToHistory(query);
+            }
+        }
+    }
+
+    // 初始化 FAQ 搜索
+    function initFAQSearch() {
+        const faqSearchInput = document.getElementById(&#39;faqSearchInput&#39;);
+        const faqSearchBtn = document.getElementById(&#39;faqSearchBtn&#39;);
+
+        if (faqSearchInput &amp;&amp; faqSearchBtn) {
+            faqSearchBtn.addEventListener(&#39;click&#39;, function() {
+                performFAQSearch();
+            });
+
+            faqSearchInput.addEventListener(&#39;keypress&#39;, function(e) {
+                if (e.key === &#39;Enter&#39;) {
+                    performFAQSearch();
+                }
+            });
+
+            // 实时 FAQ 筛选
+            faqSearchInput.addEventListener(&#39;input&#39;, function() {
+                const query = this.value.trim().toLowerCase();
+                filterFAQItems(query);
+            });
+        }
+    }
+
+    // 执行 FAQ 搜索
+    function performFAQSearch() {
+        const faqSearchInput = document.getElementById(&#39;faqSearchInput&#39;);
+        const query = faqSearchInput.value.trim().toLowerCase();
+        filterFAQItems(query);
+    }
+
+    // 筛选 FAQ 项目
+    function filterFAQItems(query) {
+        const faqItems = document.querySelectorAll(&#39;#faqAccordion .collapse&#39;);
+        let visibleCount = 0;
+
+        faqItems.forEach(item => {
+            const title = item.querySelector(&#39;.collapse-title&#39;).textContent.toLowerCase();
+            const content = item.querySelector(&#39;.collapse-content&#39;).textContent.toLowerCase();
+            
+            if (query === &#39;&#39; || title.includes(query) || content.includes(query)) {
+                item.style.display = &#39;block&#39;;
+                visibleCount++;
+                
+                // 高亮匹配文本
+                if (query !== &#39;&#39;) {
+                    highlightText(item, query);
+                } else {
+                    removeHighlight(item);
+                }
+            } else {
+                item.style.display = &#39;none&#39;;
+            }
+        });
+
+        // 显示筛选结果
+        if (query !== &#39;&#39;) {
+            const resultText = visibleCount > 0 ? `找到 ${visibleCount} 个相关问题` : &#39;未找到相关问题&#39;;
+            if (window.showNotification) {
+                window.showNotification(resultText, visibleCount > 0 ? &#39;info&#39; : &#39;warning&#39;);
+            }
+        }
+    }
+
+    // 高亮搜索结果
+    function highlightSearchResults(query) {
+        const content = document.querySelector(&#39;main&#39;);
+        const regex = new RegExp(`(${escapeRegExp(query)})`, &#39;gi&#39;);
+        
+        // 移除之前的高亮
+        removeAllHighlights();
+        
+        // 添加新的高亮
+        highlightInElement(content, regex);
+    }
+
+    // 高亮文本
+    function highlightText(element, query) {
+        const regex = new RegExp(`(${escapeRegExp(query)})`, &#39;gi&#39;);
+        highlightInElement(element, regex);
+    }
+
+    // 在元素中高亮文本
+    function highlightInElement(element, regex) {
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+
+        const textNodes = [];
+        let node;
+        while (node = walker.nextNode()) {
+            if (node.textContent.trim()) {
+                textNodes.push(node);
+            }
+        }
+
+        textNodes.forEach(textNode => {
+            const parent = textNode.parentNode;
+            if (parent.tagName !== &#39;SCRIPT&#39; &amp;&amp; parent.tagName !== &#39;STYLE&#39;) {
+                const highlightedHTML = textNode.textContent.replace(regex, &#39;<mark class="faq-highlight">$1</mark>&#39;);
+                if (highlightedHTML !== textNode.textContent) {
+                    const wrapper = document.createElement(&#39;span&#39;);
+                    wrapper.innerHTML = highlightedHTML;
+                    parent.replaceChild(wrapper, textNode);
+                }
+            }
+        });
+    }
+
+    // 移除高亮
+    function removeHighlight(element) {
+        const highlights = element.querySelectorAll(&#39;.faq-highlight&#39;);
+        highlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+            parent.normalize();
+        });
+    }
+
+    // 移除所有高亮
+    function removeAllHighlights() {
+        const highlights = document.querySelectorAll(&#39;.faq-highlight&#39;);
+        highlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+            parent.normalize();
+        });
+    }
+
+    // 转义正则表达式特殊字符
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, &#39;\\[[[page_script]]]&#39;);
+    }
+
+    // 初始化阅读进度指示器
+    function initReadingProgress() {
+        // 创建进度条元素
+        const progressBar = document.createElement(&#39;div&#39;);
+        progressBar.className = &#39;reading-progress&#39;;
+        document.body.appendChild(progressBar);
+
+        // 监听滚动事件
+        window.addEventListener(&#39;scroll&#39;, function() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            
+            progressBar.style.width = Math.min(scrollPercent, 100) + &#39;%&#39;;
+        });
+    }
+
+    // 初始化平滑滚动
+    function initSmoothScrolling() {
+        // 为所有内部链接添加平滑滚动
+        const internalLinks = document.querySelectorAll(&#39;a[href^="#"]&#39;);
+        internalLinks.forEach(link => {
+            link.addEventListener(&#39;click&#39;, function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute(&#39;href&#39;).substring(1);
+                scrollToSection(targetId);
+            });
+        });
+    }
+
+    // 滚动到指定部分
+    window.scrollToSection = function(sectionId) {
+        const targetElement = document.getElementById(sectionId);
+        if (targetElement) {
+            const headerHeight = document.querySelector(&#39;.navbar&#39;)?.offsetHeight || 0;
+            const targetPosition = targetElement.offsetTop - headerHeight - 20;
+            
+            window.scrollTo({
+                top: targetPosition,
+                behavior: &#39;smooth&#39;
+            });
+
+            // 添加临时高亮效果
+            targetElement.style.transition = &#39;background-color 0.3s ease&#39;;
+            targetElement.style.backgroundColor = &#39;var(--color-primary, rgba(59, 130, 246, 0.1))&#39;;
+            setTimeout(() => {
+                targetElement.style.backgroundColor = &#39;&#39;;
+            }, 2000);
+        }
+    };
+
+    // 初始化工具提示
+    function initTooltips() {
+        // 为带有术语解释的元素添加交互
+        const terms = document.querySelectorAll(&#39;.term-popover&#39;);
+        terms.forEach(term => {
+            term.addEventListener(&#39;mouseenter&#39;, function() {
+                // 可以在这里添加更复杂的提示逻辑
+            });
+        });
+    }
+
+    // 显示搜索建议
+    function showSearchSuggestions(query) {
+        // 模拟搜索建议
+        const suggestions = [
+            &#39;如何创建图谱&#39;,
+            &#39;数据导入格式&#39;,
+            &#39;可视化设置&#39;,
+            &#39;分享图谱&#39;,
+            &#39;API 使用&#39;
+        ].filter(suggestion => 
+            suggestion.toLowerCase().includes(query.toLowerCase())
+        );
+
+        if (suggestions.length > 0) {
+            // 这里可以显示搜索建议下拉框
+            console.log(&#39;搜索建议:&#39;, suggestions);
+        }
+    }
+
+    // 隐藏搜索建议
+    function hideSearchSuggestions() {
+        // 隐藏搜索建议下拉框
+    }
+
+    // 导出全局函数供其他脚本使用
+    window.DocumentationPage = {
+        scrollToSection: window.scrollToSection,
+        performDocumentSearch: performDocumentSearch,
+        performFAQSearch: performFAQSearch
+    };
+
+})();
+</script>
+  
+
+<script>
+    setTimeout(() => {
+      Holder.run({
+        domain: "placehold.co"
+      })
+    }, 100)
+  </script></body></html>'></iframe>
+                    </div>
+                  </div>
+
+                </body>
+                </html>
+            
