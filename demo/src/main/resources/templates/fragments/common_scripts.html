@@ -172,6 +172,114 @@
         setTimeout(() => notification.remove(), 5000);
     };
 
+    // 缩略图生成工具
+    window.APP_GLOBALS.thumbnail = {
+        // 节点颜色映射
+        nodeColors: {
+            '人物': '#3b82f6',
+            '组织': '#10b981',
+            '地点': '#f59e0b',
+            '事件': '#ef4444',
+            '概念': '#8b5cf6',
+            '作品': '#ec4899',
+            '时间': '#06b6d4',
+            'default': '#6b7280'
+        },
+        
+        getNodeColor: function(type) {
+            return this.nodeColors[type] || this.nodeColors['default'];
+        },
+        
+        // 生成 SVG 缩略图字符串
+        generateSVG: function(nodes, edges, width, height) {
+            width = width || 300;
+            height = height || 200;
+            
+            if (!nodes || nodes.length === 0) {
+                return '<svg viewBox="0 0 ' + width + ' ' + height + '"><text x="50%" y="50%" text-anchor="middle" fill="#9ca3af">暂无数据</text></svg>';
+            }
+            
+            var nodePositions = {};
+            var centerX = width / 2, centerY = height / 2;
+            var radius = Math.min(width, height) / 2 - 20;
+            var self = this;
+            
+            // 计算节点位置（环形布局）
+            nodes.forEach(function(n, i) {
+                var angle = (2 * Math.PI * i) / nodes.length;
+                var nodeId = n.nodeId || n.name;
+                nodePositions[nodeId] = {
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                };
+            });
+            
+            var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '" style="background:#f8fafc">';
+            
+            // 绘制边
+            if (edges && edges.length > 0) {
+                edges.forEach(function(e) {
+                    var sourceId = e.sourceNodeId || e.source;
+                    var targetId = e.targetNodeId || e.target;
+                    var src = nodePositions[sourceId];
+                    var tgt = nodePositions[targetId];
+                    if (src && tgt) {
+                        svg += '<line x1="' + src.x + '" y1="' + src.y + '" x2="' + tgt.x + '" y2="' + tgt.y + '" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/>';
+                    }
+                });
+            }
+            
+            // 绘制节点
+            nodes.forEach(function(n) {
+                var nodeId = n.nodeId || n.name;
+                var pos = nodePositions[nodeId];
+                var color = self.getNodeColor(n.type || 'default');
+                svg += '<circle cx="' + pos.x + '" cy="' + pos.y + '" r="5" fill="' + color + '"/>';
+            });
+            
+            svg += '</svg>';
+            return svg;
+        },
+        
+        // 将 SVG 转换为 Blob（用于上传）
+        svgToBlob: function(svgString) {
+            return new Blob([svgString], { type: 'image/svg+xml' });
+        },
+        
+        // 将 SVG 转换为 PNG Blob（通过 Canvas）
+        svgToPngBlob: function(svgString, width, height, callback) {
+            width = width || 300;
+            height = height || 200;
+            
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext('2d');
+            
+            var img = new Image();
+            var svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            var url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                
+                canvas.toBlob(function(blob) {
+                    callback(blob);
+                }, 'image/png');
+            };
+            
+            img.onerror = function() {
+                URL.revokeObjectURL(url);
+                callback(null);
+            };
+            
+            img.src = url;
+        }
+    };
+
     // 收藏管理
     window.APP_GLOBALS.favorites = {
         items: JSON.parse(localStorage.getItem('favorites') || '[]'),

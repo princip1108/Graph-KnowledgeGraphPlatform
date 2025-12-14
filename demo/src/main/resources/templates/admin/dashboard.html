@@ -974,19 +974,132 @@ function previewCover(input) {
   }
 }
 
+// 缩略图生成工具（复用公共逻辑）
+var ThumbnailUtil = {
+  nodeColors: {
+    "人物": "#3b82f6", "组织": "#10b981", "地点": "#f59e0b",
+    "事件": "#ef4444", "概念": "#8b5cf6", "作品": "#ec4899",
+    "时间": "#06b6d4", "default": "#6b7280"
+  },
+  getNodeColor: function(type) {
+    return this.nodeColors[type] || this.nodeColors["default"];
+  },
+  generateSVG: function(nodes, edges, width, height) {
+    width = width || 400; height = height || 300;
+    if (!nodes || nodes.length === 0) {
+      return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + width + " " + height + "\"><rect width=\"100%\" height=\"100%\" fill=\"#f8fafc\"/><text x=\"50%\" y=\"50%\" text-anchor=\"middle\" fill=\"#9ca3af\">暂无数据</text></svg>";
+    }
+    var nodePositions = {};
+    var centerX = width / 2, centerY = height / 2;
+    var radius = Math.min(width, height) / 2 - 30;
+    var self = this;
+    nodes.forEach(function(n, i) {
+      var angle = (2 * Math.PI * i) / nodes.length;
+      var nodeId = n.nodeId || n.name;
+      nodePositions[nodeId] = { x: centerX + radius * Math.cos(angle), y: centerY + radius * Math.sin(angle) };
+    });
+    var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + width + " " + height + "\"><rect width=\"100%\" height=\"100%\" fill=\"#f8fafc\"/>";
+    if (edges && edges.length > 0) {
+      edges.forEach(function(e) {
+        var sourceId = e.sourceNodeId || e.source;
+        var targetId = e.targetNodeId || e.target;
+        var src = nodePositions[sourceId];
+        var tgt = nodePositions[targetId];
+        if (src && tgt) {
+          svg += "<line x1=\"" + src.x + "\" y1=\"" + src.y + "\" x2=\"" + tgt.x + "\" y2=\"" + tgt.y + "\" stroke=\"#cbd5e1\" stroke-width=\"1.5\" opacity=\"0.6\"/>";
+        }
+      });
+    }
+    nodes.forEach(function(n) {
+      var nodeId = n.nodeId || n.name;
+      var pos = nodePositions[nodeId];
+      var color = self.getNodeColor(n.type || "default");
+      svg += "<circle cx=\"" + pos.x + "\" cy=\"" + pos.y + "\" r=\"8\" fill=\"" + color + "\"/>";
+    });
+    svg += "</svg>";
+    return svg;
+  },
+  svgToPngBlob: function(svgString, width, height) {
+    return new Promise(function(resolve) {
+      width = width || 400; height = height || 300;
+      var canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      var ctx = canvas.getContext("2d");
+      var img = new Image();
+      var svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      var url = URL.createObjectURL(svgBlob);
+      img.onload = function() {
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(function(blob) { resolve(blob); }, "image/png");
+      };
+      img.onerror = function() { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  }
+};
+
+// 解析 JSON 文件获取节点和关系
+function parseGraphJson(jsonContent) {
+  try {
+    var data = JSON.parse(jsonContent);
+    return { nodes: data.nodes || [], relations: data.relations || [] };
+  } catch (e) {
+    console.error("JSON 解析失败:", e);
+    return { nodes: [], relations: [] };
+  }
+}
+
 async function submitUploadForm() {
   var fileInput = document.getElementById("graphFile");
   if (!fileInput.files || !fileInput.files[0]) { showNotification("请选择图谱文件", "warning"); return; }
+  
+  var coverInput = document.getElementById("graphCover");
+  var hasCover = coverInput.files && coverInput.files[0];
   var formData = new FormData();
   formData.append("file", fileInput.files[0]);
+  
   var name = document.getElementById("graphName").value.trim();
   var description = document.getElementById("graphDescription").value.trim();
   var status = document.getElementById("graphStatus").value;
-  var coverInput = document.getElementById("graphCover");
   if (name) formData.append("name", name);
   if (description) formData.append("description", description);
   formData.append("status", status);
-  if (coverInput.files && coverInput.files[0]) formData.append("cover", coverInput.files[0]);
+  
+  // 如果有封面直接使用，否则生成缩略图
+  if (hasCover) {
+    formData.append("cover", coverInput.files[0]);
+    console.log("[缩略图] 使用用户上传的封面");
+  } else {
+    // 读取 JSON 文件生成缩略图
+    try {
+      console.log("[缩略图] 开始读取 JSON 文件...");
+      var jsonContent = await fileInput.files[0].text();
+      console.log("[缩略图] JSON 内容长度:", jsonContent.length);
+      var graphData = parseGraphJson(jsonContent);
+      console.log("[缩略图] 解析结果 - 节点:", graphData.nodes.length, "关系:", graphData.relations.length);
+      if (graphData.nodes.length > 0) {
+        console.log("[缩略图] 节点示例:", graphData.nodes[0]);
+        var svgString = ThumbnailUtil.generateSVG(graphData.nodes, graphData.relations, 400, 300);
+        console.log("[缩略图] SVG 长度:", svgString.length);
+        var pngBlob = await ThumbnailUtil.svgToPngBlob(svgString, 400, 300);
+        console.log("[缩略图] PNG Blob:", pngBlob);
+        if (pngBlob) {
+          formData.append("cover", pngBlob, "thumbnail.png");
+          console.log("[缩略图] 已添加到 FormData");
+        } else {
+          console.error("[缩略图] PNG Blob 生成失败");
+        }
+      } else {
+        console.log("[缩略图] 没有节点，跳过生成");
+      }
+    } catch (e) {
+      console.error("[缩略图] 生成失败:", e);
+    }
+  }
+  
   try {
     showNotification("正在上传...", "info");
     var response = await fetch("/api/upload/graph", { method: "POST", credentials: "include", body: formData });

@@ -37,7 +37,6 @@ public class NodeEntity {
     private String name;
     private String type;
     private String description;  // 节点简介/描述
-    private Integer importance;
     private Integer outDegree;
     private Integer inDegree;
     private Integer totalDegree;

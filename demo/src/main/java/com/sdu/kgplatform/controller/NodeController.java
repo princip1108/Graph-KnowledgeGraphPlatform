@@ -401,13 +401,13 @@ public class NodeController {
     @DeleteMapping("/relations/{relationId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> deleteRelation(@PathVariable Integer graphId,
-                                            @PathVariable Long relationId) {
+                                            @PathVariable String relationId) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
 
         try {
-            relationshipService.deleteRelationship(relationId);
+            relationshipService.deleteRelationshipByElementId(relationId);
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "关系已删除"

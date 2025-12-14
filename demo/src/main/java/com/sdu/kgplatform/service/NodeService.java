@@ -54,7 +54,6 @@ public class NodeService {
         node.setName(dto.getName());
         node.setType(dto.getType());
         node.setDescription(dto.getDescription());
-        node.setImportance(dto.getImportance() != null ? dto.getImportance() : 1);
         node.setOutDegree(0);
         node.setInDegree(0);
         node.setTotalDegree(0);
@@ -88,7 +87,6 @@ public class NodeService {
             node.setName(dto.getName());
             node.setType(dto.getType());
             node.setDescription(dto.getDescription());
-            node.setImportance(dto.getImportance() != null ? dto.getImportance() : 1);
             node.setOutDegree(0);
             node.setInDegree(0);
             node.setTotalDegree(0);
@@ -201,10 +199,6 @@ public class NodeService {
             node.setDescription(dto.getDescription());
         }
 
-        if (dto.getImportance() != null) {
-            node.setImportance(dto.getImportance());
-        }
-
         NodeEntity saved = nodeRepository.save(node);
         return convertToDto(saved);
     }
@@ -264,7 +258,6 @@ public class NodeService {
                 .name(node.getName())
                 .type(node.getType())
                 .description(node.getDescription())
-                .importance(node.getImportance())
                 .outDegree(node.getOutDegree())
                 .inDegree(node.getInDegree())
                 .totalDegree(node.getTotalDegree())

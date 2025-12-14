@@ -308,10 +308,6 @@ public class FileUploadController {
                         NodeDto nodeDto = new NodeDto();
                         nodeDto.setName(nodeName);
                         nodeDto.setType(nodeType);
-                        Object importance = nodeJson.get("importance");
-                        if (importance instanceof Number) {
-                            nodeDto.setImportance(((Number) importance).intValue());
-                        }
                         
                         try {
                             NodeDto created = nodeService.createNode(graphId, nodeDto);

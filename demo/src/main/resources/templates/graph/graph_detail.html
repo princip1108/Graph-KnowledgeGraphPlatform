@@ -222,6 +222,7 @@ border-width: var(--border);
     transition: width 0.3s ease, margin-left 0.3s ease;
     position: relative;
     overflow: hidden;
+    z-index: 15;
 }
 
 #leftSidebar.collapsed {
@@ -244,6 +245,7 @@ border-width: var(--border);
     transition: width 0.3s ease, margin-right 0.3s ease;
     position: relative;
     overflow: hidden;
+    z-index: 15;
 }
 
 #rightSidebar.collapsed {
@@ -361,13 +363,16 @@ border-width: var(--border);
 
 /* Graph node styles */
 .graph-node {
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    cursor: grab;
 }
 
 .graph-node:hover {
-    transform: scale(1.1);
-    filter: brightness(1.1);
+    opacity: 0.85;
+}
+
+.node-label {
+    pointer-events: none;
+    user-select: none;
 }
 
 .graph-node.selected {
@@ -380,6 +385,7 @@ border-width: var(--border);
     stroke: var(--color-base-content);
     stroke-opacity: 0.5;
     stroke-width: 1.5px;
+    pointer-events: none;
     transition: all 0.2s ease-in-out;
 }
 
@@ -791,83 +797,101 @@ border-width: var(--border);
             </div>
           </div>
           <!-- Search in Graph (with Advanced Search integrated) -->
-          <div class="p-6 border-b academic-border">
-            <div class="label">
-                <span class="label-text text-sm font-medium">图谱内搜索</span>
+          <div class="border-b academic-border">
+            <div class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" id="graphSearchToggle">
+              <div class="collapse-title text-sm font-medium flex items-center gap-2 py-4 px-6">
+                <span class="iconify text-primary" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                图谱内搜索
               </div>
-            <div class="space-y-3">
-              <div class="join w-full">
-                <select id="searchTargetSelect" class="select select-bordered select-sm join-item w-20" onchange="updateSearchPlaceholder()">
-                  <option value="node">节点</option>
-                  <option value="relation">关系</option>
-                </select>
-                <input type="text" placeholder="搜索节点名称..." id="graphSearchInput" class="input input-bordered input-sm join-item flex-1 focus-primary">
-                <button class="btn btn-primary btn-sm join-item" onclick="searchInGraph()">
-                  <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
-                </button>
-              </div>
-              <div class="form-control">
-                <label class="label py-1"><span class="label-text text-xs">筛选与排序</span></label>
-                <select id="searchTypeFilter" class="select select-bordered select-sm" onchange="handleFilterSort(this.value)">
-                  <option value="">全部类型</option>
-                  <optgroup label="排序方式">
-                    <option value="sort_degree">按度数排序</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div class="form-control">
-                <label class="label py-1"><span class="label-text text-xs">路径查询</span></label>
-                <select id="pathQuerySelect" class="select select-bordered select-sm" onchange="handlePathQuery(this.value)">
-                  <option value="">选择查询方式</option>
-                  <option value="relation">关系寻路</option>
-                  <option value="shortest">最短路径</option>
-                </select>
-              </div>
-              <div class="form-control">
-                <label class="label py-1"><span class="label-text text-xs">邻居深度</span></label>
-                <input type="range" min="1" max="5" value="2" id="depthRange" class="range range-secondary range-sm">
-                <div class="w-full flex justify-between text-xs px-2 text-base-content/60">
-                  <span>1</span><span>3</span><span>5</span>
-                </div>
-              </div>
-              <div class="form-control">
-                <label class="label py-1"><span class="label-text text-xs">邻居方向</span></label>
-                <select id="neighborDirectionSelect" class="select select-bordered select-sm" onchange="handleNeighborDirectionChange()">
-                  <option value="all">所有邻居</option>
-                  <option value="out">出边邻居</option>
-                  <option value="in">入边邻居</option>
-                </select>
-              </div>
-              <!-- Search Results -->
-              <div id="searchResultsPanel" class="hidden">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs text-base-content/60">搜索结果 (<span id="searchResultCount">0</span>)</span>
-                  <button class="btn btn-ghost btn-xs" onclick="resetGraphView()" title="恢复完整视图">
-                    <span class="iconify" data-icon="heroicons:arrow-path" data-width="12"></span>
-                    恢复
-                  </button>
-                </div>
-                <div id="searchResultList" class="max-h-40 overflow-y-auto space-y-1 bg-base-100 rounded-lg p-2 border academic-border">
+              <div class="collapse-content px-6 pb-4">
+                <div class="space-y-3">
+                  <div class="join w-full">
+                    <select id="searchTargetSelect" class="select select-bordered select-sm join-item w-20" onchange="updateSearchPlaceholder()">
+                      <option value="node">节点</option>
+                      <option value="relation">关系</option>
+                    </select>
+                    <input type="text" placeholder="搜索节点名称..." id="graphSearchInput" class="input input-bordered input-sm join-item flex-1 focus-primary">
+                    <button class="btn btn-primary btn-sm join-item" onclick="searchInGraph()">
+                      <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                    </button>
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">筛选与排序</span></label>
+                    <select id="searchTypeFilter" class="select select-bordered select-sm" onchange="handleFilterSort(this.value)">
+                      <option value="">全部类型</option>
+                      <optgroup label="排序方式">
+                        <option value="sort_degree">按度数排序</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">路径查询</span></label>
+                    <select id="pathQuerySelect" class="select select-bordered select-sm" onchange="handlePathQuery(this.value)">
+                      <option value="">选择查询方式</option>
+                      <option value="relation">关系寻路</option>
+                      <option value="shortest">最短路径</option>
+                    </select>
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">邻居深度</span></label>
+                    <input type="range" min="1" max="5" value="2" id="depthRange" class="range range-secondary range-sm">
+                    <div class="w-full flex justify-between text-xs px-2 text-base-content/60">
+                      <span>1</span><span>3</span><span>5</span>
+                    </div>
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">邻居方向</span></label>
+                    <select id="neighborDirectionSelect" class="select select-bordered select-sm" onchange="handleNeighborDirectionChange()">
+                      <option value="all">所有邻居</option>
+                      <option value="out">出边邻居</option>
+                      <option value="in">入边邻居</option>
+                    </select>
+                  </div>
+                  <!-- Search Results -->
+                  <div id="searchResultsPanel" class="hidden">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs text-base-content/60">搜索结果 (<span id="searchResultCount">0</span>)</span>
+                      <button class="btn btn-ghost btn-xs" onclick="resetGraphView()" title="恢复完整视图">
+                        <span class="iconify" data-icon="heroicons:arrow-path" data-width="12"></span>
+                        恢复
+                      </button>
+                    </div>
+                    <div id="searchResultList" class="max-h-40 overflow-y-auto space-y-1 bg-base-100 rounded-lg p-2 border academic-border">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           <!-- Entity Types -->
-          <div class="p-6 border-b academic-border">
-            <div class="label">
-              <span class="label-text text-sm font-medium">实体类型</span>
-            </div>
-            <div id="entityTypeFilters" class="space-y-3">
-              <div class="text-sm text-base-content/50">加载中...</div>
+          <div class="border-b academic-border">
+            <div class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" id="entityTypeToggle">
+              <div class="collapse-title text-sm font-medium flex items-center gap-2 py-4 px-6">
+                <span class="iconify text-primary" data-icon="heroicons:cube" data-width="16"></span>
+                实体类型
+              </div>
+              <div class="collapse-content px-6 pb-4">
+                <div id="entityTypeFilters" class="space-y-3">
+                  <div class="text-sm text-base-content/50">加载中...</div>
+                </div>
+              </div>
             </div>
           </div>
           <!-- Relationship Types -->
-          <div class="p-6 border-b academic-border">
-            <div class="label">
-              <span class="label-text text-sm font-medium">关系类型</span>
-            </div>
-            <div id="relationTypeFilters" class="space-y-3">
-              <div class="text-sm text-base-content/50">加载中...</div>
+          <div class="border-b academic-border">
+            <div class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" id="relationTypeToggle">
+              <div class="collapse-title text-sm font-medium flex items-center gap-2 py-4 px-6">
+                <span class="iconify text-primary" data-icon="heroicons:arrow-right-circle" data-width="16"></span>
+                关系类型
+              </div>
+              <div class="collapse-content px-6 pb-4">
+                <div id="relationTypeFilters" class="space-y-3">
+                  <div class="text-sm text-base-content/50">加载中...</div>
+                </div>
+              </div>
             </div>
           </div>
           <!-- Node Management (Collapsible, Auth Required) -->
@@ -908,12 +932,12 @@ border-width: var(--border);
           </div>
         </div>
         </div>
-        <!-- Left Sidebar Toggle Button -->
-        <button id="leftSidebarToggle" class="absolute left-[320px] top-1/2 -translate-y-1/2 z-20 bg-base-200 border border-base-300 rounded-r-lg p-1 hover:bg-base-300 transition-all" onclick="toggleLeftSidebar()" title="收起/展开左侧栏">
+        <!-- Left Sidebar Toggle Button (fixed定位，JS动态计算垂直位置) -->
+        <button id="leftSidebarToggle" class="fixed z-20 bg-base-200 border border-base-300 rounded-r-lg p-1 hover:bg-base-300 transition-all" style="left: 320px; top: 50%; transform: translateY(-50%);" onclick="toggleLeftSidebar()" title="收起/展开左侧栏">
           <span class="iconify text-base-content" data-icon="heroicons:chevron-left" data-width="16" id="leftToggleIcon"></span>
         </button>
         <!-- Left Resize Handle -->
-        <div id="leftResizeHandle" class="absolute left-[320px] top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-primary/30 z-10"></div>
+        <div id="leftResizeHandle" class="fixed w-1 cursor-col-resize bg-transparent hover:bg-primary/30 z-10" style="left: 320px; top: 64px; bottom: 0;"></div>
         <!-- Main Graph Area -->
         <div class="flex-1 flex flex-col">
           <!-- Graph Statistics Section -->
@@ -950,10 +974,10 @@ border-width: var(--border);
             </div>
           </div>
         </div>
-        <!-- Right Resize Handle -->
-        <div id="rightResizeHandle" class="absolute right-[316px] top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-primary/30 z-10"></div>
-        <!-- Right Sidebar Toggle Button -->
-        <button id="rightSidebarToggle" class="absolute right-[300px] top-1/2 -translate-y-1/2 z-20 bg-base-200 border border-base-300 rounded-l-lg p-1 hover:bg-base-300 transition-all" onclick="toggleRightSidebar()" title="收起/展开右侧栏">
+        <!-- Right Resize Handle (fixed定位) -->
+        <div id="rightResizeHandle" class="fixed w-1 cursor-col-resize bg-transparent hover:bg-primary/30 z-10" style="right: 356px; top: 64px; bottom: 0;"></div>
+        <!-- Right Sidebar Toggle Button (fixed定位) -->
+        <button id="rightSidebarToggle" class="fixed z-20 bg-base-200 border border-base-300 rounded-l-lg p-1 hover:bg-base-300 transition-all" style="right: 356px; top: 50%; transform: translateY(-50%);" onclick="toggleRightSidebar()" title="收起/展开右侧栏">
           <span class="iconify text-base-content" data-icon="heroicons:chevron-right" data-width="16" id="rightToggleIcon"></span>
         </button>
         <!-- Right Sidebar - Node Details -->
@@ -1157,31 +1181,24 @@ border-width: var(--border);
           </button>
         </form>
         <h3 class="font-bold text-lg mb-6">下载图谱</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="label"><span class="label-text">下载链接</span></label>
-            <div class="join w-full">
-              <input type="text" id="downloadLink" readonly="" value="" class="input input-bordered join-item flex-1"><button id="copyDownloadBtn" class="btn btn-primary join-item" onclick="copyDownloadLink()">
-                <span class="iconify" data-icon="heroicons:clipboard-document" data-width="16"></span>
-                复制
-              </button>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <div class="text-sm font-medium text-base-content">可用格式：</div>
-            <div class="flex gap-2">
-              <button class="btn btn-outline btn-sm" onclick="downloadFormat(&#39;json&#39;)">
-                <span class="iconify" data-icon="heroicons:document-text" data-width="16"></span>
-                JSON</button><button class="btn btn-outline btn-sm" onclick="downloadFormat(&#39;csv&#39;)">
-                <span class="iconify" data-icon="heroicons:table-cells" data-width="16"></span>
-                CSV</button><button class="btn btn-outline btn-sm" onclick="downloadFormat(&#39;png&#39;)">
-                <span class="iconify" data-icon="heroicons:photo" data-width="16"></span>
-                PNG
-              </button>
-            </div>
-          </div>
-          <div class="text-sm text-base-content/70">
-            选择格式后将生成对应的下载链接
+        <div class="space-y-3">
+          <p class="text-sm text-base-content/70">选择下载格式：</p>
+          <div class="flex flex-col gap-2">
+            <button class="btn btn-outline justify-start gap-3" onclick="downloadFormat(&#39;json&#39;)">
+              <span class="iconify" data-icon="heroicons:document-text" data-width="20"></span>
+              <span>JSON 格式</span>
+              <span class="text-xs text-base-content/50 ml-auto">可再次导入</span>
+            </button>
+            <button class="btn btn-outline justify-start gap-3" onclick="downloadFormat(&#39;csv&#39;)">
+              <span class="iconify" data-icon="heroicons:table-cells" data-width="20"></span>
+              <span>CSV 格式</span>
+              <span class="text-xs text-base-content/50 ml-auto">Excel 兼容</span>
+            </button>
+            <button class="btn btn-outline justify-start gap-3" onclick="downloadFormat(&#39;png&#39;)">
+              <span class="iconify" data-icon="heroicons:photo" data-width="20"></span>
+              <span>PNG 图片</span>
+              <span class="text-xs text-base-content/50 ml-auto">可视化预览</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1219,17 +1236,13 @@ border-width: var(--border);
               <label class="label"><span class="label-text">节点简介（可选）</span></label>
               <textarea id="singleNodeDescription" class="textarea textarea-bordered h-20" placeholder="输入节点的简介描述..."></textarea>
             </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">重要性（1-10）</span></label>
-              <input type="number" id="singleNodeImportance" class="input input-bordered" min="1" max="10" value="5">
-            </div>
           </div>
           
           <!-- Batch Import Form -->
           <div id="batchImportForm" class="space-y-3 hidden">
             <div class="alert alert-info">
               <span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>
-              <span>每行一个节点，格式: 节点名称,类型,简介,重要性(可选)</span>
+              <span>每行一个节点，格式: 节点名称,类型,简介</span>
             </div>
             <textarea id="batchImportInput" class="textarea textarea-bordered w-full h-40" placeholder="节点1,概念,这是节点1的简介,5
 节点2,算法,这是节点2的简介,3
@@ -1478,10 +1491,6 @@ border-width: var(--border);
             <label class="label"><span class="label-text">节点简介</span></label>
             <textarea id="editNodeDescription" class="textarea textarea-bordered h-24" placeholder="输入节点的简介描述..."></textarea>
           </div>
-          <div class="form-control">
-            <label class="label"><span class="label-text">重要性（1-10）</span></label>
-            <input type="number" id="editNodeImportance" class="input input-bordered" min="1" max="10" value="5">
-          </div>
           <div class="flex justify-end gap-2">
             <button class="btn btn-ghost" onclick="document.getElementById(&#39;editNodeModal&#39;).close()">取消</button>
             <button class="btn btn-primary" onclick="executeEditNode()">
@@ -1707,8 +1716,8 @@ window.APP_GLOBALS.user.init();
         &#39;thumbnail&#39;: { name: &#39;图谱缩略图&#39; }
     };
 
-    // Get graph ID from URL
-    function getGraphIdFromUrl() {
+    // Get graph ID or share link from URL
+    function getGraphParamsFromUrl() {
         // Check parent window URL first (iframe case)
         let url = window.location.href;
         try {
@@ -1718,7 +1727,32 @@ window.APP_GLOBALS.user.init();
         } catch(e) { /* cross-origin, use current */ }
         
         const urlParams = new URLSearchParams(url.split(&#39;?&#39;)[1] || &#39;&#39;);
-        return urlParams.get(&#39;id&#39;);
+        return {
+            id: urlParams.get(&#39;id&#39;),
+            share: urlParams.get(&#39;share&#39;)
+        };
+    }
+    
+    // 兼容旧函数
+    function getGraphIdFromUrl() {
+        return getGraphParamsFromUrl().id;
+    }
+    
+    // 根据分享链接加载图谱
+    async function loadGraphByShareLink(shareLink) {
+        try {
+            const response = await fetch(`/api/graph/share/${shareLink}`);
+            if (!response.ok) {
+                throw new Error(&#39;分享链接无效&#39;);
+            }
+            const graphInfo = await response.json();
+            // 使用获取到的 graphId 加载完整数据
+            return await loadGraphData(graphInfo.graphId);
+        } catch (e) {
+            console.error(&#39;加载分享图谱失败:&#39;, e);
+            window.showNotification(&#39;分享链接无效或已过期&#39;, &#39;error&#39;);
+            return null;
+        }
     }
 
     // Load graph data from API
@@ -1994,13 +2028,18 @@ window.APP_GLOBALS.user.init();
 
     // Initialize page
     document.addEventListener(&#39;DOMContentLoaded&#39;, async function() {
-        const graphId = getGraphIdFromUrl();
+        const params = getGraphParamsFromUrl();
+        let data = null;
         
-        if (graphId) {
-            const data = await loadGraphData(graphId);
-            if (data) {
-                updatePageWithGraphData(data);
-            }
+        // 优先处理分享链接
+        if (params.share) {
+            data = await loadGraphByShareLink(params.share);
+        } else if (params.id) {
+            data = await loadGraphData(params.id);
+        }
+        
+        if (data) {
+            updatePageWithGraphData(data);
         }
         
         initializeGraph();
@@ -2012,6 +2051,10 @@ window.APP_GLOBALS.user.init();
         initializeChart();
         checkAndShowEditSection();
         updateSearchTypeFilter();
+        
+        // 初始化侧边栏拖拽
+        initResizeHandle();
+        initRightResizeHandle();
     });
 
 // Chart selection function
@@ -2069,19 +2112,44 @@ window.APP_GLOBALS.user.init();
             return;
         }
         
-        let html = &#39;&lt;div class="flex items-center justify-center h-full gap-6 p-4"&gt;&#39;;
-        html += &#39;&lt;div class="flex flex-col gap-2"&gt;&#39;;
         const total = nodes.length;
+        
+        // 获取容器尺寸，计算自适应布局
+        const containerWidth = container.offsetWidth || 400;
+        const containerHeight = container.offsetHeight || 150;
+        const pieSize = 96; // 饼图尺寸
+        const padding = 32; // 内边距
+        const gap = 16; // 间距
+        
+        // 可用于图例的宽度和高度
+        const legendWidth = containerWidth - pieSize - padding - gap;
+        const legendHeight = containerHeight - padding;
+        
+        // 估算每个图例项的尺寸
+        const itemWidth = 120; // 每个图例项估算宽度
+        const itemHeight = 20; // 每个图例项高度
+        
+        // 计算最大列数和行数
+        const maxColumns = Math.max(1, Math.floor(legendWidth / itemWidth));
+        const maxRows = Math.max(1, Math.floor(legendHeight / itemHeight));
+        const maxVisibleItems = maxColumns * maxRows;
+        
+        // 根据数据量和可用空间计算实际列数
+        const columnCount = Math.min(maxColumns, Math.max(1, Math.ceil(data.length / maxRows)));
+        const needScroll = data.length &gt; maxVisibleItems;
+        
+        let html = &#39;&lt;div class="flex items-center justify-center h-full gap-4 p-4"&gt;&#39;;
+        html += &#39;&lt;div class="grid gap-x-3 gap-y-1&#39; + (needScroll ? &#39; overflow-y-auto&#39; : &#39;&#39;) + &#39;" style="grid-template-columns: repeat(&#39; + columnCount + &#39;, auto);&#39; + (needScroll ? &#39; max-height: &#39; + legendHeight + &#39;px;&#39; : &#39;&#39;) + &#39;"&gt;&#39;;
         data.forEach(function(item) {
             const percent = ((item.value / total) * 100).toFixed(1);
-            html += &#39;&lt;div class="flex items-center gap-2 text-sm"&gt;&#39;;
-            html += &#39;&lt;div class="w-3 h-3 rounded-full" style="background-color: &#39; + item.color + &#39;;"&gt;&lt;/div&gt;&#39;;
-            html += &#39;&lt;span&gt;&#39; + item.name + &#39;&lt;/span&gt;&#39;;
-            html += &#39;&lt;span class="text-base-content/50"&gt;&#39; + item.value + &#39; (&#39; + percent + &#39;%)&lt;/span&gt;&#39;;
+            html += &#39;&lt;div class="flex items-center gap-1 text-xs whitespace-nowrap"&gt;&#39;;
+            html += &#39;&lt;div class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: &#39; + item.color + &#39;;"&gt;&lt;/div&gt;&#39;;
+            html += &#39;&lt;span class="truncate" style="max-width: 80px;"&gt;&#39; + item.name + &#39;&lt;/span&gt;&#39;;
+            html += &#39;&lt;span class="text-base-content/50"&gt;&#39; + item.value + &#39;(&#39; + percent + &#39;%)&lt;/span&gt;&#39;;
             html += &#39;&lt;/div&gt;&#39;;
         });
         html += &#39;&lt;/div&gt;&#39;;
-        html += &#39;&lt;div class="relative w-32 h-32"&gt;&#39;;
+        html += &#39;&lt;div class="relative flex-shrink-0" style="width: &#39; + pieSize + &#39;px; height: &#39; + pieSize + &#39;px;"&gt;&#39;;
         html += renderPieSVG(data, total);
         html += &#39;&lt;/div&gt;&#39;;
         html += &#39;&lt;/div&gt;&#39;;
@@ -2148,8 +2216,23 @@ window.APP_GLOBALS.user.init();
 
     // 3. 核心节点排行榜
     function renderCoreNodes(container, nodes) {
-        const sorted = [...nodes].sort(function(a, b) {
-            return (b.totalDegree || 0) - (a.totalDegree || 0);
+        const edges = currentGraphData.edges || [];
+        
+        // 根据边计算每个节点的度数
+        const degreeMap = {};
+        nodes.forEach(function(n) { degreeMap[n.nodeId] = 0; });
+        edges.forEach(function(e) {
+            if (degreeMap[e.sourceNodeId] !== undefined) degreeMap[e.sourceNodeId]++;
+            if (degreeMap[e.targetNodeId] !== undefined) degreeMap[e.targetNodeId]++;
+        });
+        
+        // 将度数附加到节点并排序
+        const nodesWithDegree = nodes.map(function(n) {
+            return { ...n, calculatedDegree: degreeMap[n.nodeId] || 0 };
+        });
+        
+        const sorted = nodesWithDegree.sort(function(a, b) {
+            return b.calculatedDegree - a.calculatedDegree;
         }).slice(0, 10);
         
         if (sorted.length === 0) {
@@ -2157,11 +2240,11 @@ window.APP_GLOBALS.user.init();
             return;
         }
         
-        const maxDegree = sorted[0].totalDegree || 1;
+        const maxDegree = sorted[0].calculatedDegree || 1;
         let html = &#39;&lt;div class="p-4 overflow-y-auto h-full"&gt;&#39;;
         html += &#39;&lt;div class="text-xs text-base-content/50 mb-2"&gt;按连接数排序 (Top 10)&lt;/div&gt;&#39;;
         sorted.forEach(function(n, i) {
-            const degree = n.totalDegree || 0;
+            const degree = n.calculatedDegree;
             const percent = (degree / maxDegree) * 100;
             html += &#39;&lt;div class="flex items-center gap-2 mb-2"&gt;&#39;;
             html += &#39;&lt;span class="w-5 text-xs text-base-content/50"&gt;&#39; + (i + 1) + &#39;&lt;/span&gt;&#39;;
@@ -2248,7 +2331,17 @@ window.APP_GLOBALS.user.init();
         });
         
         svg += &#39;&lt;/svg&gt;&#39;;
-        container.innerHTML = &#39;&lt;div class="p-2 h-full"&gt;&#39; + svg + &#39;&lt;/div&gt;&#39;;
+        
+        // 添加节点数和关系数标注
+        const statsHtml = &#39;&lt;div class="text-center text-xs text-base-content/60 mt-2"&gt;&#39; +
+            &#39;&lt;span class="mr-3"&gt;节点: &#39; + nodes.length + &#39;&lt;/span&gt;&#39; +
+            &#39;&lt;span&gt;关系: &#39; + edges.length + &#39;&lt;/span&gt;&#39; +
+            &#39;&lt;/div&gt;&#39;;
+        
+        container.innerHTML = &#39;&lt;div class="p-2 h-full flex flex-col"&gt;&#39; +
+            &#39;&lt;div class="flex-1"&gt;&#39; + svg + &#39;&lt;/div&gt;&#39; +
+            statsHtml +
+            &#39;&lt;/div&gt;&#39;;
     }
 
     // Initialize chart display
@@ -2296,38 +2389,34 @@ window.APP_GLOBALS.user.init();
         }, 500);
     }
 
-    // Render graph from real data
-    function renderGraphFromData() {
-        const canvas = document.getElementById(&#39;graphCanvas&#39;);
-        const nodes = currentGraphData.nodes || [];
-        const edges = currentGraphData.edges || [];
-        
-        if (nodes.length === 0) {
-            canvas.innerHTML = `
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="text-center">
-                        <p class="text-base-content/70">该图谱暂无节点数据</p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
+    // ==================== 布局配置 ====================
+    const LAYOUT_CONFIG = {
+        nodeRadius: 14,              // 节点圆半径
+        minNodeSpacing: 80,          // 同层节点最小间距
+        minLayerGap: 100,            // 层级最小间距
+        staggerOffset: 18,           // 奇偶节点交错距离
+        maxFanAngle: Math.PI * 1.5,  // 子节点扇形最大角度（270°）
+        minAnglePerChild: 0.3,       // 每个子节点最小角度
+        maxLevelDepth: 4,            // 单中心最大层级深度
+        componentGap: 150,           // 连通分量间距
+        viewBoxPadding: 60,          // viewBox 边界 padding
+        isolatedNodeSpacing: 60,     // 孤立节点间距
+    };
 
-        canvas.innerHTML = &#39;&#39;;
-        
-        // Calculate positions using hierarchical radial layout
-        const width = canvas.clientWidth || 800;
-        const height = canvas.clientHeight || 600;
-        const centerX = width / 2;
-        const centerY = height / 2;
-        
-        // 构建邻接表并计算每个节点的连接数
+    // ==================== 图结构构建 ====================
+    
+    /**
+     * 构建邻接表和连接度统计
+     */
+    function buildGraphStructure(nodes, edges) {
         const adjacencyList = {};
         const connectionCount = {};
+        
         nodes.forEach(n =&gt; {
             adjacencyList[n.nodeId] = [];
             connectionCount[n.nodeId] = 0;
         });
+        
         edges.forEach(edge =&gt; {
             if (adjacencyList[edge.sourceNodeId]) {
                 adjacencyList[edge.sourceNodeId].push(edge.targetNodeId);
@@ -2339,232 +2428,682 @@ window.APP_GLOBALS.user.init();
             }
         });
         
-        // 找出所有连通分量
-        const allVisited = new Set();
+        return { adjacencyList, connectionCount };
+    }
+
+    /**
+     * 识别所有连通分量
+     */
+    function findConnectedComponents(nodes, adjacencyList, connectionCount) {
+        const visited = new Set();
         const components = [];
         
         nodes.forEach(n =&gt; {
-            if (allVisited.has(n.nodeId)) return;
+            if (visited.has(n.nodeId)) return;
             
-            // BFS找出该连通分量的所有节点
+            // BFS 找出该连通分量的所有节点
             const component = [];
             const queue = [n.nodeId];
-            allVisited.add(n.nodeId);
+            visited.add(n.nodeId);
             
             while (queue.length &gt; 0) {
                 const nodeId = queue.shift();
                 component.push(nodeId);
                 (adjacencyList[nodeId] || []).forEach(neighbor =&gt; {
-                    if (!allVisited.has(neighbor)) {
-                        allVisited.add(neighbor);
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
                         queue.push(neighbor);
                     }
                 });
             }
             
-            // 找出该分量中连接度最高的节点作为中心
-            let centerNodeId = component[0];
-            let maxConn = 0;
-            component.forEach(nodeId =&gt; {
-                if (connectionCount[nodeId] &gt; maxConn) {
-                    maxConn = connectionCount[nodeId];
-                    centerNodeId = nodeId;
-                }
-            });
-            
-            components.push({ nodes: component, center: centerNodeId, size: component.length });
+            components.push({ nodes: component, size: component.length });
         });
         
-        // 按大小排序，大的分量放前面
+        // 按大小排序，大的在前
         components.sort((a, b) =&gt; b.size - a.size);
+        return components;
+    }
+
+    // ==================== 统计分析 ====================
+    
+    /**
+     * 计算图的统计指标
+     */
+    function calculateGraphStats(componentNodes, connectionCount) {
+        const degrees = componentNodes.map(id =&gt; connectionCount[id] || 0);
+        const n = degrees.length;
+        if (n === 0) return { mean: 0, stdDev: 0, threshold: 0 };
         
-        // 根据分量数量和大小计算布局区域
-        const nodePositions = {};
-        const componentCount = components.length;
-        const totalNodes = nodes.length;
+        const sum = degrees.reduce((a, b) =&gt; a + b, 0);
+        const mean = sum / n;
         
-        // 区分大分量（>=5节点）和小分量（<5节点）
-        const largeComps = components.filter(c =&gt; c.size &gt;= 5);
-        const smallComps = components.filter(c =&gt; c.size &lt; 5);
+        const squaredDiffs = degrees.map(d =&gt; Math.pow(d - mean, 2));
+        const variance = squaredDiffs.reduce((a, b) =&gt; a + b, 0) / n;
+        const stdDev = Math.sqrt(variance);
         
-        // 大分量按权重水平分配主区域（如果有小分量，主区域只占上部分）
-        const componentAreas = [];
-        const largeWeights = largeComps.map(c =&gt; Math.sqrt(c.size));
-        const largeTotalWeight = largeWeights.reduce((a, b) =&gt; a + b, 0) || 1;
+        // 中心节点阈值：平均值 + 0.5倍标准差（降低门槛让更多节点可成为中心）
+        const threshold = mean + stdDev * 0.5;
         
-        // 如果有小分量，主区域高度缩小，给下方留空间
-        const mainAreaHeight = smallComps.length > 0 ? height * 0.7 : height;
-        const mainAreaCenterY = smallComps.length > 0 ? mainAreaHeight / 2 : height / 2;
+        return { mean, stdDev, threshold };
+    }
+    
+    /**
+     * 计算两节点间的BFS距离
+     */
+    function bfsDistance(startId, endId, adjacencyList) {
+        if (startId === endId) return 0;
         
-        let currentX = 0;
-        largeComps.forEach((comp, idx) =&gt; {
-            const ratio = largeWeights[idx] / largeTotalWeight;
-            const compWidth = width * ratio;
-            componentAreas.push({
-                x: currentX + compWidth / 2,
-                y: mainAreaCenterY,
-                w: compWidth,
-                h: mainAreaHeight
-            });
-            currentX += compWidth;
+        const visited = new Set([startId]);
+        const queue = [{ nodeId: startId, dist: 0 }];
+        
+        while (queue.length &gt; 0) {
+            const { nodeId, dist } = queue.shift();
+            
+            for (const neighbor of (adjacencyList[nodeId] || [])) {
+                if (neighbor === endId) return dist + 1;
+                if (!visited.has(neighbor)) {
+                    visited.add(neighbor);
+                    queue.push({ nodeId: neighbor, dist: dist + 1 });
+                }
+            }
+        }
+        return Infinity;
+    }
+
+    // ==================== 中心节点确定 ====================
+    
+    /**
+     * 动态确定中心节点
+     * - 根据节点数量确定中心数量
+     * - 根据连接度和距离选择中心
+     */
+    function determineCenters(componentNodes, adjacencyList, connectionCount, specifiedCenter = null) {
+        const n = componentNodes.length;
+        const stats = calculateGraphStats(componentNodes, connectionCount);
+        
+        // 1. 确定中心数量
+        let centerCount;
+        if (n &lt;= 25) centerCount = 1;
+        else if (n &lt;= 60) centerCount = 2;
+        else if (n &lt;= 100) centerCount = 3;
+        else centerCount = 4;
+        
+        // 2. 按连接度排序
+        const sortedNodes = [...componentNodes].sort((a, b) =&gt; 
+            (connectionCount[b] || 0) - (connectionCount[a] || 0)
+        );
+        
+        const centers = [];
+        
+        // 3. 选择第一中心
+        if (specifiedCenter &amp;&amp; componentNodes.includes(specifiedCenter)) {
+            // 如果指定了中心且连接度足够高，使用它
+            if (connectionCount[specifiedCenter] &gt;= stats.threshold) {
+                centers.push(specifiedCenter);
+            } else {
+                // 连接度不够，找最近的高连接度节点
+                const nearestCenter = findNearestHighDegreeNode(
+                    specifiedCenter, componentNodes, adjacencyList, connectionCount, stats.threshold
+                );
+                centers.push(nearestCenter || sortedNodes[0]);
+            }
+        } else {
+            centers.push(sortedNodes[0]);
+        }
+        
+        // 4. 选择后续中心（距离已有中心最远且连接度高的）
+        while (centers.length &lt; centerCount) {
+            let bestCandidate = null;
+            let bestScore = -1;
+            
+            for (const nodeId of sortedNodes) {
+                if (centers.includes(nodeId)) continue;
+                if (connectionCount[nodeId] &lt; stats.mean) continue; // 至少达到平均连接度
+                
+                // 计算到所有已有中心的最小距离
+                let minDistToCenters = Infinity;
+                for (const centerId of centers) {
+                    const dist = bfsDistance(nodeId, centerId, adjacencyList);
+                    minDistToCenters = Math.min(minDistToCenters, dist);
+                }
+                
+                // 评分 = 距离 × 连接度权重
+                const score = minDistToCenters * (1 + connectionCount[nodeId] / 10);
+                
+                if (score &gt; bestScore) {
+                    bestScore = score;
+                    bestCandidate = nodeId;
+                }
+            }
+            
+            if (bestCandidate &amp;&amp; bestScore &gt; 2) {
+                centers.push(bestCandidate);
+            } else {
+                break; // 找不到合适的中心了
+            }
+        }
+        
+        // 5. 分配节点到最近的中心
+        const nodeToCenter = {};
+        componentNodes.forEach(nodeId =&gt; {
+            let minDist = Infinity;
+            let nearestCenter = centers[0];
+            
+            for (const centerId of centers) {
+                const dist = bfsDistance(nodeId, centerId, adjacencyList);
+                if (dist &lt; minDist) {
+                    minDist = dist;
+                    nearestCenter = centerId;
+                }
+            }
+            
+            nodeToCenter[nodeId] = nearestCenter;
         });
         
-        // 小分量的节点在主图下方弧形分布（凸起向下，动态计算间距）
-        const smallNodeIds = smallComps.flatMap(c =&gt; c.nodes);
-        if (smallNodeIds.length &gt; 0) {
-            // 弧线中心在主分量下方
-            const arcCenterX = width / 2;
-            const arcY = mainAreaHeight + 40;  // 弧线顶部位置（主分量区域底部+间距）
+        return { centers, nodeToCenter, stats };
+    }
+    
+    /**
+     * 找到距离指定节点最近的高连接度节点
+     */
+    function findNearestHighDegreeNode(startId, componentNodes, adjacencyList, connectionCount, threshold) {
+        const visited = new Set([startId]);
+        const queue = [startId];
+        
+        while (queue.length &gt; 0) {
+            const nodeId = queue.shift();
             
-            // 根据节点数量动态计算弧线参数
-            const minSpacing = 60;  // 节点最小间距
-            const totalWidth = Math.min(width * 0.8, smallNodeIds.length * minSpacing);  // 弧线跨度
-            const arcRadius = totalWidth / 2 + 50;  // 弧线半径
-            const arcCenterY = arcY - arcRadius;  // 圆心在弧线上方
+            for (const neighbor of (adjacencyList[nodeId] || [])) {
+                if (!visited.has(neighbor) &amp;&amp; componentNodes.includes(neighbor)) {
+                    if (connectionCount[neighbor] &gt;= threshold) {
+                        return neighbor;
+                    }
+                    visited.add(neighbor);
+                    queue.push(neighbor);
+                }
+            }
+        }
+        return null;
+    }
+
+    // ==================== 半径计算 ====================
+    
+    /**
+     * 动态计算每层半径
+     * 确保同层节点间距 ≥ minNodeSpacing
+     * 密集区域自动扩展半径
+     */
+    function calculateLayerRadii(levelNodeCounts) {
+        const radii = { 0: 0 };
+        let prevRadius = 0;
+        
+        const levels = Object.keys(levelNodeCounts).map(Number).sort((a, b) =&gt; a - b);
+        
+        levels.forEach(level =&gt; {
+            if (level === 0) return;
             
-            // 计算弧度范围
-            const halfChord = totalWidth / 2;
-            const halfAngle = Math.asin(Math.min(halfChord / arcRadius, 1));
-            const startAngle = Math.PI / 2 - halfAngle;
-            const angleStep = smallNodeIds.length > 1 ? (2 * halfAngle) / (smallNodeIds.length - 1) : 0;
+            const nodeCount = levelNodeCounts[level];
             
-            smallNodeIds.forEach((nodeId, idx) =&gt; {
-                const angle = startAngle + angleStep * idx;
-                const node = nodes.find(n =&gt; n.nodeId === nodeId);
-                nodePositions[nodeId] = {
-                    x: arcCenterX + arcRadius * Math.cos(angle),
-                    y: arcCenterY + arcRadius * Math.sin(angle),
-                    ...node
-                };
+            // 方法1：根据节点间距计算（圆周长 = 2πr）
+            const radiusBySpacing = (nodeCount * LAYOUT_CONFIG.minNodeSpacing) / (2 * Math.PI);
+            
+            // 方法2：根据层级间距计算
+            const radiusByGap = prevRadius + LAYOUT_CONFIG.minLayerGap;
+            
+            // 取较大值
+            let radius = Math.max(radiusBySpacing, radiusByGap);
+            
+            // 密集区域检测：如果节点数超过阈值，额外增加半径
+            const densityThreshold = 12; // 每层超过12个节点视为密集
+            if (nodeCount &gt; densityThreshold) {
+                const densityFactor = 1 + (nodeCount - densityThreshold) * 0.05;
+                radius *= densityFactor;
+            }
+            
+            radii[level] = radius;
+            prevRadius = radius;
+        });
+        
+        return radii;
+    }
+
+    // ==================== 节点位置分配 ====================
+    
+    /**
+     * 为单个中心的节点群计算位置
+     */
+    function layoutSingleCenter(centerId, assignedNodes, nodes, edges, adjacencyList) {
+        const positions = {};
+        
+        // BFS 构建层级结构
+        const nodesByLevel = {};
+        const nodeLevels = {};
+        const nodeParent = {};
+        const visited = new Set();
+        
+        const queue = [{ nodeId: centerId, level: 0, parent: null }];
+        visited.add(centerId);
+        
+        while (queue.length &gt; 0) {
+            const { nodeId, level, parent } = queue.shift();
+            
+            if (!nodesByLevel[level]) nodesByLevel[level] = [];
+            nodesByLevel[level].push(nodeId);
+            nodeLevels[nodeId] = level;
+            if (parent) nodeParent[nodeId] = parent;
+            
+            (adjacencyList[nodeId] || []).forEach(neighbor =&gt; {
+                if (!visited.has(neighbor) &amp;&amp; assignedNodes.includes(neighbor)) {
+                    visited.add(neighbor);
+                    queue.push({ nodeId: neighbor, level: level + 1, parent: nodeId });
+                }
             });
         }
         
-        // 只为大分量独立布局（小分量已弧形分布）
-        largeComps.forEach((comp, compIndex) =&gt; {
-            const area = componentAreas[compIndex];
-            if (!area) return;
-            const compCenterX = area.x;
-            const compCenterY = area.y;
-            const cellWidth = area.w;
-            const cellHeight = area.h;
+        // 计算每层节点数
+        const levelNodeCounts = {};
+        Object.keys(nodesByLevel).forEach(l =&gt; {
+            levelNodeCounts[l] = nodesByLevel[l].length;
+        });
+        
+        // 计算每层半径
+        const radii = calculateLayerRadii(levelNodeCounts);
+        
+        // 中心点在原点 (0, 0)
+        const centerX = 0, centerY = 0;
+        
+        // 分配位置
+        Object.keys(nodesByLevel).sort((a, b) =&gt; Number(a) - Number(b)).forEach(levelStr =&gt; {
+            const level = parseInt(levelStr);
+            const nodesAtLevel = nodesByLevel[level];
+            const radius = radii[level];
             
-            // BFS构建该分量的层级
-            const nodesByLevel = {};
-            const nodeLevels = {};
-            const visited = new Set();
-            const bfsQueue = [{ nodeId: comp.center, level: 0 }];
-            visited.add(comp.center);
-            
-            while (bfsQueue.length &gt; 0) {
-                const { nodeId, level } = bfsQueue.shift();
-                if (!nodesByLevel[level]) nodesByLevel[level] = [];
-                nodesByLevel[level].push(nodeId);
-                nodeLevels[nodeId] = level;
+            if (level === 0) {
+                // 中心节点
+                const node = nodes.find(n =&gt; n.nodeId === centerId);
+                positions[centerId] = { x: centerX, y: centerY, ...node };
+            } else if (level === 1) {
+                // 第一层：均匀分布在圆周上，奇偶交错
+                const angleStep = (2 * Math.PI) / nodesAtLevel.length;
+                const startAngle = -Math.PI / 2;
                 
-                (adjacencyList[nodeId] || []).forEach(neighbor =&gt; {
-                    if (!visited.has(neighbor) &amp;&amp; comp.nodes.includes(neighbor)) {
-                        visited.add(neighbor);
-                        bfsQueue.push({ nodeId: neighbor, level: level + 1 });
-                    }
+                nodesAtLevel.forEach((nodeId, index) =&gt; {
+                    const angle = startAngle + angleStep * index;
+                    const r = index % 2 === 0 ? radius : radius + LAYOUT_CONFIG.staggerOffset;
+                    const node = nodes.find(n =&gt; n.nodeId === nodeId);
+                    positions[nodeId] = {
+                        x: centerX + r * Math.cos(angle),
+                        y: centerY + r * Math.sin(angle),
+                        ...node
+                    };
                 });
-            }
-            
-            // 记录父节点
-            const parentMap = {};
-            edges.forEach(edge =&gt; {
-                const srcLevel = nodeLevels[edge.sourceNodeId];
-                const tgtLevel = nodeLevels[edge.targetNodeId];
-                if (srcLevel !== undefined &amp;&amp; tgtLevel !== undefined) {
-                    if (srcLevel &lt; tgtLevel) parentMap[edge.targetNodeId] = edge.sourceNodeId;
-                    else if (tgtLevel &lt; srcLevel) parentMap[edge.sourceNodeId] = edge.targetNodeId;
-                }
-            });
-            
-            const maxLevel = Math.max(...Object.keys(nodesByLevel).map(Number), 0);
-            
-            // 使用自适应布局参数
-            const layoutParams = calculateLayoutParams(comp.nodes.length, cellWidth, cellHeight, maxLevel);
-            const baseLayerGap = layoutParams.layerGap;
-            
-            // 为该分量的每个层级分配位置
-            Object.keys(nodesByLevel).sort((a, b) =&gt; Number(a) - Number(b)).forEach(levelStr =&gt; {
-                const level = parseInt(levelStr);
-                const nodesAtLevel = nodesByLevel[level];
+            } else {
+                // 更深层：按父节点分组，扇形分布
+                const nodesByParentMap = {};
+                nodesAtLevel.forEach(nodeId =&gt; {
+                    const parent = nodeParent[nodeId] || &#39;_root&#39;;
+                    if (!nodesByParentMap[parent]) nodesByParentMap[parent] = [];
+                    nodesByParentMap[parent].push(nodeId);
+                });
                 
-                if (level === 0) {
-                    const node = nodes.find(n =&gt; n.nodeId === comp.center);
-                    nodePositions[comp.center] = { x: compCenterX, y: compCenterY, ...node };
-                } else {
-                    // 层级半径：确保第一层有足够距离，后续层级递增
-                    const radius = baseLayerGap * level;
+                let globalIndex = 0;
+                Object.keys(nodesByParentMap).forEach(parentId =&gt; {
+                    const children = nodesByParentMap[parentId];
+                    const parentPos = positions[parentId];
                     
-                    const nodesByParent = {};
-                    nodesAtLevel.forEach(nodeId =&gt; {
-                        const parent = parentMap[nodeId] || &#39;_root&#39;;
-                        if (!nodesByParent[parent]) nodesByParent[parent] = [];
-                        nodesByParent[parent].push(nodeId);
-                    });
-                    
-                    if (level === 1) {
-                        const angleStep = (2 * Math.PI) / nodesAtLevel.length;
-                        const startAngle = -Math.PI / 2;
-                        nodesAtLevel.forEach((nodeId, index) =&gt; {
-                            const angle = startAngle + angleStep * index;
+                    if (!parentPos) {
+                        // fallback：均匀分布
+                        children.forEach((nodeId, idx) =&gt; {
+                            const angle = (globalIndex / nodesAtLevel.length) * 2 * Math.PI;
+                            const r = (globalIndex % 2 === 0) ? radius : radius + LAYOUT_CONFIG.staggerOffset;
                             const node = nodes.find(n =&gt; n.nodeId === nodeId);
-                            nodePositions[nodeId] = {
-                                x: compCenterX + radius * Math.cos(angle),
-                                y: compCenterY + radius * Math.sin(angle),
+                            positions[nodeId] = {
+                                x: centerX + r * Math.cos(angle),
+                                y: centerY + r * Math.sin(angle),
                                 ...node
                             };
+                            globalIndex++;
                         });
-                    } else {
-                        const totalChildren = nodesAtLevel.length;
-                        Object.keys(nodesByParent).forEach(parentId =&gt; {
-                            const children = nodesByParent[parentId];
-                            const parentPos = nodePositions[parentId];
-                            
-                            if (!parentPos) {
-                                children.forEach((nodeId, idx) =&gt; {
-                                    const angle = (idx / totalChildren) * 2 * Math.PI;
-                                    const node = nodes.find(n =&gt; n.nodeId === nodeId);
-                                    nodePositions[nodeId] = {
-                                        x: compCenterX + radius * Math.cos(angle),
-                                        y: compCenterY + radius * Math.sin(angle),
-                                        ...node
-                                    };
-                                });
-                                return;
-                            }
-                            
-                            const parentAngle = Math.atan2(parentPos.y - compCenterY, parentPos.x - compCenterX);
-                            const minAnglePerChild = 0.25;
-                            const requiredAngle = children.length * minAnglePerChild;
-                            const spreadAngle = Math.min(Math.PI * 1.2, Math.max(requiredAngle, Math.PI / 4));
-                            const childAngleStep = children.length &gt; 1 ? spreadAngle / (children.length - 1) : 0;
-                            const childStartAngle = parentAngle - spreadAngle / 2;
-                            
-                            children.forEach((nodeId, idx) =&gt; {
-                                const childAngle = children.length &gt; 1 ? childStartAngle + childAngleStep * idx : parentAngle;
-                                const node = nodes.find(n =&gt; n.nodeId === nodeId);
-                                nodePositions[nodeId] = {
-                                    x: compCenterX + radius * Math.cos(childAngle),
-                                    y: compCenterY + radius * Math.sin(childAngle),
-                                    ...node
-                                };
-                            });
-                        });
+                        return;
+                    }
+                    
+                    // 计算父节点相对于中心的角度
+                    const parentAngle = Math.atan2(parentPos.y - centerY, parentPos.x - centerX);
+                    
+                    // 扇形角度
+                    const totalAngle = Math.min(
+                        LAYOUT_CONFIG.maxFanAngle,
+                        children.length * LAYOUT_CONFIG.minAnglePerChild
+                    );
+                    const startAngle = parentAngle - totalAngle / 2;
+                    const step = children.length &gt; 1 ? totalAngle / (children.length - 1) : 0;
+                    
+                    children.forEach((nodeId, idx) =&gt; {
+                        const angle = children.length === 1 ? parentAngle : startAngle + step * idx;
+                        const r = (globalIndex % 2 === 0) ? radius : radius + LAYOUT_CONFIG.staggerOffset;
+                        const node = nodes.find(n =&gt; n.nodeId === nodeId);
+                        positions[nodeId] = {
+                            x: centerX + r * Math.cos(angle),
+                            y: centerY + r * Math.sin(angle),
+                            ...node
+                        };
+                        globalIndex++;
+                    });
+                });
+            }
+        });
+        
+        return positions;
+    }
+
+    // ==================== 排斥力微调 ====================
+    
+    /**
+     * 应用排斥力，推开重叠节点
+     */
+    function applyRepulsion(positions, iterations = 30) {
+        const minDist = LAYOUT_CONFIG.nodeRadius * 2 + 10;
+        const repulsionStrength = 5;
+        const nodeIds = Object.keys(positions);
+        
+        for (let iter = 0; iter &lt; iterations; iter++) {
+            let maxOverlap = 0;
+            
+            for (let i = 0; i &lt; nodeIds.length; i++) {
+                for (let j = i + 1; j &lt; nodeIds.length; j++) {
+                    const idA = nodeIds[i];
+                    const idB = nodeIds[j];
+                    const posA = positions[idA];
+                    const posB = positions[idB];
+                    
+                    const dx = posB.x - posA.x;
+                    const dy = posB.y - posA.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist &lt; minDist &amp;&amp; dist &gt; 0) {
+                        maxOverlap = Math.max(maxOverlap, minDist - dist);
+                        const force = repulsionStrength * (minDist - dist) / dist;
+                        const fx = force * dx * 0.5;
+                        const fy = force * dy * 0.5;
+                        
+                        posA.x -= fx;
+                        posA.y -= fy;
+                        posB.x += fx;
+                        posB.y += fy;
                     }
                 }
-            });
+            }
+            
+            // 如果没有重叠，提前退出
+            if (maxOverlap &lt; 1) break;
+        }
+    }
+
+    // ==================== 孤立节点布局 ====================
+    
+    /**
+     * 孤立节点在底部弧形分布
+     */
+    function layoutIsolatedNodes(isolatedNodeIds, nodes, mainBounds) {
+        const positions = {};
+        if (isolatedNodeIds.length === 0) return positions;
+        
+        const arcCenterX = (mainBounds.minX + mainBounds.maxX) / 2;
+        const arcY = mainBounds.maxY + 80;
+        
+        const spacing = LAYOUT_CONFIG.isolatedNodeSpacing;
+        const totalWidth = isolatedNodeIds.length * spacing;
+        const arcRadius = Math.max(totalWidth / Math.PI, 100);
+        const arcCenterY = arcY - arcRadius;
+        
+        const halfAngle = Math.min(Math.PI * 0.4, (isolatedNodeIds.length * spacing) / (2 * arcRadius));
+        const startAngle = Math.PI / 2 - halfAngle;
+        const angleStep = isolatedNodeIds.length &gt; 1 ? (2 * halfAngle) / (isolatedNodeIds.length - 1) : 0;
+        
+        isolatedNodeIds.forEach((nodeId, idx) =&gt; {
+            const angle = isolatedNodeIds.length === 1 ? Math.PI / 2 : startAngle + angleStep * idx;
+            const node = nodes.find(n =&gt; n.nodeId === nodeId);
+            positions[nodeId] = {
+                x: arcCenterX + arcRadius * Math.cos(angle),
+                y: arcCenterY + arcRadius * Math.sin(angle),
+                ...node
+            };
         });
+        
+        return positions;
+    }
+
+    // ==================== viewBox 计算 ====================
+    
+    /**
+     * 计算 viewBox
+     * 确保所有节点（包括标签）都在可视区域内
+     */
+    function calculateViewBox(positions) {
+        const coords = Object.values(positions);
+        if (coords.length === 0) {
+            return { x: 0, y: 0, width: 800, height: 600 };
+        }
+        
+        // 增加 padding：节点半径 + 标签高度 + 额外边距
+        const nodePadding = LAYOUT_CONFIG.nodeRadius + 40; // 标签在节点下方约28px
+        const sidePadding = LAYOUT_CONFIG.viewBoxPadding;
+        
+        const minX = Math.min(...coords.map(p =&gt; p.x)) - sidePadding;
+        const maxX = Math.max(...coords.map(p =&gt; p.x)) + sidePadding;
+        const minY = Math.min(...coords.map(p =&gt; p.y)) - sidePadding;
+        const maxY = Math.max(...coords.map(p =&gt; p.y)) + nodePadding; // 底部额外空间给标签
+        
+        // 确保最小尺寸
+        const width = Math.max(maxX - minX, 400);
+        const height = Math.max(maxY - minY, 300);
+        
+        return {
+            x: minX,
+            y: minY,
+            width: width,
+            height: height
+        };
+    }
+    
+    /**
+     * 计算边界框
+     */
+    function getBoundingBox(positions) {
+        const coords = Object.values(positions);
+        if (coords.length === 0) {
+            return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+        }
+        return {
+            minX: Math.min(...coords.map(p =&gt; p.x)),
+            maxX: Math.max(...coords.map(p =&gt; p.x)),
+            minY: Math.min(...coords.map(p =&gt; p.y)),
+            maxY: Math.max(...coords.map(p =&gt; p.y))
+        };
+    }
+    
+    /**
+     * 计算多中心的环形排列位置
+     * 多个中心不水平排列，而是围绕总体中心环形分布
+     */
+    function getCenterPositions(centerCount) {
+        const gap = 300; // 中心间距
+        const positions = [];
+        
+        if (centerCount === 1) {
+            positions.push({ x: 0, y: 0 });
+        } else if (centerCount === 2) {
+            // 两中心左右对称
+            positions.push({ x: -gap / 2, y: 0 });
+            positions.push({ x: gap / 2, y: 0 });
+        } else if (centerCount === 3) {
+            // 三中心三角形
+            positions.push({ x: 0, y: -gap * 0.4 });           // 上
+            positions.push({ x: -gap * 0.5, y: gap * 0.3 });   // 左下
+            positions.push({ x: gap * 0.5, y: gap * 0.3 });    // 右下
+        } else {
+            // 四中心及以上：环形分布
+            const angleStep = (2 * Math.PI) / centerCount;
+            for (let i = 0; i &lt; centerCount; i++) {
+                const angle = -Math.PI / 2 + angleStep * i; // 从顶部开始
+                positions.push({
+                    x: gap * 0.6 * Math.cos(angle),
+                    y: gap * 0.6 * Math.sin(angle)
+                });
+            }
+        }
+        
+        return positions;
+    }
+
+    // ==================== 主布局函数 ====================
+    
+    /**
+     * 计算所有节点的布局位置
+     * @param {Array} nodes - 节点数组
+     * @param {Array} edges - 边数组
+     * @param {string} specifiedCenter - 可选，指定中心节点
+     * @returns {{ positions: Object, viewBox: Object }}
+     */
+    function layoutGraph(nodes, edges, specifiedCenter = null) {
+        if (nodes.length === 0) {
+            return { positions: {}, viewBox: { x: 0, y: 0, width: 800, height: 600 } };
+        }
+        
+        // 1. 构建图结构
+        const { adjacencyList, connectionCount } = buildGraphStructure(nodes, edges);
+        
+        // 2. 识别连通分量
+        const components = findConnectedComponents(nodes, adjacencyList, connectionCount);
+        
+        // 3. 区分大分量和孤立节点（小分量）
+        const largeComps = components.filter(c =&gt; c.size &gt;= 5);
+        const smallComps = components.filter(c =&gt; c.size &lt; 5);
+        const isolatedNodeIds = smallComps.flatMap(c =&gt; c.nodes);
+        
+        // 4. 为每个大分量布局
+        let allPositions = {};
+        let offsetX = 0;
+        
+        largeComps.forEach((comp, compIdx) =&gt; {
+            // 确定该分量的中心节点
+            const compSpecifiedCenter = (specifiedCenter &amp;&amp; comp.nodes.includes(specifiedCenter)) 
+                ? specifiedCenter 
+                : null;
+            
+            const { centers, nodeToCenter } = determineCenters(
+                comp.nodes, adjacencyList, connectionCount, compSpecifiedCenter
+            );
+            
+            // 计算多中心的环形排列位置
+            const centerPositionsMap = getCenterPositions(centers.length);
+            
+            // 为每个中心布局其管理的节点
+            let compPositions = {};
+            
+            centers.forEach((centerId, centerIdx) =&gt; {
+                const assignedNodes = comp.nodes.filter(nid =&gt; nodeToCenter[nid] === centerId);
+                const centerPositions = layoutSingleCenter(centerId, assignedNodes, nodes, edges, adjacencyList);
+                
+                // 获取该中心的目标位置
+                const targetPos = centerPositionsMap[centerIdx];
+                
+                // 平移子图到目标位置
+                Object.keys(centerPositions).forEach(nid =&gt; {
+                    centerPositions[nid].x += targetPos.x;
+                    centerPositions[nid].y += targetPos.y;
+                    compPositions[nid] = centerPositions[nid];
+                });
+            });
+            
+            // 应用排斥力
+            applyRepulsion(compPositions);
+            
+            // 平移整个分量
+            const compBbox = getBoundingBox(compPositions);
+            const compShiftX = offsetX - compBbox.minX;
+            
+            Object.keys(compPositions).forEach(nid =&gt; {
+                compPositions[nid].x += compShiftX;
+                allPositions[nid] = compPositions[nid];
+            });
+            
+            offsetX = compBbox.maxX + compShiftX + LAYOUT_CONFIG.componentGap;
+        });
+        
+        // 5. 布局孤立节点
+        if (isolatedNodeIds.length &gt; 0) {
+            const mainBounds = getBoundingBox(allPositions);
+            // 如果没有大分量，设置默认边界
+            if (Object.keys(allPositions).length === 0) {
+                mainBounds.minX = 0;
+                mainBounds.maxX = 400;
+                mainBounds.minY = 0;
+                mainBounds.maxY = 0;
+            }
+            
+            const isolatedPositions = layoutIsolatedNodes(isolatedNodeIds, nodes, mainBounds);
+            Object.assign(allPositions, isolatedPositions);
+        }
+        
+        // 6. 计算 viewBox
+        const viewBox = calculateViewBox(allPositions);
+        
+        return { positions: allPositions, viewBox };
+    }
+
+    // ==================== 渲染函数 ====================
+
+    /**
+     * 渲染图谱（主入口）
+     */
+    function renderGraphFromData(specifiedCenter = null) {
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const nodes = currentGraphData.nodes || [];
+        const edges = currentGraphData.edges || [];
+        
+        if (nodes.length === 0) {
+            canvas.innerHTML = `
+                &lt;div class="absolute inset-0 flex items-center justify-center"&gt;
+                    &lt;div class="text-center"&gt;
+                        &lt;p class="text-base-content/70"&gt;该图谱暂无节点数据&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            `;
+            return;
+        }
+
+        canvas.innerHTML = &#39;&#39;;
+        
+        // 计算布局
+        const { positions: nodePositions, viewBox } = layoutGraph(nodes, edges, specifiedCenter);
+        
+        // 保存节点位置数据和初始 viewBox（用于重置视图）
+        currentGraphData.nodePositions = nodePositions;
+        currentGraphData.initialViewBox = { ...viewBox };
+        currentGraphData.initialPositions = JSON.parse(JSON.stringify(nodePositions));
         
         // Create SVG container
         const svg = document.createElementNS(&#39;http://www.w3.org/2000/svg&#39;, &#39;svg&#39;);
         svg.setAttribute(&#39;width&#39;, &#39;100%&#39;);
         svg.setAttribute(&#39;height&#39;, &#39;100%&#39;);
+        svg.setAttribute(&#39;viewBox&#39;, `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+        svg.setAttribute(&#39;preserveAspectRatio&#39;, &#39;xMidYMid meet&#39;);
         svg.style.position = &#39;absolute&#39;;
         svg.style.top = &#39;0&#39;;
         svg.style.left = &#39;0&#39;;
+        svg.style.cursor = &#39;grab&#39;;
+        
+        // 添加透明背景矩形用于捕获拖动事件
+        const bgRect = document.createElementNS(&#39;http://www.w3.org/2000/svg&#39;, &#39;rect&#39;);
+        bgRect.setAttribute(&#39;x&#39;, viewBox.x - 1000);
+        bgRect.setAttribute(&#39;y&#39;, viewBox.y - 1000);
+        bgRect.setAttribute(&#39;width&#39;, viewBox.width + 2000);
+        bgRect.setAttribute(&#39;height&#39;, viewBox.height + 2000);
+        bgRect.setAttribute(&#39;fill&#39;, &#39;transparent&#39;);
+        bgRect.setAttribute(&#39;class&#39;, &#39;svg-background&#39;);
+        svg.appendChild(bgRect);
 
         // 添加箭头定义
         const defs = document.createElementNS(&#39;http://www.w3.org/2000/svg&#39;, &#39;defs&#39;);
@@ -2680,9 +3219,12 @@ window.APP_GLOBALS.user.init();
         
         // 保存节点位置数据
         currentGraphData.nodePositions = nodePositions;
+        
+        // 初始化画布拖动（每次渲染后重新绑定）
+        initCanvasPanning();
     }
     
-    // ==================== 节点拖动功能（高性能版） ====================
+    // ==================== 节点拖动功能（优化版） ====================
     
     let dragging = {
         active: false,
@@ -2690,17 +3232,28 @@ window.APP_GLOBALS.user.init();
         offsetX: 0,
         offsetY: 0,
         moved: false,
-        // 缓存元素引用，避免重复查询 DOM
         nodeEl: null,
         labelEl: null,
-        edges: [],      // { edge, targetX, targetY, isSource, labelEl }
-        canvasRect: null,
-        rafId: null,
-        targetX: 0,
-        targetY: 0
+        edges: [],
+        svg: null,
+        viewBox: null,
+        originalR: 14
     };
     
     const NODE_RADIUS = 14;
+    
+    /**
+     * 屏幕坐标转 SVG 坐标（修复 viewBox 缩放问题）
+     */
+    function screenToSVG(svg, clientX, clientY) {
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return { x: clientX, y: clientY };
+        const svgP = pt.matrixTransform(ctm.inverse());
+        return { x: svgP.x, y: svgP.y };
+    }
     
     // 开始拖动
     function startDrag(event, nodeId) {
@@ -2708,19 +3261,21 @@ window.APP_GLOBALS.user.init();
         event.stopPropagation();
         
         const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const svg = canvas ? canvas.querySelector(&#39;svg&#39;) : null;
         const nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
-        if (!canvas || !nodeEl) return;
+        if (!canvas || !svg || !nodeEl) return;
         
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = event.clientX - rect.left;
-        const mouseY = event.clientY - rect.top;
+        // 获取 viewBox 用于边界限制
+        const viewBoxStr = svg.getAttribute(&#39;viewBox&#39;);
+        const vb = viewBoxStr ? viewBoxStr.split(&#39; &#39;).map(Number) : [0, 0, 800, 600];
+        
+        // 使用 SVG 坐标系（正确处理 viewBox 缩放）
+        const svgPos = screenToSVG(svg, event.clientX, event.clientY);
         const nodeCX = parseFloat(nodeEl.getAttribute(&#39;cx&#39;));
         const nodeCY = parseFloat(nodeEl.getAttribute(&#39;cy&#39;));
         
-        // 预先缓存所有需要更新的元素
+        // 缓存相关边
         const edges = [];
-        
-        // 以该节点为起点的边
         document.querySelectorAll(`[data-edge-source="${nodeId}"]`).forEach(edge =&gt; {
             const targetId = edge.getAttribute(&#39;data-edge-target&#39;);
             const targetEl = document.querySelector(`[data-node-id="${targetId}"]`);
@@ -2734,8 +3289,6 @@ window.APP_GLOBALS.user.init();
                 });
             }
         });
-        
-        // 以该节点为终点的边
         document.querySelectorAll(`[data-edge-target="${nodeId}"]`).forEach(edge =&gt; {
             const sourceId = edge.getAttribute(&#39;data-edge-source&#39;);
             const sourceEl = document.querySelector(`[data-node-id="${sourceId}"]`);
@@ -2753,49 +3306,43 @@ window.APP_GLOBALS.user.init();
         dragging = {
             active: true,
             nodeId: nodeId,
-            offsetX: mouseX - nodeCX,
-            offsetY: mouseY - nodeCY,
+            offsetX: svgPos.x - nodeCX,
+            offsetY: svgPos.y - nodeCY,
             moved: false,
             nodeEl: nodeEl,
             labelEl: document.querySelector(`[data-label-for="${nodeId}"]`),
             edges: edges,
-            canvasRect: rect,
-            rafId: null,
-            targetX: nodeCX,
-            targetY: nodeCY
+            svg: svg,
+            viewBox: { x: vb[0], y: vb[1], width: vb[2], height: vb[3] },
+            originalR: 14
         };
         
+        // 视觉反馈：放大 + 阴影
+        nodeEl.setAttribute(&#39;r&#39;, 17);
+        nodeEl.style.filter = &#39;drop-shadow(0 4px 8px rgba(0,0,0,0.3))&#39;;
         nodeEl.style.cursor = &#39;grabbing&#39;;
     }
     
-    // 拖动中 - 只记录目标位置，由 RAF 执行实际更新
+    // 拖动中 - 直接更新位置（降低延迟）
     function onDrag(event) {
-        if (!dragging.active) return;
+        if (!dragging.active || !dragging.svg) return;
         
-        const mouseX = event.clientX - dragging.canvasRect.left;
-        const mouseY = event.clientY - dragging.canvasRect.top;
+        // 转换为 SVG 坐标（修复 viewBox 缩放问题）
+        const svgPos = screenToSVG(dragging.svg, event.clientX, event.clientY);
+        let x = svgPos.x - dragging.offsetX;
+        let y = svgPos.y - dragging.offsetY;
         
-        dragging.targetX = mouseX - dragging.offsetX;
-        dragging.targetY = mouseY - dragging.offsetY;
+        // 边界限制
+        const padding = NODE_RADIUS + 10;
+        const vb = dragging.viewBox;
+        if (vb) {
+            x = Math.max(vb.x + padding, Math.min(vb.x + vb.width - padding, x));
+            y = Math.max(vb.y + padding, Math.min(vb.y + vb.height - padding, y));
+        }
+        
         dragging.moved = true;
         
-        // 使用 RAF 批量更新，避免重复渲染
-        if (!dragging.rafId) {
-            dragging.rafId = requestAnimationFrame(updateDragPosition);
-        }
-    }
-    
-    // 实际更新位置（在 RAF 中执行）
-    function updateDragPosition() {
-        if (!dragging.active) {
-            dragging.rafId = null;
-            return;
-        }
-        
-        const x = dragging.targetX;
-        const y = dragging.targetY;
-        
-        // 更新节点
+        // 直接更新节点位置（无 RAF 延迟）
         dragging.nodeEl.setAttribute(&#39;cx&#39;, x);
         dragging.nodeEl.setAttribute(&#39;cy&#39;, y);
         
@@ -2820,7 +3367,7 @@ window.APP_GLOBALS.user.init();
             const dy = y2 - y1;
             const dist = Math.sqrt(dx * dx + dy * dy);
             
-            if (dist > 0) {
+            if (dist &gt; 0) {
                 const nx = dx / dist;
                 const ny = dy / dist;
                 e.edge.setAttribute(&#39;x1&#39;, x1 + nx * NODE_RADIUS);
@@ -2840,21 +3387,17 @@ window.APP_GLOBALS.user.init();
             currentGraphData.nodePositions[dragging.nodeId].x = x;
             currentGraphData.nodePositions[dragging.nodeId].y = y;
         }
-        
-        dragging.rafId = null;
     }
     
     // 结束拖动
     function endDrag(event) {
         if (!dragging.active) return;
         
+        // 恢复视觉效果
         if (dragging.nodeEl) {
+            dragging.nodeEl.setAttribute(&#39;r&#39;, dragging.originalR);
+            dragging.nodeEl.style.filter = &#39;&#39;;
             dragging.nodeEl.style.cursor = &#39;grab&#39;;
-        }
-        
-        // 取消未执行的 RAF
-        if (dragging.rafId) {
-            cancelAnimationFrame(dragging.rafId);
         }
         
         // 如果没有移动，触发点击选择
@@ -2876,11 +3419,284 @@ window.APP_GLOBALS.user.init();
         
         dragging = {
             active: false, nodeId: null, offsetX: 0, offsetY: 0, moved: false,
-            nodeEl: null, labelEl: null, edges: [], canvasRect: null, rafId: null,
-            targetX: 0, targetY: 0
+            nodeEl: null, labelEl: null, edges: [], svg: null, viewBox: null,
+            originalR: 14
         };
     }
 
+    // ==================== 画布拖动功能（平移视图） ====================
+    
+    let panning = {
+        active: false,
+        startX: 0,
+        startY: 0,
+        viewBox: { x: 0, y: 0, width: 0, height: 0 }
+    };
+    
+    /**
+     * 初始化画布拖动功能
+     */
+    let panningInitialized = false;
+    function initCanvasPanning() {
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        if (!canvas) return;
+        
+        // 避免重复绑定
+        if (panningInitialized) return;
+        panningInitialized = true;
+        
+        // 直接在 canvas 上监听，使用 capture 阶段
+        canvas.addEventListener(&#39;mousedown&#39;, startPanning, false);
+        canvas.addEventListener(&#39;mousemove&#39;, onPanning, false);
+        canvas.addEventListener(&#39;mouseup&#39;, endPanning, false);
+        canvas.addEventListener(&#39;mouseleave&#39;, endPanning, false);
+        
+        console.log(&#39;Canvas panning initialized&#39;);
+    }
+    
+    /**
+     * 开始画布拖动（仅在空白区域触发）
+     */
+    function startPanning(event) {
+        // 如果正在拖动节点，不触发画布拖动
+        if (dragging.active) return;
+        
+        // 检查点击目标
+        const target = event.target;
+        const tagName = target.tagName.toLowerCase();
+        
+        // 如果点击的是节点（circle）或文本标签，不触发画布拖动
+        if (tagName === &#39;circle&#39; || tagName === &#39;text&#39;) {
+            return;
+        }
+        
+        // 只有点击 svg、rect（背景）、line（边）、div（canvas）时才触发
+        if (tagName !== &#39;svg&#39; &amp;&amp; tagName !== &#39;rect&#39; &amp;&amp; tagName !== &#39;line&#39; &amp;&amp; tagName !== &#39;div&#39;) {
+            return;
+        }
+        
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const svg = canvas.querySelector(&#39;svg&#39;);
+        if (!svg) return;
+        
+        const viewBoxStr = svg.getAttribute(&#39;viewBox&#39;);
+        if (!viewBoxStr) return;
+        
+        const parts = viewBoxStr.split(&#39; &#39;).map(Number);
+        
+        panning = {
+            active: true,
+            startX: event.clientX,
+            startY: event.clientY,
+            viewBox: {
+                x: parts[0],
+                y: parts[1],
+                width: parts[2],
+                height: parts[3]
+            }
+        };
+        
+        svg.style.cursor = &#39;grabbing&#39;;
+    }
+    
+    /**
+     * 画布拖动中 - 优化版本
+     */
+    let panAnimationId = null;
+    function onPanning(event) {
+        if (!panning.active) return;
+        if (dragging.active) return; // 节点拖动优先
+        
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const svg = canvas.querySelector(&#39;svg&#39;);
+        if (!svg) return;
+        
+        const dx = event.clientX - panning.startX;
+        const dy = event.clientY - panning.startY;
+        
+        // 根据缩放比例转换移动距离
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = panning.viewBox.width / rect.width;
+        const scaleY = panning.viewBox.height / rect.height;
+        
+        // 拖动方向与 viewBox 移动方向相反，增加1.5倍灵敏度
+        const moveX = dx * scaleX * 1.5;
+        const moveY = dy * scaleY * 1.5;
+        
+        // 使用 requestAnimationFrame 优化渲染
+        if (panAnimationId) {
+            cancelAnimationFrame(panAnimationId);
+        }
+        
+        panAnimationId = requestAnimationFrame(() =&gt; {
+            const newX = panning.viewBox.x - moveX;
+            const newY = panning.viewBox.y - moveY;
+            
+            svg.setAttribute(&#39;viewBox&#39;, `${newX} ${newY} ${panning.viewBox.width} ${panning.viewBox.height}`);
+            
+            // 更新起点实现连续拖动
+            panning.startX = event.clientX;
+            panning.startY = event.clientY;
+            panning.viewBox.x = newX;
+            panning.viewBox.y = newY;
+        });
+    }
+    
+    /**
+     * 结束画布拖动
+     */
+    function endPanning(event) {
+        if (!panning.active) return;
+        
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const svg = canvas ? canvas.querySelector(&#39;svg&#39;) : null;
+        if (svg) {
+            svg.style.cursor = &#39;grab&#39;;
+        }
+        
+        panning.active = false;
+    }
+    
+    // ==================== 重置视图功能 ====================
+    
+    /**
+     * 重置视图 - 恢复到初始加载状态
+     */
+    window.resetView = function() {
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const svg = canvas ? canvas.querySelector(&#39;svg&#39;) : null;
+        if (!svg || !currentGraphData.initialViewBox || !currentGraphData.initialPositions) {
+            console.log(&#39;无初始状态数据&#39;);
+            return;
+        }
+        
+        // 重置缩放比例
+        graphZoom = 1;
+        
+        // 恢复初始 viewBox
+        const vb = currentGraphData.initialViewBox;
+        svg.setAttribute(&#39;viewBox&#39;, `${vb.x} ${vb.y} ${vb.width} ${vb.height}`);
+        
+        // 恢复初始节点位置
+        const initPos = currentGraphData.initialPositions;
+        
+        Object.keys(initPos).forEach(nodeId =&gt; {
+            const pos = initPos[nodeId];
+            const nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
+            const labelEl = document.querySelector(`[data-label-for="${nodeId}"]`);
+            
+            if (nodeEl) {
+                nodeEl.setAttribute(&#39;cx&#39;, pos.x);
+                nodeEl.setAttribute(&#39;cy&#39;, pos.y);
+            }
+            if (labelEl) {
+                labelEl.setAttribute(&#39;x&#39;, pos.x);
+                labelEl.setAttribute(&#39;y&#39;, pos.y + 28);
+            }
+            
+            // 同步更新当前位置数据
+            if (currentGraphData.nodePositions[nodeId]) {
+                currentGraphData.nodePositions[nodeId].x = pos.x;
+                currentGraphData.nodePositions[nodeId].y = pos.y;
+            }
+        });
+        
+        // 更新所有边的位置
+        document.querySelectorAll(&#39;.graph-edge&#39;).forEach(edge =&gt; {
+            const sourceId = edge.getAttribute(&#39;data-edge-source&#39;);
+            const targetId = edge.getAttribute(&#39;data-edge-target&#39;);
+            const sourcePos = initPos[sourceId];
+            const targetPos = initPos[targetId];
+            
+            if (sourcePos &amp;&amp; targetPos) {
+                const dx = targetPos.x - sourcePos.x;
+                const dy = targetPos.y - sourcePos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist &gt; 0) {
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    edge.setAttribute(&#39;x1&#39;, sourcePos.x + nx * NODE_RADIUS);
+                    edge.setAttribute(&#39;y1&#39;, sourcePos.y + ny * NODE_RADIUS);
+                    edge.setAttribute(&#39;x2&#39;, targetPos.x - nx * (NODE_RADIUS + 5));
+                    edge.setAttribute(&#39;y2&#39;, targetPos.y - ny * (NODE_RADIUS + 5));
+                    
+                    // 更新边标签
+                    const edgeLabelEl = document.querySelector(`[data-label-source="${sourceId}"][data-label-target="${targetId}"]`);
+                    if (edgeLabelEl) {
+                        edgeLabelEl.setAttribute(&#39;x&#39;, (sourcePos.x + targetPos.x) / 2);
+                        edgeLabelEl.setAttribute(&#39;y&#39;, (sourcePos.y + targetPos.y) / 2 - 8);
+                    }
+                }
+            }
+        });
+        
+        // 清除选中状态
+        selectedNode = null;
+        document.querySelectorAll(&#39;.graph-node&#39;).forEach(node =&gt; {
+            node.classList.remove(&#39;selected&#39;);
+            node.style.stroke = &#39;&#39;;
+            node.style.strokeWidth = &#39;&#39;;
+        });
+        
+        // 清除节点详情面板
+        clearNodeDetails();
+        
+        console.log(&#39;图谱已重置到初始状态&#39;);
+    }
+    
+    /**
+     * 调整画布 viewBox 适应容器大小变化
+     * 侧边栏收起/展开时调用，扩大或缩小可视区域
+     */
+    function adjustCanvasViewBox() {
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const svg = canvas ? canvas.querySelector(&#39;svg&#39;) : null;
+        if (!svg || !currentGraphData.initialViewBox) return;
+        
+        const initVB = currentGraphData.initialViewBox;
+        const canvasRect = canvas.getBoundingClientRect();
+        
+        // 计算新的 viewBox 尺寸，保持图谱内容居中
+        // 根据画布宽高比调整 viewBox
+        const canvasRatio = canvasRect.width / canvasRect.height;
+        const initRatio = initVB.width / initVB.height;
+        
+        let newWidth, newHeight;
+        if (canvasRatio &gt; initRatio) {
+            // 画布更宽，扩大 viewBox 宽度
+            newHeight = initVB.height;
+            newWidth = newHeight * canvasRatio;
+        } else {
+            // 画布更高，扩大 viewBox 高度
+            newWidth = initVB.width;
+            newHeight = newWidth / canvasRatio;
+        }
+        
+        // 居中调整
+        const centerX = initVB.x + initVB.width / 2;
+        const centerY = initVB.y + initVB.height / 2;
+        const newX = centerX - newWidth / 2;
+        const newY = centerY - newHeight / 2;
+        
+        svg.setAttribute(&#39;viewBox&#39;, `${newX} ${newY} ${newWidth} ${newHeight}`);
+    }
+    
+    /**
+     * 清除节点详情面板
+     */
+    function clearNodeDetails() {
+        const detailPanel = document.getElementById(&#39;nodeDetailContent&#39;);
+        if (detailPanel) {
+            detailPanel.innerHTML = `
+                &lt;div class="text-center text-base-content/50 py-8"&gt;
+                    &lt;span class="iconify text-4xl mb-2" data-icon="heroicons:cursor-arrow-rays"&gt;&lt;/span&gt;
+                    &lt;p&gt;点击节点查看详情&lt;/p&gt;
+                &lt;/div&gt;
+            `;
+        }
+    }
+    
     // 节点类型颜色映射（预定义 + 动态生成）
     const nodeTypeColors = {};
     const predefinedColors = {
@@ -3111,205 +3927,15 @@ window.APP_GLOBALS.user.init();
         }
     }
     
-    // 保存原始布局位置
-    let originalLayout = null;
-    
-    // 自适应布局参数计算 - 根据节点数量动态调整间距
-    function calculateLayoutParams(nodeCount, canvasWidth, canvasHeight, maxLevel) {
-        const minNodeSpacing = 60;  // 节点最小间距
-        const nodesPerLevel = nodeCount / Math.max(maxLevel, 1);
-        
-        // 根据每层节点数计算所需周长和半径
-        const requiredCircumference = nodesPerLevel * minNodeSpacing;
-        const minRadiusForSpacing = requiredCircumference / (2 * Math.PI);
-        
-        // 画布可用的最大半径
-        const maxAvailableRadius = Math.min(canvasWidth, canvasHeight) / 2 - 40;
-        
-        // 最优半径：确保间距足够
-        const optimalRadius = Math.max(minRadiusForSpacing, 100);
-        
-        // 层级间距：确保最小80px，根据层数合理分配
-        const layerGap = Math.max(80, Math.min(optimalRadius / Math.max(maxLevel, 1), 120));
-        
-        return {
-            optimalRadius: optimalRadius,
-            layerGap: layerGap,
-            maxRadius: maxAvailableRadius
-        };
-    }
-    
-    // 以指定节点为中心重新布局图谱
+    /**
+     * 以指定节点为中心重新布局图谱
+     * 使用新布局系统，直接重绘
+     */
     function showCenteredGraphView(centerNodeId) {
-        const edges = currentGraphData.edges || [];
         const nodes = currentGraphData.nodes || [];
-        const canvas = document.getElementById(&#39;graphCanvas&#39;);
         
-        if (!canvas) return;
-        
-        // 保存原始布局（如果还没保存）
-        if (!originalLayout) {
-            originalLayout = {};
-            document.querySelectorAll(&#39;.graph-node&#39;).forEach(nodeEl =&gt; {
-                const nodeId = nodeEl.getAttribute(&#39;data-node-id&#39;);
-                originalLayout[nodeId] = {
-                    x: parseFloat(nodeEl.getAttribute(&#39;cx&#39;)),
-                    y: parseFloat(nodeEl.getAttribute(&#39;cy&#39;))
-                };
-            });
-        }
-        
-        // 构建邻接表
-        const adjacencyList = {};
-        nodes.forEach(n =&gt; adjacencyList[n.nodeId] = []);
-        edges.forEach(edge =&gt; {
-            if (adjacencyList[edge.sourceNodeId]) {
-                adjacencyList[edge.sourceNodeId].push(edge.targetNodeId);
-            }
-            if (adjacencyList[edge.targetNodeId]) {
-                adjacencyList[edge.targetNodeId].push(edge.sourceNodeId);
-            }
-        });
-        
-        // BFS 找到所有连通的节点，并记录层级（距离）
-        const nodesByLevel = {}; // level -> [nodeIds]
-        const nodeLevels = {};   // nodeId -> level
-        const visited = new Set();
-        const queue = [{ nodeId: centerNodeId, level: 0 }];
-        visited.add(centerNodeId);
-        
-        while (queue.length > 0) {
-            const { nodeId, level } = queue.shift();
-            
-            if (!nodesByLevel[level]) nodesByLevel[level] = [];
-            nodesByLevel[level].push(nodeId);
-            nodeLevels[nodeId] = level;
-            
-            (adjacencyList[nodeId] || []).forEach(neighbor =&gt; {
-                if (!visited.has(neighbor)) {
-                    visited.add(neighbor);
-                    queue.push({ nodeId: neighbor, level: level + 1 });
-                }
-            });
-        }
-        
-        // 找出不连通的节点
-        const disconnectedNodes = nodes
-            .map(n =&gt; n.nodeId)
-            .filter(id =&gt; !visited.has(id));
-        
-        // 获取画布中心
-        const centerX = canvas.clientWidth / 2;
-        const centerY = canvas.clientHeight / 2;
-        
-        // 计算新的布局位置
-        const newPositions = {};
-        const maxLevel = Math.max(...Object.keys(nodesByLevel).map(Number), 0);
-        
-        // 使用自适应布局参数
-        const layoutParams = calculateLayoutParams(nodes.length, canvas.clientWidth, canvas.clientHeight, maxLevel);
-        const baseLayerGap = layoutParams.layerGap;
-        const maxRadius = layoutParams.maxRadius;
-        
-        // 记录每个节点的父节点（用于扇形布局）
-        const parentMap = {};
-        edges.forEach(edge =&gt; {
-            const srcLevel = nodeLevels[edge.sourceNodeId];
-            const tgtLevel = nodeLevels[edge.targetNodeId];
-            if (srcLevel !== undefined &amp;&amp; tgtLevel !== undefined) {
-                if (srcLevel &lt; tgtLevel) {
-                    parentMap[edge.targetNodeId] = edge.sourceNodeId;
-                } else if (tgtLevel &lt; srcLevel) {
-                    parentMap[edge.sourceNodeId] = edge.targetNodeId;
-                }
-            }
-        });
-        
-        // 按层级分配位置 - 使用改进的扇形径向布局
-        Object.keys(nodesByLevel).sort((a, b) =&gt; Number(a) - Number(b)).forEach(levelStr =&gt; {
-            const level = parseInt(levelStr);
-            const nodesAtLevel = nodesByLevel[level];
-            
-            if (level === 0) {
-                // 中心节点
-                newPositions[centerNodeId] = { x: centerX, y: centerY };
-            } else {
-                // 层级半径：直接线性关系
-                const radius = baseLayerGap * level;
-                
-                // 按父节点分组
-                const nodesByParent = {};
-                nodesAtLevel.forEach(nodeId =&gt; {
-                    const parent = parentMap[nodeId] || &#39;_root&#39;;
-                    if (!nodesByParent[parent]) nodesByParent[parent] = [];
-                    nodesByParent[parent].push(nodeId);
-                });
-                
-                // 计算每个父节点分配的角度范围
-                const parents = Object.keys(nodesByParent);
-                const totalChildren = nodesAtLevel.length;
-                
-                if (level === 1) {
-                    // 第一层：均匀分布在圆周上
-                    const angleStep = (2 * Math.PI) / nodesAtLevel.length;
-                    const startAngle = -Math.PI / 2; // 从顶部开始
-                    nodesAtLevel.forEach((nodeId, index) =&gt; {
-                        const angle = startAngle + angleStep * index;
-                        newPositions[nodeId] = {
-                            x: centerX + radius * Math.cos(angle),
-                            y: centerY + radius * Math.sin(angle)
-                        };
-                    });
-                } else {
-                    // 更深层：围绕父节点的方向排列
-                    let currentAngleOffset = 0;
-                    parents.forEach(parentId =&gt; {
-                        const children = nodesByParent[parentId];
-                        const parentPos = newPositions[parentId];
-                        
-                        if (!parentPos) {
-                            // 父节点位置未知，使用默认角度
-                            const fallbackAngle = currentAngleOffset;
-                            children.forEach((nodeId, idx) =&gt; {
-                                const childAngle = fallbackAngle + (idx - (children.length - 1) / 2) * 0.3;
-                                newPositions[nodeId] = {
-                                    x: centerX + radius * Math.cos(childAngle),
-                                    y: centerY + radius * Math.sin(childAngle)
-                                };
-                            });
-                            currentAngleOffset += children.length * 0.35;
-                            return;
-                        }
-                        
-                        // 计算父节点相对于中心的角度
-                        const parentAngle = Math.atan2(parentPos.y - centerY, parentPos.x - centerX);
-                        
-                        // 子节点围绕父节点方向分散排列 - 根据子节点数量动态计算扩散角度
-                        const minAnglePerChild = 0.25;  // 每个子节点最小占用约15度
-                        const requiredAngle = children.length * minAnglePerChild;
-                        const spreadAngle = Math.min(Math.PI * 1.2, Math.max(requiredAngle, Math.PI / 4));
-                        const childAngleStep = children.length > 1 ? spreadAngle / (children.length - 1) : 0;
-                        const childStartAngle = parentAngle - spreadAngle / 2;
-                        
-                        children.forEach((nodeId, idx) =&gt; {
-                            const childAngle = children.length > 1 
-                                ? childStartAngle + childAngleStep * idx 
-                                : parentAngle;
-                            newPositions[nodeId] = {
-                                x: centerX + radius * Math.cos(childAngle),
-                                y: centerY + radius * Math.sin(childAngle)
-                            };
-                        });
-                    });
-                }
-            }
-        });
-        
-        // 不连通的节点保持原位置不变（只变暗，不移动）
-        // 不需要为它们计算新位置
-        
-        // 动画过渡到新位置
-        animateToNewLayout(newPositions, centerNodeId, visited, disconnectedNodes);
+        // 使用新布局系统重新渲染
+        renderGraphFromData(centerNodeId);
         
         // 选中中心节点并更新详情面板
         const centerNode = nodes.find(n =&gt; n.nodeId === centerNodeId);
@@ -3324,83 +3950,12 @@ window.APP_GLOBALS.user.init();
             };
             selectNode(nodeInfo);
             
-            // 确保右侧详情面板更新
             if (window.updateNodeDetailPanel) {
                 window.updateNodeDetailPanel(nodeInfo);
             }
         }
         
-        const connectedCount = visited.size - 1;
-        const msg = disconnectedNodes.length > 0 
-            ? `以"${centerNode?.name || &#39;节点&#39;}"为中心，${connectedCount} 个连通节点，${disconnectedNodes.length} 个不连通`
-            : `以"${centerNode?.name || &#39;节点&#39;}"为中心，共 ${connectedCount} 个连通节点`;
-        window.showNotification(msg, &#39;info&#39;);
-    }
-    
-    // 动画过渡到新布局
-    function animateToNewLayout(newPositions, centerNodeId, connectedIds, disconnectedIds) {
-        const duration = 600; // 动画时长 ms
-        const startTime = performance.now();
-        
-        // 记录起始位置
-        const startPositions = {};
-        document.querySelectorAll(&#39;.graph-node&#39;).forEach(nodeEl =&gt; {
-            const nodeId = nodeEl.getAttribute(&#39;data-node-id&#39;);
-            startPositions[nodeId] = {
-                x: parseFloat(nodeEl.getAttribute(&#39;cx&#39;)),
-                y: parseFloat(nodeEl.getAttribute(&#39;cy&#39;))
-            };
-        });
-        
-        function animate(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // 使用 easeOutCubic 缓动函数
-            const eased = 1 - Math.pow(1 - progress, 3);
-            
-            // 更新每个节点的位置
-            Object.keys(newPositions).forEach(nodeId =&gt; {
-                const start = startPositions[nodeId];
-                const end = newPositions[nodeId];
-                if (!start || !end) return;
-                
-                const currentX = start.x + (end.x - start.x) * eased;
-                const currentY = start.y + (end.y - start.y) * eased;
-                
-                // 更新节点
-                const nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
-                if (nodeEl) {
-                    nodeEl.setAttribute(&#39;cx&#39;, currentX);
-                    nodeEl.setAttribute(&#39;cy&#39;, currentY);
-                }
-                
-                // 更新标签
-                const labelEl = document.querySelector(`[data-label-for="${nodeId}"]`);
-                if (labelEl) {
-                    labelEl.setAttribute(&#39;x&#39;, currentX);
-                    labelEl.setAttribute(&#39;y&#39;, currentY + 28);
-                }
-                
-                // 更新数据
-                if (currentGraphData.nodePositions?.[nodeId]) {
-                    currentGraphData.nodePositions[nodeId].x = currentX;
-                    currentGraphData.nodePositions[nodeId].y = currentY;
-                }
-            });
-            
-            // 更新所有边
-            updateAllEdges();
-            
-            if (progress &lt; 1) {
-                requestAnimationFrame(animate);
-            } else {
-                // 动画结束，应用样式
-                applyFocusStyles(centerNodeId, connectedIds, disconnectedIds || []);
-            }
-        }
-        
-        requestAnimationFrame(animate);
+        window.showNotification(`以"${centerNode?.name || &#39;节点&#39;}"为中心重新布局`, &#39;info&#39;);
     }
     
     // 更新所有边的位置
@@ -4338,26 +4893,41 @@ window.APP_GLOBALS.user.init();
 
     window.zoomIn = function() {
         graphZoom = Math.min(graphZoom * 1.2, 3);
-        applyGraphTransform();
+        applyViewBoxZoom();
     };
 
     window.zoomOut = function() {
         graphZoom = Math.max(graphZoom / 1.2, 0.3);
-        applyGraphTransform();
+        applyViewBoxZoom();
     };
 
-    window.resetView = function() {
-        graphZoom = 1;
-        graphPan = { x: 0, y: 0 };
-        applyGraphTransform();
-    };
-
-    function applyGraphTransform() {
+    // 使用 viewBox 实现缩放
+    function applyViewBoxZoom() {
         const svg = document.querySelector(&#39;#graphCanvas svg&#39;);
-        if (svg) {
-            svg.style.transform = `scale(${graphZoom}) translate(${graphPan.x}px, ${graphPan.y}px)`;
-        }
+        if (!svg || !currentGraphData.initialViewBox) return;
+        
+        const initVB = currentGraphData.initialViewBox;
+        // 缩放时缩小 viewBox 尺寸 = 放大显示内容
+        const newWidth = initVB.width / graphZoom;
+        const newHeight = initVB.height / graphZoom;
+        // 保持中心点不变
+        const centerX = initVB.x + initVB.width / 2;
+        const centerY = initVB.y + initVB.height / 2;
+        const newX = centerX - newWidth / 2;
+        const newY = centerY - newHeight / 2;
+        
+        svg.setAttribute(&#39;viewBox&#39;, `${newX} ${newY} ${newWidth} ${newHeight}`);
     }
+
+    // 滚轮缩放画布
+    document.getElementById(&#39;graphCanvas&#39;).addEventListener(&#39;wheel&#39;, function(e) {
+        e.preventDefault();
+        if (e.deltaY &lt; 0) {
+            zoomIn();
+        } else {
+            zoomOut();
+        }
+    }, { passive: false });
 
     // Action functions
     window.toggleFavorite = function() {
@@ -4388,12 +4958,25 @@ window.APP_GLOBALS.user.init();
     }
 
     window.shareGraph = function() {
+        // 获取正确的 origin（处理 iframe 情况）
+        let origin = window.location.origin;
+        if (!origin || origin === &#39;null&#39;) {
+            try {
+                origin = window.parent.location.origin;
+            } catch(e) {
+                origin = &#39;&#39;;
+            }
+        }
+        if (!origin || origin === &#39;null&#39;) {
+            origin = window.location.protocol + &#39;//&#39; + window.location.host;
+        }
+        
         // Generate share link - use the stored shareLink if available
         let shareUrl;
         if (currentGraphData.shareLink) {
-            shareUrl = `${window.location.origin}/graph/graph_detail.html?share=${currentGraphData.shareLink}`;
+            shareUrl = `${origin}/graph/graph_detail.html?share=${currentGraphData.shareLink}`;
         } else if (currentGraphData.id) {
-            shareUrl = `${window.location.origin}/graph/graph_detail.html?id=${currentGraphData.id}`;
+            shareUrl = `${origin}/graph/graph_detail.html?id=${currentGraphData.id}`;
         } else {
             shareUrl = window.location.href;
         }
@@ -4404,11 +4987,6 @@ window.APP_GLOBALS.user.init();
     };
 
     window.downloadGraph = function() {
-        // Generate initial download link
-        const downloadUrl = `${window.location.origin}/api/download/${currentGraphData.id}`;
-        document.getElementById(&#39;downloadLink&#39;).value = downloadUrl;
-        
-        // Show modal
         document.getElementById(&#39;downloadModal&#39;).showModal();
     };
 
@@ -4438,53 +5016,27 @@ window.APP_GLOBALS.user.init();
         });
     };
 
-    // Copy download link function
-    window.copyDownloadLink = function() {
-        const downloadLink = document.getElementById(&#39;downloadLink&#39;);
-        downloadLink.select();
-        downloadLink.setSelectionRange(0, 99999);
-        
-        navigator.clipboard.writeText(downloadLink.value).then(() => {
-            const btn = document.getElementById(&#39;copyDownloadBtn&#39;);
-            const originalText = btn.innerHTML;
-            
-            btn.innerHTML = &#39;<span class="iconify" data-icon="heroicons:check" data-width="16"></span>已复制&#39;;
-            btn.classList.add(&#39;btn-success&#39;);
-            btn.classList.remove(&#39;btn-primary&#39;);
-            
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.classList.remove(&#39;btn-success&#39;);
-                btn.classList.add(&#39;btn-primary&#39;);
-            }, 2000);
-            
-            window.showNotification(&#39;下载链接已复制到剪贴板&#39;, &#39;success&#39;);
-        }).catch(() => {
-            window.showNotification(&#39;复制失败，请手动复制&#39;, &#39;error&#39;);
-        });
-    };
-
-    // Download format selection
+    // Download format selection - 直接触发下载
     window.downloadFormat = function(format) {
-        const baseUrl = `${window.location.origin}/api/download/${currentGraphData.id}`;
-        let downloadUrl = &#39;&#39;;
-        
-        switch(format) {
-            case &#39;json&#39;:
-                downloadUrl = `${baseUrl}?format=json`;
-                break;
-            case &#39;csv&#39;:
-                downloadUrl = `${baseUrl}?format=csv`;
-                break;
-            case &#39;png&#39;:
-                downloadUrl = `${baseUrl}?format=png`;
-                break;
-            default:
-                downloadUrl = baseUrl;
+        const graphId = currentGraphData.id;
+        if (!graphId) {
+            window.showNotification(&#39;请先选择图谱&#39;, &#39;warning&#39;);
+            return;
         }
         
-        document.getElementById(&#39;downloadLink&#39;).value = downloadUrl;
-        window.showNotification(`已生成${format.toUpperCase()}格式下载链接`, &#39;info&#39;);
+        const downloadUrl = `/api/download/${graphId}?format=${format}`;
+        
+        // 直接触发下载
+        const link = document.createElement(&#39;a&#39;);
+        link.href = downloadUrl;
+        link.download = &#39;&#39;;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // 关闭模态框
+        document.getElementById(&#39;downloadModal&#39;).close();
+        window.showNotification(`正在下载 ${format.toUpperCase()} 格式文件...`, &#39;info&#39;);
     };
 
     window.toggleFullscreen = function() {
@@ -4563,7 +5115,6 @@ window.APP_GLOBALS.user.init();
         document.getElementById(&#39;singleNodeName&#39;).value = &#39;&#39;;
         document.getElementById(&#39;singleNodeType&#39;).value = &#39;&#39;;
         document.getElementById(&#39;singleNodeDescription&#39;).value = &#39;&#39;;
-        document.getElementById(&#39;singleNodeImportance&#39;).value = &#39;5&#39;;
         document.getElementById(&#39;batchImportInput&#39;).value = &#39;&#39;;
         switchImportTab(&#39;single&#39;);
         document.getElementById(&#39;batchImportModal&#39;).showModal();
@@ -4583,14 +5134,13 @@ window.APP_GLOBALS.user.init();
             const name = document.getElementById(&#39;singleNodeName&#39;).value.trim();
             const type = document.getElementById(&#39;singleNodeType&#39;).value.trim() || &#39;默认&#39;;
             const description = document.getElementById(&#39;singleNodeDescription&#39;).value.trim();
-            const importance = parseInt(document.getElementById(&#39;singleNodeImportance&#39;).value) || 5;
             
             if (!name) {
                 window.showNotification(&#39;请输入节点名称&#39;, &#39;warning&#39;);
                 return;
             }
             
-            nodes = [{ name, type, description, importance }];
+            nodes = [{ name, type, description }];
         } else {
             const input = document.getElementById(&#39;batchImportInput&#39;).value.trim();
             if (!input) {
@@ -4604,8 +5154,7 @@ window.APP_GLOBALS.user.init();
                 return {
                     name: parts[0] || &#39;&#39;,
                     type: parts[1] || &#39;默认&#39;,
-                    description: parts[2] || &#39;&#39;,
-                    importance: parseInt(parts[3]) || 5
+                    description: parts[2] || &#39;&#39;
                 };
             }).filter(n =&gt; n.name);
         }
@@ -5462,6 +6011,9 @@ window.APP_GLOBALS.user.init();
             resizeHandle.style.display = &#39;&#39;;
             toggleIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-left&#39;);
         }
+        
+        // 调整画布可视区域
+        setTimeout(adjustCanvasViewBox, 350);
     };
     
     // 拖拽调整左侧栏宽度
@@ -5510,11 +6062,7 @@ window.APP_GLOBALS.user.init();
         });
     }
     
-    // 初始化拖拽功能
-    document.addEventListener(&#39;DOMContentLoaded&#39;, initResizeHandle);
-    if (document.readyState !== &#39;loading&#39;) {
-        initResizeHandle();
-    }
+    // 拖拽功能已在主 DOMContentLoaded 中初始化
     
     // ==================== 右侧栏折叠和拖拽功能 ====================
     
@@ -5522,7 +6070,7 @@ window.APP_GLOBALS.user.init();
     let isResizingRight = false;
     let startXRight = 0;
     let startWidthRight = 0;
-    const ACTION_PANEL_WIDTH = 64; // 右侧操作栏宽度
+    const ACTION_PANEL_WIDTH = 56; // 右侧操作栏宽度 (w-16 = 3.5rem = 56px)
     
     // 折叠/展开右侧栏
     window.toggleRightSidebar = function() {
@@ -5539,8 +6087,8 @@ window.APP_GLOBALS.user.init();
             sidebar.style.width = &#39;0px&#39;;
             sidebar.style.minWidth = &#39;0&#39;;
             sidebar.style.overflow = &#39;hidden&#39;;
-            toggleBtn.style.right = (ACTION_PANEL_WIDTH) + &#39;px&#39;;
-            resizeHandle.style.right = (ACTION_PANEL_WIDTH) + &#39;px&#39;;
+            toggleBtn.style.right = ACTION_PANEL_WIDTH + &#39;px&#39;;
+            resizeHandle.style.right = ACTION_PANEL_WIDTH + &#39;px&#39;;
             resizeHandle.style.display = &#39;none&#39;;
             toggleIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-left&#39;);
         } else {
@@ -5548,10 +6096,13 @@ window.APP_GLOBALS.user.init();
             sidebar.style.minWidth = &#39;200px&#39;;
             sidebar.style.overflow = &#39;&#39;;
             toggleBtn.style.right = (300 + ACTION_PANEL_WIDTH) + &#39;px&#39;;
-            resizeHandle.style.right = (300 + ACTION_PANEL_WIDTH + 16) + &#39;px&#39;;
+            resizeHandle.style.right = (300 + ACTION_PANEL_WIDTH) + &#39;px&#39;;
             resizeHandle.style.display = &#39;&#39;;
             toggleIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-right&#39;);
         }
+        
+        // 调整画布可视区域
+        setTimeout(adjustCanvasViewBox, 350);
     };
     
     // 拖拽调整右侧栏宽度
@@ -5587,7 +6138,7 @@ window.APP_GLOBALS.user.init();
             
             sidebar.style.width = newWidth + &#39;px&#39;;
             toggleBtn.style.right = (newWidth + ACTION_PANEL_WIDTH) + &#39;px&#39;;
-            resizeHandle.style.right = (newWidth + ACTION_PANEL_WIDTH + 16) + &#39;px&#39;;
+            resizeHandle.style.right = (newWidth + ACTION_PANEL_WIDTH) + &#39;px&#39;;
         });
         
         document.addEventListener(&#39;mouseup&#39;, function() {
@@ -5600,11 +6151,7 @@ window.APP_GLOBALS.user.init();
         });
     }
     
-    // 初始化右侧拖拽功能
-    document.addEventListener(&#39;DOMContentLoaded&#39;, initRightResizeHandle);
-    if (document.readyState !== &#39;loading&#39;) {
-        initRightResizeHandle();
-    }
+    // 右侧拖拽功能已在主 DOMContentLoaded 中初始化
     
     // ==================== 节点详情显示功能 ====================
     
@@ -5693,20 +6240,6 @@ window.APP_GLOBALS.user.init();
         `;
     };
     
-    // 清空节点详情面板
-    window.clearNodeDetailPanel = function() {
-        const container = document.getElementById(&#39;nodeDetailContent&#39;);
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div class="text-center text-base-content/50 py-8">
-                <span class="iconify mx-auto mb-3" data-icon="heroicons:cursor-arrow-rays" data-width="32"></span>
-                <p class="text-sm">点击图谱中的节点</p>
-                <p class="text-xs mt-1">查看详细信息</p>
-            </div>
-        `;
-    };
-    
     // ==================== 编辑节点功能 ====================
     
     // 打开编辑节点模态框
@@ -5723,7 +6256,6 @@ window.APP_GLOBALS.user.init();
         document.getElementById(&#39;editNodeName&#39;).value = node.name || &#39;&#39;;
         document.getElementById(&#39;editNodeType&#39;).value = node.type || &#39;&#39;;
         document.getElementById(&#39;editNodeDescription&#39;).value = node.description || &#39;&#39;;
-        document.getElementById(&#39;editNodeImportance&#39;).value = node.importance || 5;
         
         document.getElementById(&#39;editNodeModal&#39;).showModal();
     };
@@ -5741,7 +6273,6 @@ window.APP_GLOBALS.user.init();
         const name = document.getElementById(&#39;editNodeName&#39;).value.trim();
         const type = document.getElementById(&#39;editNodeType&#39;).value.trim();
         const description = document.getElementById(&#39;editNodeDescription&#39;).value.trim();
-        const importance = parseInt(document.getElementById(&#39;editNodeImportance&#39;).value) || 5;
         
         if (!name) {
             window.showNotification(&#39;节点名称不能为空&#39;, &#39;warning&#39;);
@@ -5753,7 +6284,7 @@ window.APP_GLOBALS.user.init();
                 method: &#39;PUT&#39;,
                 headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
                 credentials: &#39;include&#39;,
-                body: JSON.stringify({ name, type, description, importance })
+                body: JSON.stringify({ name, type, description })
             });
             
             const result = await response.json();
@@ -5801,9 +6332,5 @@ window.APP_GLOBALS.user.init();
   </script></body></html>'></iframe>
                     </div>
                   </div>
-
                 </body>
                 </html>
-            
-                </html>
-            
