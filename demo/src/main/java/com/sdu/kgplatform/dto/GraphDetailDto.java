@@ -21,6 +21,7 @@ public class GraphDetailDto {
     private Integer graphId;
     private Integer uploaderId;
     private String uploaderName;
+    private String uploaderAvatar;
     private String name;
     private String description;
     private String status;

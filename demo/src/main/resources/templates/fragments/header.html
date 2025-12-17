@@ -6,10 +6,10 @@
 </head>
 <body>
 <!-- 头部导航片段 -->
-<header th:fragment="header" class="navbar text-base-content shadow-soft sticky top-0 z-50 header-height bg-base-100/95 backdrop-blur">
+<header th:fragment="header" class="navbar text-base-content shadow-soft sticky top-0 z-50 bg-base-100 border-b px-4 h-16">
     <div class="navbar-start">
         <div class="flex items-center gap-4">
-            <a th:href="@{/}" class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10">
+            <a href="/" class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10">
                 <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
                 Graph+知识图谱平台
             </a>
@@ -19,46 +19,46 @@
                     <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
                 </div>
                 <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
-                    <li><a th:href="@{/}" class="nav-hover focus-primary text-base-content">首页</a></li>
-                    <li><a th:href="@{/graphs}" class="nav-hover focus-primary text-base-content">探索</a></li>
-                    <li><a th:href="@{/forum}" class="nav-hover focus-primary text-base-content">论坛</a></li>
-                    <li><a th:href="@{/admin}" class="nav-hover focus-primary text-base-content">管理</a></li>
-                    <li><a th:href="@{/documentation}" class="nav-hover focus-primary text-base-content">使用文档</a></li>
-                    <li><a th:href="@{/about}" class="nav-hover focus-primary text-base-content">关于我们</a></li>
+                    <li><a href="/graph/home.html" class="nav-hover focus-primary text-base-content">首页</a></li>
+                    <li><a href="/graph/graph_list.html" class="nav-hover focus-primary text-base-content">探索</a></li>
+                    <li><a href="/community/forum_list.html" class="nav-hover focus-primary text-base-content">论坛</a></li>
+                    <li><a href="/pages/documentation.html" class="nav-hover focus-primary text-base-content">使用文档</a></li>
+                    <li><a href="/pages/about.html" class="nav-hover focus-primary text-base-content">关于我们</a></li>
                 </ul>
             </div>
         </div>
     </div>
     <div class="navbar-center hidden lg:flex">
         <ul class="menu menu-horizontal px-1 gap-2">
-            <li><a th:href="@{/}" class="nav-hover focus-primary text-base-content">首页</a></li>
-            <li><a th:href="@{/graphs}" class="nav-hover focus-primary text-base-content">探索</a></li>
-            <li><a th:href="@{/forum}" class="nav-hover focus-primary text-base-content">论坛</a></li>
-            <li><a th:href="@{/admin}" class="nav-hover focus-primary text-base-content">管理</a></li>
-            <li><a th:href="@{/documentation}" class="nav-hover focus-primary text-base-content">使用文档</a></li>
-            <li><a th:href="@{/about}" class="nav-hover focus-primary text-base-content">关于我们</a></li>
+            <li><a href="/graph/home.html" class="nav-hover focus-primary text-base-content">首页</a></li>
+            <li><a href="/graph/graph_list.html" class="nav-hover focus-primary text-base-content">探索</a></li>
+            <li><a href="/community/forum_list.html" class="nav-hover focus-primary text-base-content">论坛</a></li>
+            <li><a href="/pages/documentation.html" class="nav-hover focus-primary text-base-content">使用文档</a></li>
+            <li><a href="/pages/about.html" class="nav-hover focus-primary text-base-content">关于我们</a></li>
         </ul>
     </div>
     <div class="navbar-end">
         <div class="flex items-center gap-4">
             <!-- 未登录状态 -->
             <div data-user-control="logged-out" class="flex gap-2">
-                <a th:href="@{/login}" class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10">登录</a>
-                <a th:href="@{/register}" class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100">注册</a>
+                <a href="/user/login_register.html" class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10">登录</a>
+                <a href="/user/login_register.html" class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100">注册</a>
             </div>
             <!-- 已登录状态 -->
             <div data-user-control="logged-in" class="dropdown dropdown-end" style="display: none;">
-                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-                    <div class="w-10 h-10 rounded-full bg-primary-content text-primary flex items-center justify-center text-sm font-bold">
-                        用户
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
+                    <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
+                        <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
+                        <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
                     </div>
                 </div>
-                <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
-                    <li><a th:href="@{/profile}" class="text-base-content">个人资料</a></li>
-                    <li><a th:href="@{/profile}" class="text-base-content">我的收藏</a></li>
-                    <li><a th:href="@{/profile}" class="text-base-content">历史记录</a></li>
-                    <li><hr class="academic-divider"></li>
-                    <li><a onclick="APP_GLOBALS.user.logout()" class="text-error cursor-pointer">退出登录</a></li>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
+                    <li class="menu-title"><span>用户中心</span></li>
+                    <li><a href="/user/profile.html"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a></li>
+                    <li><a href="/user/profile.html#favorites"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a></li>
+                    <li><a href="/user/profile.html"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a></li>
+                    <div class="divider my-1"></div>
+                    <li><a class="text-error" onclick="logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a></li>
                 </ul>
             </div>
         </div>

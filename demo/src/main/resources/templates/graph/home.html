@@ -99,13 +99,16 @@
                     'about_page': '../pages/about.html',
                     'feedback_page': '../community/feedback.html',
                     'page_998124': '../admin/dashboard.html',
-                    'page_998125': '../community/forum_list.html'
+                    'page_998125': '../community/forum_list.html',
+                    'post_edit_page': '../community/post_edit.html',
+                    'post_detail_page': '../community/post_detail.html'
                   };
                   let targetPath = pagePathMap[targetPageId];
                   if (type === "iframeNavigation" && targetPath) {
                     // 如果有 params，拼接到 URL 上
-                    if (params && params.graphId) {
-                      targetPath += '?id=' + params.graphId;
+                    if (params && typeof params === 'object') {
+                      const queryString = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
+                      targetPath += (targetPath.includes('?') ? '&' : '?') + queryString;
                     }
                     window.location.href = targetPath
                   }
@@ -1032,35 +1035,63 @@ notification.remove();
 
 // Favorites management
 window.APP_GLOBALS.favorites = {
-items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+items: JSON.parse(localStorage.getItem(&#39;graph_favorites&#39;) || &#39;[]&#39;),
 
-add: function(graphId, graphData) {
-if (!this.items.find(item => item.id === graphId)) {
-this.items.push({
-id: graphId,
-data: graphData,
-addedAt: new Date().toISOString()
+add: async function(graphId, graphData) {
+try {
+const res = await fetch(&#39;/api/graph/&#39; + graphId + &#39;/favorite&#39;, {
+method: &#39;POST&#39;,
+credentials: &#39;include&#39;
 });
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+const data = await res.json();
+if (data.success) {
+if (!this.items.find(item =&gt; item.id === graphId)) {
+this.items.push({ id: graphId, data: graphData, addedAt: new Date().toISOString() });
+localStorage.setItem(&#39;graph_favorites&#39;, JSON.stringify(this.items));
+}
 showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+return true;
+} else {
+showNotification(data.error || &#39;收藏失败，请先登录&#39;, &#39;error&#39;);
+return false;
+}
+} catch(e) {
+showNotification(&#39;收藏失败，请先登录&#39;, &#39;error&#39;);
+return false;
 }
 },
 
-remove: function(graphId) {
-this.items = this.items.filter(item => item.id !== graphId);
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+remove: async function(graphId) {
+try {
+const res = await fetch(&#39;/api/graph/&#39; + graphId + &#39;/favorite&#39;, {
+method: &#39;POST&#39;,
+credentials: &#39;include&#39;
+});
+const data = await res.json();
+if (data.success) {
+this.items = this.items.filter(item =&gt; item.id !== graphId);
+localStorage.setItem(&#39;graph_favorites&#39;, JSON.stringify(this.items));
 showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+return true;
+} else {
+showNotification(data.error || &#39;操作失败&#39;, &#39;error&#39;);
+return false;
+}
+} catch(e) {
+showNotification(&#39;操作失败&#39;, &#39;error&#39;);
+return false;
+}
 },
 
 isFavorited: function(graphId) {
-return this.items.some(item => item.id === graphId);
+return this.items.some(item =&gt; item.id === graphId);
 },
 
-toggle: function(graphId, graphData) {
+toggle: async function(graphId, graphData) {
 if (this.isFavorited(graphId)) {
-this.remove(graphId);
+return await this.remove(graphId);
 } else {
-this.add(graphId, graphData);
+return await this.add(graphId, graphData);
 }
 }
 };
@@ -1172,7 +1203,7 @@ function viewGraphDetail(graphId) {
             params: { graphId: graphId }
         }, &#39;*&#39;);
     } else {
-        window.location.href = &#39;./graph_detail.html?id=&#39; + graphId;
+        window.location.href = &#39;/graph/graph_detail.html?id=&#39; + graphId;
     }
 }
 
@@ -1327,11 +1358,11 @@ function initializeFavorites() {
     updateFavoriteButtons();
 }
 
-function toggleFavorite(graphId, buttonElement) {
+async function toggleFavorite(graphId, buttonElement) {
     const iconElement = buttonElement.querySelector(&#39;.iconify&#39;);
-    const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
+    const wasAlreadyFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
 
-    // Mock graph data for demonstration
+    // Get graph data from card
     const cardElement = buttonElement.closest(&#39;.card&#39;);
     const graphData = {
         id: graphId,
@@ -1340,21 +1371,24 @@ function toggleFavorite(graphId, buttonElement) {
         image: cardElement.querySelector(&#39;img&#39;).src
     };
 
-    window.APP_GLOBALS.favorites.toggle(graphId, graphData);
+    const success = await window.APP_GLOBALS.favorites.toggle(graphId, graphData);
+    
+    if (!success) return; // API call failed, don&#39;t update UI
 
     // Update button appearance with animation
+    const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
     if (isFavorited) {
-        iconElement.classList.remove(&#39;favorited&#39;);
-        iconElement.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart&#39;);
-        buttonElement.style.transform = &#39;scale(0.9)&#39;;
-        setTimeout(() => {
-            buttonElement.style.transform = &#39;scale(1)&#39;;
-        }, 150);
-    } else {
         iconElement.classList.add(&#39;favorited&#39;);
         iconElement.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart-solid&#39;);
         buttonElement.style.transform = &#39;scale(1.1)&#39;;
-        setTimeout(() => {
+        setTimeout(() =&gt; {
+            buttonElement.style.transform = &#39;scale(1)&#39;;
+        }, 150);
+    } else {
+        iconElement.classList.remove(&#39;favorited&#39;);
+        iconElement.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart&#39;);
+        buttonElement.style.transform = &#39;scale(0.9)&#39;;
+        setTimeout(() =&gt; {
             buttonElement.style.transform = &#39;scale(1)&#39;;
         }, 150);
     }

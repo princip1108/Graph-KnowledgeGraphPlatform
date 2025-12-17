@@ -597,7 +597,7 @@ border-width: var(--border);
             <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
           </li>
           <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
+            <a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
           </li>
           <li>
             <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
@@ -922,18 +922,27 @@ border-width: var(--border);
 window.APP_GLOBALS = window.APP_GLOBALS || {};
 
 // Global navigation utility
-window.navigateTo = function(targetPageId) {
+window.navigateTo = function(targetPageId, params) {
 const isInIframe = window.self !== window.top;
-const targetFileName = `${targetPageId}.html`;
 
 if (isInIframe) {
 window.parent.postMessage({
 type: &#39;iframeNavigation&#39;,
-targetPageId: targetPageId
+targetPageId: targetPageId,
+params: params
 }, &#39;*&#39;);
 } else {
-window.location.href = targetFileName;
+let url = `${targetPageId}.html`;
+if (params) {
+const queryString = Object.keys(params).map(k =&gt; k + &#39;=&#39; + encodeURIComponent(params[k])).join(&#39;&amp;&#39;);
+url += &#39;?&#39; + queryString;
 }
+window.location.href = url;
+}
+};
+
+window.navigateToFavorites = function() {
+navigateTo(&#39;user_profile_page&#39;, { section: &#39;favorites&#39; });
 };
 
 // User authentication state management
@@ -1069,35 +1078,57 @@ notification.remove();
 
 // Favorites management
 window.APP_GLOBALS.favorites = {
-items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+items: JSON.parse(localStorage.getItem(&#39;graph_favorites&#39;) || &#39;[]&#39;),
 
-add: function(graphId, graphData) {
-if (!this.items.find(item => item.id === graphId)) {
-this.items.push({
-id: graphId,
-data: graphData,
-addedAt: new Date().toISOString()
+add: async function(graphId, graphData) {
+try {
+const res = await fetch(&#39;/api/graph/&#39; + graphId + &#39;/favorite&#39;, {
+method: &#39;POST&#39;,
+credentials: &#39;include&#39;
 });
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+const data = await res.json();
+if (data.success) {
+if (!this.items.find(item =&gt; item.id === graphId)) {
+this.items.push({ id: graphId, data: graphData, addedAt: new Date().toISOString() });
+localStorage.setItem(&#39;graph_favorites&#39;, JSON.stringify(this.items));
+}
 showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+} else {
+showNotification(data.error || &#39;收藏失败，请先登录&#39;, &#39;error&#39;);
+}
+} catch(e) {
+showNotification(&#39;收藏失败，请先登录&#39;, &#39;error&#39;);
 }
 },
 
-remove: function(graphId) {
-this.items = this.items.filter(item => item.id !== graphId);
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+remove: async function(graphId) {
+try {
+const res = await fetch(&#39;/api/graph/&#39; + graphId + &#39;/favorite&#39;, {
+method: &#39;POST&#39;,
+credentials: &#39;include&#39;
+});
+const data = await res.json();
+if (data.success) {
+this.items = this.items.filter(item =&gt; item.id !== graphId);
+localStorage.setItem(&#39;graph_favorites&#39;, JSON.stringify(this.items));
 showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+} else {
+showNotification(data.error || &#39;操作失败&#39;, &#39;error&#39;);
+}
+} catch(e) {
+showNotification(&#39;操作失败&#39;, &#39;error&#39;);
+}
 },
 
 isFavorited: function(graphId) {
-return this.items.some(item => item.id === graphId);
+return this.items.some(item =&gt; item.id === graphId);
 },
 
-toggle: function(graphId, graphData) {
+toggle: async function(graphId, graphData) {
 if (this.isFavorited(graphId)) {
-this.remove(graphId);
+await this.remove(graphId);
 } else {
-this.add(graphId, graphData);
+await this.add(graphId, graphData);
 }
 }
 };
@@ -1782,17 +1813,17 @@ function hideGraphPreview() {
 }
 
 // 切换收藏状态
-function toggleFavorite(graphId, event) {
+async function toggleFavorite(graphId, event) {
   event.stopPropagation();
   
-  const graph = allGraphs.find(g => g.id === graphId);
+  const graph = allGraphs.find(g =&gt; g.id === graphId);
+  const btn = event.target.closest(&#39;.favorite-btn&#39;);
+  const heartIcon = btn.querySelector(&#39;.iconify&#39;);
   
   if (graph) {
-    window.APP_GLOBALS.favorites.toggle(graphId, graph);
+    await window.APP_GLOBALS.favorites.toggle(graphId, graph);
     
     // 更新心形图标状态
-    const btn = event.target.closest(&#39;.favorite-btn&#39;);
-    const heartIcon = btn.querySelector(&#39;.iconify&#39;);
     const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
     
     if (isFavorited) {
@@ -1816,7 +1847,7 @@ function viewGraphDetail(graphId) {
       params: { graphId: graphId }
     }, &#39;*&#39;);
   } else {
-    window.location.href = `./graph_detail.html?id=${graphId}`;
+    window.location.href = `/graph/graph_detail.html?id=${graphId}`;
   }
 }
 

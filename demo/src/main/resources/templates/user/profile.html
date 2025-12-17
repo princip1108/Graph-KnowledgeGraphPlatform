@@ -99,13 +99,16 @@
                     'about_page': '../pages/about.html',
                     'feedback_page': '../community/feedback.html',
                     'page_998124': '../admin/dashboard.html',
-                    'page_998125': '../community/forum_list.html'
+                    'page_998125': '../community/forum_list.html',
+                    'post_edit_page': '../community/post_edit.html',
+                    'post_detail_page': '../community/post_detail.html'
                   };
                   let targetPath = pagePathMap[targetPageId];
                   if (type === "iframeNavigation" && targetPath) {
                     // 如果有 params，拼接到 URL 上
-                    if (params && params.graphId) {
-                      targetPath += '?id=' + params.graphId;
+                    if (params && typeof params === 'object') {
+                      const queryString = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
+                      targetPath += (targetPath.includes('?') ? '&' : '?') + queryString;
                     }
                     window.location.href = targetPath
                   }
@@ -535,7 +538,7 @@ z-index: 10;
             <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
           </li>
           <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
+            <a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
           </li>
           <li>
             <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
@@ -847,81 +850,29 @@ z-index: 10;
                   <h2 class="card-title text-2xl font-semibold mb-6">
                     我的收藏
                   </h2>
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div data-repeatable="true" class="card bg-base-200 shadow-soft hover-lift cursor-pointer">
-                      <figure class="px-6 pt-6">
-                        <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/2ebea935-f4fa-41bd-a921-99293f48d7bb.png" alt="人工智能知识图谱" class="rounded-lg w-full h-40 object-cover">
-                      </figure>
-                      <div class="card-body">
-                        <h3 class="card-title text-lg">人工智能技术发展图谱</h3>
-                        <div class="flex gap-2 mb-2">
-                          <div class="badge badge-primary badge-sm">
-                            人工智能
-                          </div>
-                          <div class="badge badge-secondary badge-sm">
-                            技术发展
-                          </div>
-                        </div>
-                        <p class="text-sm text-base-content/70 mb-4">
-                          收藏时间：2024-10-28
-                        </p>
-                        <div class="card-actions justify-end">
-                          <button class="btn btn-primary btn-sm" onclick="navigateTo(&#39;graph_detail_page&#39;)">
-                            <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
-                            查看详情</button><button class="btn btn-ghost btn-sm text-error" onclick="removeFavorite(this)">
-                            <span class="iconify" data-icon="heroicons:heart-slash" data-width="16"></span>
-                            取消收藏
-                          </button>
-                        </div>
-                      </div>
+                  <!-- 收藏分类标签 -->
+                  <div class="tabs tabs-boxed mb-6">
+                    <a id="tab-posts" class="tab tab-active" onclick="switchFavoriteTab(&#39;posts&#39;)">
+                      <span class="iconify mr-1" data-icon="heroicons:document-text" data-width="16"></span>
+                      帖子收藏
+                    </a>
+                    <a id="tab-graphs" class="tab" onclick="switchFavoriteTab(&#39;graphs&#39;)">
+                      <span class="iconify mr-1" data-icon="heroicons:share" data-width="16"></span>
+                      图谱收藏
+                    </a>
+                  </div>
+                  <!-- 帖子收藏列表 -->
+                  <div id="post-favorites-container" class="space-y-4">
+                    <div class="text-center py-8 text-base-content/70">
+                      <span class="loading loading-spinner loading-md"></span>
+                      <p class="mt-2">加载中...</p>
                     </div>
-                    <div data-repeatable="true" class="card bg-base-200 shadow-soft hover-lift cursor-pointer">
-                      <figure class="px-6 pt-6">
-                        <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/c94846dc-cd06-4324-a765-07af06f633b4.png" alt="机器学习算法" class="rounded-lg w-full h-40 object-cover">
-                      </figure>
-                      <div class="card-body">
-                        <h3 class="card-title text-lg">机器学习算法分类</h3>
-                        <div class="flex gap-2 mb-2">
-                          <div class="badge badge-accent badge-sm">
-                            机器学习
-                          </div>
-                          <div class="badge badge-info badge-sm">算法</div>
-                        </div>
-                        <p class="text-sm text-base-content/70 mb-4">
-                          收藏时间：2024-10-27
-                        </p>
-                        <div class="card-actions justify-end">
-                          <button class="btn btn-primary btn-sm" onclick="navigateTo(&#39;graph_detail_page&#39;)">
-                            <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
-                            查看详情</button><button class="btn btn-ghost btn-sm text-error" onclick="removeFavorite(this)">
-                            <span class="iconify" data-icon="heroicons:heart-slash" data-width="16"></span>
-                            取消收藏
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div data-repeatable="true" class="card bg-base-200 shadow-soft hover-lift cursor-pointer">
-                      <figure class="px-6 pt-6">
-                        <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/6a5d2f10-f223-4e2c-9925-5ce3fb4446ff.png" alt="自然语言处理" class="rounded-lg w-full h-40 object-cover">
-                      </figure>
-                      <div class="card-body">
-                        <h3 class="card-title text-lg">自然语言处理技术栈</h3>
-                        <div class="flex gap-2 mb-2">
-                          <div class="badge badge-warning badge-sm">NLP</div>
-                          <div class="badge badge-success badge-sm">技术栈</div>
-                        </div>
-                        <p class="text-sm text-base-content/70 mb-4">
-                          收藏时间：2024-10-26
-                        </p>
-                        <div class="card-actions justify-end">
-                          <button class="btn btn-primary btn-sm" onclick="navigateTo(&#39;graph_detail_page&#39;)">
-                            <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
-                            查看详情</button><button class="btn btn-ghost btn-sm text-error" onclick="removeFavorite(this)">
-                            <span class="iconify" data-icon="heroicons:heart-slash" data-width="16"></span>
-                            取消收藏
-                          </button>
-                        </div>
-                      </div>
+                  </div>
+                  <!-- 图谱收藏列表 -->
+                  <div id="graph-favorites-container" class="space-y-4 hidden">
+                    <div class="text-center py-8 text-base-content/70">
+                      <span class="loading loading-spinner loading-md"></span>
+                      <p class="mt-2">加载中...</p>
                     </div>
                   </div>
                 </div>
@@ -1191,18 +1142,28 @@ z-index: 10;
 window.APP_GLOBALS = window.APP_GLOBALS || {};
 
 // Global navigation utility
-window.navigateTo = function(targetPageId) {
+window.navigateTo = function(targetPageId, params) {
 const isInIframe = window.self !== window.top;
-const targetFileName = `${targetPageId}.html`;
 
 if (isInIframe) {
 window.parent.postMessage({
 type: &#39;iframeNavigation&#39;,
-targetPageId: targetPageId
+targetPageId: targetPageId,
+params: params
 }, &#39;*&#39;);
 } else {
-window.location.href = targetFileName;
+let url = `${targetPageId}.html`;
+if (params) {
+const queryString = Object.keys(params).map(k =&gt; k + &#39;=&#39; + encodeURIComponent(params[k])).join(&#39;&amp;&#39;);
+url += &#39;?&#39; + queryString;
 }
+window.location.href = url;
+}
+};
+
+// 跳转到收藏页面
+window.navigateToFavorites = function() {
+navigateTo(&#39;user_profile_page&#39;, { section: &#39;favorites&#39; });
 };
 
 // User authentication state management
@@ -1379,8 +1340,15 @@ let confirmAction = null;
 
 // 页面初始化
 document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-    // 默认显示个人资料部分
-    showSection(&#39;profile&#39;);
+    // 检测URL参数，支持直接跳转到指定section
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get(&#39;section&#39;);
+    if (section &amp;&amp; document.getElementById(section + &#39;-section&#39;)) {
+        showSection(section);
+    } else {
+        // 默认显示个人资料部分
+        showSection(&#39;profile&#39;);
+    }
     
     // 初始化用户数据
     initializeUserData();
@@ -1952,6 +1920,255 @@ function handleAvatarUpload(input) {
     // 清空 input 以便重复选择同一文件
     input.value = &#39;&#39;;
 }
+
+// 收藏标签切换
+function switchFavoriteTab(type) {
+    const tabPosts = document.getElementById(&#39;tab-posts&#39;);
+    const tabGraphs = document.getElementById(&#39;tab-graphs&#39;);
+    const postContainer = document.getElementById(&#39;post-favorites-container&#39;);
+    const graphContainer = document.getElementById(&#39;graph-favorites-container&#39;);
+    
+    if (type === &#39;posts&#39;) {
+        tabPosts.classList.add(&#39;tab-active&#39;);
+        tabGraphs.classList.remove(&#39;tab-active&#39;);
+        postContainer.classList.remove(&#39;hidden&#39;);
+        graphContainer.classList.add(&#39;hidden&#39;);
+        loadPostFavorites();
+    } else {
+        tabPosts.classList.remove(&#39;tab-active&#39;);
+        tabGraphs.classList.add(&#39;tab-active&#39;);
+        postContainer.classList.add(&#39;hidden&#39;);
+        graphContainer.classList.remove(&#39;hidden&#39;);
+        loadGraphFavorites();
+    }
+}
+
+// 加载我的收藏（入口函数）
+function loadFavorites() {
+    loadPostFavorites();
+}
+
+// 加载帖子收藏
+function loadPostFavorites() {
+    const container = document.getElementById(&#39;post-favorites-container&#39;);
+    if (!container) return;
+    
+    fetch(&#39;/api/user/favorites&#39;, { credentials: &#39;include&#39; })
+        .then(res =&gt; res.json())
+        .then(data =&gt; {
+            if (!data.success || !data.favorites || data.favorites.length === 0) {
+                container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;暂无帖子收藏&lt;/div&gt;&#39;;
+                return;
+            }
+            
+            let html = &#39;&#39;;
+            data.favorites.forEach(post =&gt; {
+                const date = post.uploadTime ? new Date(post.uploadTime).toLocaleDateString() : &#39;--&#39;;
+                html += `
+                    &lt;div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="window.open(&#39;/community/post_detail.html?id=${post.postId}&#39;, &#39;_top&#39;)"&gt;
+                        &lt;div class="flex-1"&gt;
+                            &lt;h3 class="font-medium text-base-content"&gt;${post.postTitle || &#39;无标题&#39;}&lt;/h3&gt;
+                            &lt;p class="text-sm text-base-content/70 mt-1"&gt;${post.postAbstract || &#39;&#39;}&lt;/p&gt;
+                            &lt;div class="flex items-center gap-4 mt-2 text-xs text-base-content/50"&gt;
+                                &lt;span&gt;收藏时间：${date}&lt;/span&gt;
+                                &lt;span&gt;点赞：${post.likeCount || 0}&lt;/span&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;button class="btn btn-ghost btn-sm text-error" onclick="event.stopPropagation(); removeFavoritePost(${post.postId})"&gt;
+                            &lt;span class="iconify" data-icon="heroicons:heart-slash" data-width="16"&gt;&lt;/span&gt;
+                        &lt;/button&gt;
+                    &lt;/div&gt;
+                `;
+            });
+            container.innerHTML = html;
+        })
+        .catch(err =&gt; {
+            console.error(&#39;加载帖子收藏失败:&#39;, err);
+            container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;加载失败，请刷新重试&lt;/div&gt;&#39;;
+        });
+}
+
+// 加载图谱收藏
+function loadGraphFavorites() {
+    const container = document.getElementById(&#39;graph-favorites-container&#39;);
+    if (!container) return;
+    
+    fetch(&#39;/api/graph/favorites&#39;, { credentials: &#39;include&#39; })
+        .then(res =&gt; res.json())
+        .then(data =&gt; {
+            if (!data.success || !data.favorites || data.favorites.length === 0) {
+                container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;暂无图谱收藏&lt;/div&gt;&#39;;
+                return;
+            }
+            
+            let html = &#39;&#39;;
+            data.favorites.forEach(graph =&gt; {
+                const date = graph.uploadDate ? new Date(graph.uploadDate).toLocaleDateString() : &#39;--&#39;;
+                const cover = graph.coverImage || &#39;https://placehold.co/80x80/eee/999?text=图谱&#39;;
+                html += `
+                    &lt;div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="window.open(&#39;/graph/graph_detail.html?id=${graph.graphId}&#39;, &#39;_top&#39;)"&gt;
+                        &lt;div class="flex items-center gap-4 flex-1"&gt;
+                            &lt;img src="${cover}" class="w-16 h-16 rounded-lg object-cover" alt="图谱封面"&gt;
+                            &lt;div class="flex-1"&gt;
+                                &lt;h3 class="font-medium text-base-content"&gt;${graph.name || &#39;无标题&#39;}&lt;/h3&gt;
+                                &lt;p class="text-sm text-base-content/70 mt-1 line-clamp-1"&gt;${graph.description || &#39;暂无描述&#39;}&lt;/p&gt;
+                                &lt;div class="flex items-center gap-4 mt-2 text-xs text-base-content/50"&gt;
+                                    &lt;span&gt;节点：${graph.nodeCount || 0}&lt;/span&gt;
+                                    &lt;span&gt;浏览：${graph.viewCount || 0}&lt;/span&gt;
+                                    &lt;span&gt;收藏：${graph.collectCount || 0}&lt;/span&gt;
+                                &lt;/div&gt;
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;button class="btn btn-ghost btn-sm text-error" onclick="event.stopPropagation(); removeFavoriteGraph(${graph.graphId})"&gt;
+                            &lt;span class="iconify" data-icon="heroicons:heart-slash" data-width="16"&gt;&lt;/span&gt;
+                        &lt;/button&gt;
+                    &lt;/div&gt;
+                `;
+            });
+            container.innerHTML = html;
+        })
+        .catch(err =&gt; {
+            console.error(&#39;加载图谱收藏失败:&#39;, err);
+            container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;加载失败，请刷新重试&lt;/div&gt;&#39;;
+        });
+}
+
+// 取消收藏帖子
+function removeFavoritePost(postId) {
+    fetch(&#39;/api/posts/&#39; + postId + &#39;/favorite&#39;, {
+        method: &#39;POST&#39;,
+        credentials: &#39;include&#39;
+    })
+    .then(res =&gt; res.json())
+    .then(data =&gt; {
+        if (data.success) {
+            showNotification(&#39;已取消收藏&#39;, &#39;success&#39;);
+            loadPostFavorites();
+        } else {
+            showNotification(data.error || &#39;操作失败&#39;, &#39;error&#39;);
+        }
+    })
+    .catch(err =&gt; {
+        showNotification(&#39;操作失败&#39;, &#39;error&#39;);
+    });
+}
+
+// 取消收藏图谱
+function removeFavoriteGraph(graphId) {
+    fetch(&#39;/api/graph/&#39; + graphId + &#39;/favorite&#39;, {
+        method: &#39;POST&#39;,
+        credentials: &#39;include&#39;
+    })
+    .then(res =&gt; res.json())
+    .then(data =&gt; {
+        if (data.success) {
+            showNotification(&#39;已取消收藏&#39;, &#39;success&#39;);
+            loadGraphFavorites();
+        } else {
+            showNotification(data.error || &#39;操作失败&#39;, &#39;error&#39;);
+        }
+    })
+    .catch(err =&gt; {
+        showNotification(&#39;操作失败&#39;, &#39;error&#39;);
+    });
+}
+
+// 加载草稿箱
+function loadDrafts() {
+    const container = document.getElementById(&#39;drafts-container&#39;);
+    if (!container) return;
+    
+    fetch(&#39;/api/user/drafts&#39;, { credentials: &#39;include&#39; })
+        .then(res =&gt; res.json())
+        .then(data =&gt; {
+            if (!data.success || !data.drafts || data.drafts.length === 0) {
+                container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;暂无草稿&lt;/div&gt;&#39;;
+                return;
+            }
+            
+            let html = &#39;&#39;;
+            data.drafts.forEach(post =&gt; {
+                const date = post.uploadTime ? new Date(post.uploadTime).toLocaleDateString() : &#39;--&#39;;
+                html += `
+                    &lt;div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift"&gt;
+                        &lt;div class="flex-1"&gt;
+                            &lt;h3 class="font-medium text-base-content"&gt;${post.postTitle || &#39;无标题草稿&#39;}&lt;/h3&gt;
+                            &lt;p class="text-sm text-base-content/70 mt-1"&gt;${post.postAbstract || &#39;&#39;}&lt;/p&gt;
+                            &lt;div class="text-xs text-base-content/50 mt-2"&gt;保存时间：${date}&lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div class="flex gap-2"&gt;
+                            &lt;button class="btn btn-primary btn-sm" onclick="window.open(&#39;/community/post_edit.html?id=${post.postId}&#39;, &#39;_top&#39;)"&gt;
+                                &lt;span class="iconify" data-icon="heroicons:pencil" data-width="16"&gt;&lt;/span&gt;
+                                继续编辑
+                            &lt;/button&gt;
+                            &lt;button class="btn btn-ghost btn-sm text-error" onclick="deleteDraft(${post.postId})"&gt;
+                                &lt;span class="iconify" data-icon="heroicons:trash" data-width="16"&gt;&lt;/span&gt;
+                            &lt;/button&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                `;
+            });
+            container.innerHTML = html;
+        })
+        .catch(err =&gt; {
+            console.error(&#39;加载草稿失败:&#39;, err);
+            container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;加载失败，请刷新重试&lt;/div&gt;&#39;;
+        });
+}
+
+// 删除草稿
+function deleteDraft(postId) {
+    showConfirmDialog(&#39;确定要删除这篇草稿吗？&#39;, function() {
+        fetch(&#39;/api/posts/&#39; + postId, {
+            method: &#39;DELETE&#39;,
+            credentials: &#39;include&#39;
+        })
+        .then(res =&gt; res.json())
+        .then(data =&gt; {
+            if (data.success) {
+                showNotification(&#39;草稿已删除&#39;, &#39;success&#39;);
+                loadDrafts();
+            } else {
+                showNotification(data.error || &#39;删除失败&#39;, &#39;error&#39;);
+            }
+        })
+        .catch(err =&gt; {
+            showNotification(&#39;删除失败&#39;, &#39;error&#39;);
+        });
+    });
+}
+
+// 修改 showSection 函数，在切换时加载数据
+var originalShowSection = showSection;
+showSection = function(sectionName) {
+    originalShowSection(sectionName);
+    if (sectionName === &#39;favorites&#39;) {
+        loadFavorites();
+    } else if (sectionName === &#39;drafts&#39;) {
+        loadDrafts();
+    }
+};
+
+// 处理 URL hash 跳转
+(function handleHashNavigation() {
+    var hash = window.location.hash;
+    if (hash) {
+        var section = hash.replace(&#39;#&#39;, &#39;&#39;);
+        // 等待页面加载完成后再切换
+        setTimeout(function() {
+            showSection(section);
+        }, 100);
+    }
+})();
+
+// 监听 hash 变化
+window.addEventListener(&#39;hashchange&#39;, function() {
+    var hash = window.location.hash;
+    if (hash) {
+        var section = hash.replace(&#39;#&#39;, &#39;&#39;);
+        showSection(section);
+    }
+});
 </script>
   
 

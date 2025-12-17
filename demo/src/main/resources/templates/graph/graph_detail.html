@@ -212,88 +212,53 @@ border-width: var(--border);
     overflow: hidden;
 }
 
-/* ==================== 可调整侧边栏样式 ==================== */
+/* ==================== 侧边栏样式 ==================== */
 
 /* 左侧边栏 */
 #leftSidebar {
-    width: 280px;
+    width: 320px;
     min-width: 200px;
-    max-width: 400px;
-    transition: width 0.3s ease, margin-left 0.3s ease;
+    max-width: 500px;
     position: relative;
-    overflow: hidden;
-    z-index: 15;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+    align-self: stretch;
 }
-
 #leftSidebar.collapsed {
     width: 0 !important;
-    min-width: 0;
-    margin-left: -1px;
-    overflow: hidden;
+    min-width: 0 !important;
+    overflow: visible;
 }
-
 #leftSidebar.collapsed .sidebar-content {
-    opacity: 0;
-    pointer-events: none;
+    display: none;
+}
+#leftSidebar.collapsed .resize-handle {
+    display: none;
 }
 
 /* 右侧详情栏 */
 #rightSidebar {
     width: 300px;
-    min-width: 220px;
-    max-width: 450px;
-    transition: width 0.3s ease, margin-right 0.3s ease;
+    min-width: 200px;
+    max-width: 500px;
     position: relative;
-    overflow: hidden;
-    z-index: 15;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+    align-self: stretch;
 }
-
 #rightSidebar.collapsed {
     width: 0 !important;
-    min-width: 0;
-    margin-right: -1px;
-    overflow: hidden;
+    min-width: 0 !important;
+    overflow: visible;
 }
-
 #rightSidebar.collapsed .sidebar-content {
-    opacity: 0;
-    pointer-events: none;
+    display: none;
+}
+#rightSidebar.collapsed .resize-handle {
+    display: none;
 }
 
-/* 侧边栏内容容器 */
-.sidebar-content {
-    transition: opacity 0.2s ease;
-    height: 100%;
-    overflow-y: auto;
-}
-
-
-/* 拖拽调整手柄 */
-.resize-handle {
-    position: absolute;
-    top: 0;
-    width: 6px;
-    height: 100%;
-    cursor: col-resize;
-    background: transparent;
-    z-index: 100;
-    transition: background-color 0.2s;
-}
-
-.resize-handle:hover,
-.resize-handle.active {
-    background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent);
-}
-
-.resize-handle-left {
-    right: -3px;
-}
-
-.resize-handle-right {
-    left: -3px;
-}
-
-/* 收起/展开按钮 */
+/* 侧边栏折叠按钮 - 相对于侧边栏定位 */
 .sidebar-toggle {
     position: absolute;
     top: 50%;
@@ -302,40 +267,43 @@ border-width: var(--border);
     height: 48px;
     background: var(--color-base-200);
     border: 1px solid var(--color-base-300);
-    border-radius: 0 6px 6px 0;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 101;
-    transition: all 0.2s;
+    z-index: 100;
+    transition: background 0.2s;
 }
-
 .sidebar-toggle:hover {
     background: var(--color-base-300);
 }
-
-.sidebar-toggle-left {
+#leftSidebarToggle {
     right: -20px;
-    border-left: none;
+    border-radius: 0 8px 8px 0;
 }
-
-.sidebar-toggle-right {
+#rightSidebarToggle {
     left: -20px;
-    border-radius: 6px 0 0 6px;
-    border-right: none;
+    border-radius: 8px 0 0 8px;
 }
 
-.sidebar-toggle .iconify {
-    transition: transform 0.3s;
+/* 拖拽调整手柄 */
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background: transparent;
+    z-index: 20;
 }
-
-.collapsed .sidebar-toggle-left .iconify {
-    transform: rotate(180deg);
+.resize-handle:hover {
+    background: rgba(59, 130, 246, 0.4);
 }
-
-.collapsed .sidebar-toggle-right .iconify {
-    transform: rotate(180deg);
+.resize-handle-left {
+    right: 0;
+}
+.resize-handle-right {
+    left: 0;
 }
 
 /* Graph canvas styles with subtle grid background */
@@ -770,13 +738,107 @@ border-width: var(--border);
 </style>
   <script src="/assets/static/libs/25_6/holder.js"></script></head>
   <body class="bg-base-100 min-h-screen">
-    <div class="header-wrapper"></div>
+    <div data-section-id="common_header" data-section-type="common_header">
+  <div id="ijzt" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 ijzt spark-custom-ijzt ijzt">
+    <!-- Left section: Logo -->
+    <div class="navbar-start">
+      <div class="flex items-center gap-4">
+        <button class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;home_page&#39;)">
+          <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
+          Graph+知识图谱平台
+        </button>
+      </div>
+      <!-- Mobile menu (visible on small screens) -->
+      <div class="dropdown lg:hidden">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
+        </div>
+        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
+          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Center section: Main navigation -->
+    <div class="navbar-center hidden lg:flex">
+      <ul class="menu menu-horizontal px-1 gap-2">
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Right section: User controls -->
+    <div class="navbar-end">
+      <!-- Login/Register buttons for logged-out users -->
+      <div data-user-control="logged-out" class="flex items-center gap-2" style="display: none;">
+        <button class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;login_register_page&#39;)">
+          登录</button><button class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100" onclick="navigateTo(&#39;login_register_page&#39;)">
+          注册
+        </button>
+      </div>
+      <!-- User profile dropdown for logged-in users -->
+      <div data-user-control="logged-in" id="i1jf9" class="dropdown dropdown-end" style="display: none;">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
+          <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
+            <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
+            <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
+          </div>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
+          <li class="menu-title"><span>用户中心</span></li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
+          </li>
+          <li id="admin-menu-item" style="display: none;">
+            <a class="nav-hover focus-primary text-primary" onclick="navigateTo(&#39;admin_dashboard_page&#39;)"><span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="16"></span><span>管理后台</span></a>
+          </li>
+          <div class="divider my-1"></div>
+          <li>
+            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
     <!-- Main Content -->
     <div id="i9njq" class="flex-1 flex flex-col" style="min-height: calc(100vh - 64px);">
       <!-- Graph Detail Layout -->
-      <div class="flex-1 flex">
+      <div id="graphDetailLayout" class="flex relative" style="height: 65vh; min-height: 500px;">
         <!-- Left Sidebar -->
         <div id="leftSidebar" class="bg-base-200 border-r academic-border flex flex-col" style="width: 320px;">
+          <!-- Left Resize Handle -->
+          <div id="leftResizeHandle" class="resize-handle resize-handle-left"></div>
+          <!-- Left Sidebar Toggle Button -->
+          <button id="leftSidebarToggle" class="sidebar-toggle" onclick="toggleLeftSidebar()" title="收起/展开左侧栏">
+            <span class="iconify text-base-content" data-icon="heroicons:chevron-left" data-width="16" id="leftToggleIcon"></span>
+          </button>
+          <div class="sidebar-content flex-1 flex flex-col overflow-y-auto">
           <!-- Return Button -->
           <div class="p-6 border-b academic-border">
             <button class="btn btn-ghost btn-sm w-full justify-start gap-2 focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">
@@ -792,9 +854,24 @@ border-width: var(--border);
             <p id="graphDescription" class="text-sm text-base-content/70 mb-4 leading-relaxed">
               正在加载图谱信息...
             </p>
-            <div id="graphTags" class="flex flex-wrap gap-2">
+            <div id="graphTags" class="flex flex-wrap gap-2 mb-4">
               <div class="badge badge-ghost badge-sm">加载中...</div>
             </div>
+            <!-- Uploader Info -->
+            <div id="uploaderSection" class="flex items-center gap-3 p-3 bg-base-100 rounded-lg mb-4">
+              <a id="uploaderLink" href="#" target="_top" class="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity">
+                <div id="uploaderAvatar" class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold text-sm">U</div>
+                <div>
+                  <div class="text-sm font-medium" id="uploaderName">上传者</div>
+                  <div class="text-xs text-base-content/50">图谱创建者</div>
+                </div>
+              </a>
+            </div>
+            <!-- Create Post Button -->
+            <button id="createPostBtn" class="btn btn-primary btn-sm w-full gap-2" onclick="createPostForGraph()">
+              <span class="iconify" data-icon="heroicons:pencil-square" data-width="16"></span>
+              发布相关帖子
+            </button>
           </div>
           <!-- Search in Graph (with Advanced Search integrated) -->
           <div class="border-b academic-border">
@@ -931,13 +1008,8 @@ border-width: var(--border);
             </div>
           </div>
         </div>
+          </div>
         </div>
-        <!-- Left Sidebar Toggle Button (fixed定位，JS动态计算垂直位置) -->
-        <button id="leftSidebarToggle" class="fixed z-20 bg-base-200 border border-base-300 rounded-r-lg p-1 hover:bg-base-300 transition-all" style="left: 320px; top: 50%; transform: translateY(-50%);" onclick="toggleLeftSidebar()" title="收起/展开左侧栏">
-          <span class="iconify text-base-content" data-icon="heroicons:chevron-left" data-width="16" id="leftToggleIcon"></span>
-        </button>
-        <!-- Left Resize Handle -->
-        <div id="leftResizeHandle" class="fixed w-1 cursor-col-resize bg-transparent hover:bg-primary/30 z-10" style="left: 320px; top: 64px; bottom: 0;"></div>
         <!-- Main Graph Area -->
         <div class="flex-1 flex flex-col">
           <!-- Graph Statistics Section -->
@@ -974,14 +1046,14 @@ border-width: var(--border);
             </div>
           </div>
         </div>
-        <!-- Right Resize Handle (fixed定位) -->
-        <div id="rightResizeHandle" class="fixed w-1 cursor-col-resize bg-transparent hover:bg-primary/30 z-10" style="right: 356px; top: 64px; bottom: 0;"></div>
-        <!-- Right Sidebar Toggle Button (fixed定位) -->
-        <button id="rightSidebarToggle" class="fixed z-20 bg-base-200 border border-base-300 rounded-l-lg p-1 hover:bg-base-300 transition-all" style="right: 356px; top: 50%; transform: translateY(-50%);" onclick="toggleRightSidebar()" title="收起/展开右侧栏">
-          <span class="iconify text-base-content" data-icon="heroicons:chevron-right" data-width="16" id="rightToggleIcon"></span>
-        </button>
         <!-- Right Sidebar - Node Details -->
         <div id="rightSidebar" class="bg-base-200 border-l academic-border flex flex-col" style="width: 300px;">
+          <!-- Right Resize Handle -->
+          <div id="rightResizeHandle" class="resize-handle resize-handle-right"></div>
+          <!-- Right Sidebar Toggle Button -->
+          <button id="rightSidebarToggle" class="sidebar-toggle" onclick="toggleRightSidebar()" title="收起/展开右侧栏">
+            <span class="iconify text-base-content" data-icon="heroicons:chevron-right" data-width="16" id="rightToggleIcon"></span>
+          </button>
           <div class="sidebar-content">
             <!-- Header -->
             <div class="p-4 border-b academic-border">
@@ -1538,18 +1610,27 @@ border-width: var(--border);
 window.APP_GLOBALS = window.APP_GLOBALS || {};
 
 // Global navigation utility
-window.navigateTo = function(targetPageId) {
+window.navigateTo = function(targetPageId, params) {
 const isInIframe = window.self !== window.top;
-const targetFileName = `${targetPageId}.html`;
 
 if (isInIframe) {
 window.parent.postMessage({
 type: &#39;iframeNavigation&#39;,
-targetPageId: targetPageId
+targetPageId: targetPageId,
+params: params
 }, &#39;*&#39;);
 } else {
-window.location.href = targetFileName;
+let url = `${targetPageId}.html`;
+if (params) {
+const queryString = Object.keys(params).map(k =&gt; k + &#39;=&#39; + encodeURIComponent(params[k])).join(&#39;&amp;&#39;);
+url += &#39;?&#39; + queryString;
 }
+window.location.href = url;
+}
+};
+
+window.navigateToFavorites = function() {
+navigateTo(&#39;user_profile_page&#39;, { section: &#39;favorites&#39; });
 };
 
 // User authentication state management
@@ -1580,7 +1661,7 @@ window.top.location.href = &#39;/graph/home.html&#39;;
 
 updateUserInterface: function() {
 const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
-userControls.forEach(control => {
+userControls.forEach(control =&gt; {
 const controlType = control.getAttribute(&#39;data-user-control&#39;);
 if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
 control.style.display = &#39;none&#39;;
@@ -1590,6 +1671,24 @@ control.style.display = &#39;none&#39;;
 control.style.display = &#39;&#39;;
 }
 });
+
+// 更新导航栏头像
+if (this.isLoggedIn &amp;&amp; this.userInfo) {
+const avatarText = document.getElementById(&#39;nav-avatar-text&#39;);
+const avatarImg = document.getElementById(&#39;nav-avatar-img&#39;);
+if (avatarText &amp;&amp; avatarImg) {
+if (this.userInfo.avatar) {
+avatarText.classList.add(&#39;hidden&#39;);
+avatarImg.src = this.userInfo.avatar;
+avatarImg.classList.remove(&#39;hidden&#39;);
+} else {
+const initial = (this.userInfo.userName || &#39;用&#39;).substring(0, 1);
+avatarText.textContent = initial;
+avatarText.classList.remove(&#39;hidden&#39;);
+avatarImg.classList.add(&#39;hidden&#39;);
+}
+}
+}
 },
 
 init: function() {
@@ -1738,6 +1837,11 @@ window.APP_GLOBALS.user.init();
         return getGraphParamsFromUrl().id;
     }
     
+    // 获取当前图谱ID（优先从 currentGraphData，否则从 URL）
+    window.getCurrentGraphId = function() {
+        return currentGraphData.id || getGraphIdFromUrl();
+    };
+    
     // 根据分享链接加载图谱
     async function loadGraphByShareLink(shareLink) {
         try {
@@ -1758,7 +1862,6 @@ window.APP_GLOBALS.user.init();
     // Load graph data from API
     async function loadGraphData(graphId) {
         if (!graphId) {
-            console.log(&#39;No graph ID provided&#39;);
             return null;
         }
         
@@ -1773,13 +1876,10 @@ window.APP_GLOBALS.user.init();
             // Load nodes
             const nodesResponse = await fetch(`/api/graph/${graphId}/nodes`);
             const nodesData = nodesResponse.ok ? await nodesResponse.json() : { nodes: [] };
-            console.log(&#39;Nodes API response:&#39;, nodesData);
             
             // Load relations
             const relationsResponse = await fetch(`/api/graph/${graphId}/relations`);
-            console.log(&#39;Relations API status:&#39;, relationsResponse.status, relationsResponse.ok);
             const relationsData = relationsResponse.ok ? await relationsResponse.json() : { relations: [] };
-            console.log(&#39;Relations API response:&#39;, relationsData);
             
             // Check edit permission
             let canEdit = false;
@@ -1790,7 +1890,7 @@ window.APP_GLOBALS.user.init();
                     canEdit = permData.canEdit === true;
                 }
             } catch (e) {
-                console.log(&#39;Permission check failed, defaulting to no edit&#39;);
+                // Permission check failed, defaulting to no edit
             }
             
             return {
@@ -1804,7 +1904,10 @@ window.APP_GLOBALS.user.init();
                 viewCount: graphInfo.viewCount || 0,
                 collectCount: graphInfo.collectCount || 0,
                 shareLink: graphInfo.shareLink || &#39;&#39;,
-                canEdit: canEdit
+                canEdit: canEdit,
+                uploaderId: graphInfo.uploaderId,
+                uploaderName: graphInfo.uploaderName,
+                uploaderAvatar: graphInfo.uploaderAvatar
             };
         } catch (error) {
             console.error(&#39;Error loading graph data:&#39;, error);
@@ -1847,6 +1950,40 @@ window.APP_GLOBALS.user.init();
         if (nodeManagementSection) {
             nodeManagementSection.style.display = data.canEdit ? &#39;block&#39; : &#39;none&#39;;
         }
+        
+        // Update uploader info
+        updateUploaderInfo(data);
+    }
+    
+    // Update uploader info
+    function updateUploaderInfo(data) {
+        const uploaderNameEl = document.getElementById(&#39;uploaderName&#39;);
+        const uploaderAvatarEl = document.getElementById(&#39;uploaderAvatar&#39;);
+        const uploaderLink = document.getElementById(&#39;uploaderLink&#39;);
+        
+        if (data.uploaderName) {
+            if (uploaderNameEl) uploaderNameEl.textContent = data.uploaderName;
+        }
+        
+        // 更新头像：如果有头像URL则显示图片，否则显示首字母
+        if (uploaderAvatarEl) {
+            if (data.uploaderAvatar) {
+                uploaderAvatarEl.innerHTML = &#39;&lt;img src="&#39; + data.uploaderAvatar + &#39;" class="w-full h-full rounded-full object-cover" alt="" /&gt;&#39;;
+            } else if (data.uploaderName) {
+                uploaderAvatarEl.textContent = data.uploaderName.charAt(0).toUpperCase();
+            }
+        }
+        
+        if (data.uploaderId &amp;&amp; uploaderLink) {
+            uploaderLink.href = &#39;/user/profile.html?id=&#39; + data.uploaderId;
+        }
+    }
+    
+    // Create post for this graph
+    window.createPostForGraph = function() {
+        const graphId = getCurrentGraphId();
+        const graphName = document.getElementById(&#39;graphTitle&#39;)?.textContent || &#39;&#39;;
+        window.top.location.href = &#39;/community/post_edit.html?graphId=&#39; + graphId + &#39;&amp;graphName=&#39; + encodeURIComponent(graphName);
     }
     
     // Update search type filter options
@@ -2291,49 +2428,89 @@ window.APP_GLOBALS.user.init();
         container.innerHTML = html;
     }
 
-    // 5. 图谱缩略图
+    // 5. 图谱缩略图 - 与主图谱布局一致
     function renderThumbnail(container) {
         const nodes = currentGraphData.nodes || [];
         const edges = currentGraphData.edges || [];
+        const mainPositions = currentGraphData.nodePositions || {};
         
         if (nodes.length === 0) {
             container.innerHTML = &#39;&lt;div class="flex items-center justify-center h-full text-base-content/50"&gt;暂无图谱数据&lt;/div&gt;&#39;;
             return;
         }
         
-        const width = 300, height = 200;
-        const nodePositions = {};
-        const centerX = width / 2, centerY = height / 2;
-        const radius = Math.min(width, height) / 2 - 20;
+        // 使用主图谱的布局位置，如果没有则使用圆形布局
+        let nodePositions = {};
+        const hasMainPositions = Object.keys(mainPositions).length &gt; 0;
+        const thumbWidth = 280, thumbHeight = 160;
         
-        nodes.forEach(function(n, i) {
-            const angle = (2 * Math.PI * i) / nodes.length;
-            nodePositions[n.nodeId] = {
-                x: centerX + radius * Math.cos(angle),
-                y: centerY + radius * Math.sin(angle)
-            };
-        });
+        if (hasMainPositions) {
+            // 计算主图谱的边界
+            const xs = Object.values(mainPositions).map(function(p) { return p.x; });
+            const ys = Object.values(mainPositions).map(function(p) { return p.y; });
+            const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+            const minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+            const graphWidth = maxX - minX || 1;
+            const graphHeight = maxY - minY || 1;
+            
+            // 缩略图边距
+            const padding = 15;
+            const availWidth = thumbWidth - padding * 2;
+            const availHeight = thumbHeight - padding * 2;
+            
+            // 计算缩放比例（保持宽高比）
+            const scale = Math.min(availWidth / graphWidth, availHeight / graphHeight);
+            
+            // 缩放并居中
+            const offsetX = padding + (availWidth - graphWidth * scale) / 2;
+            const offsetY = padding + (availHeight - graphHeight * scale) / 2;
+            
+            nodes.forEach(function(n) {
+                const pos = mainPositions[n.nodeId];
+                if (pos) {
+                    nodePositions[n.nodeId] = {
+                        x: (pos.x - minX) * scale + offsetX,
+                        y: (pos.y - minY) * scale + offsetY
+                    };
+                }
+            });
+        } else {
+            // 回退到圆形布局
+            const centerX = thumbWidth / 2, centerY = thumbHeight / 2;
+            const radius = Math.min(thumbWidth, thumbHeight) / 2 - 20;
+            nodes.forEach(function(n, i) {
+                const angle = (2 * Math.PI * i) / nodes.length;
+                nodePositions[n.nodeId] = {
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                };
+            });
+        }
         
-        let svg = &#39;&lt;svg viewBox="0 0 &#39; + width + &#39; &#39; + height + &#39;" class="w-full h-full"&gt;&#39;;
+        let svg = &#39;&lt;svg viewBox="0 0 &#39; + thumbWidth + &#39; &#39; + thumbHeight + &#39;" class="w-full h-full"&gt;&#39;;
         
+        // 绘制边
         edges.forEach(function(e) {
             const src = nodePositions[e.sourceNodeId];
             const tgt = nodePositions[e.targetNodeId];
             if (src &amp;&amp; tgt) {
-                svg += &#39;&lt;line x1="&#39; + src.x + &#39;" y1="&#39; + src.y + &#39;" x2="&#39; + tgt.x + &#39;" y2="&#39; + tgt.y + &#39;" stroke="#6b7280" stroke-width="0.5" opacity="0.5"/&gt;&#39;;
+                svg += &#39;&lt;line x1="&#39; + src.x + &#39;" y1="&#39; + src.y + &#39;" x2="&#39; + tgt.x + &#39;" y2="&#39; + tgt.y + &#39;" stroke="#6b7280" stroke-width="0.5" opacity="0.4"/&gt;&#39;;
             }
         });
         
+        // 绘制节点（使用类型颜色）
         nodes.forEach(function(n) {
             const pos = nodePositions[n.nodeId];
-            const color = getNodeColor(n.type || &#39;default&#39;);
-            svg += &#39;&lt;circle cx="&#39; + pos.x + &#39;" cy="&#39; + pos.y + &#39;" r="4" fill="&#39; + color + &#39;"/&gt;&#39;;
+            if (pos) {
+                const color = getNodeColor(n.type || &#39;default&#39;);
+                svg += &#39;&lt;circle cx="&#39; + pos.x + &#39;" cy="&#39; + pos.y + &#39;" r="3" fill="&#39; + color + &#39;"/&gt;&#39;;
+            }
         });
         
         svg += &#39;&lt;/svg&gt;&#39;;
         
         // 添加节点数和关系数标注
-        const statsHtml = &#39;&lt;div class="text-center text-xs text-base-content/60 mt-2"&gt;&#39; +
+        const statsHtml = &#39;&lt;div class="text-center text-xs text-base-content/60 mt-1"&gt;&#39; +
             &#39;&lt;span class="mr-3"&gt;节点: &#39; + nodes.length + &#39;&lt;/span&gt;&#39; +
             &#39;&lt;span&gt;关系: &#39; + edges.length + &#39;&lt;/span&gt;&#39; +
             &#39;&lt;/div&gt;&#39;;
@@ -3122,12 +3299,9 @@ window.APP_GLOBALS.user.init();
         svg.appendChild(defs);
 
         // Draw edges first (so nodes appear on top)
-        console.log(&#39;Drawing edges:&#39;, edges.length, &#39;edges&#39;);
-        console.log(&#39;Node positions keys:&#39;, Object.keys(nodePositions));
         
         let edgesDrawn = 0;
         edges.forEach((edge, index) => {
-            console.log(`Edge ${index}:`, edge.sourceNodeId, &#39;->&#39;, edge.targetNodeId);
             const fromNode = nodePositions[edge.sourceNodeId];
             const toNode = nodePositions[edge.targetNodeId];
             
@@ -3181,7 +3355,6 @@ window.APP_GLOBALS.user.init();
                 console.warn(`Edge ${index}: Could not find nodes - from:`, fromNode, &#39;to:&#39;, toNode);
             }
         });
-        console.log(&#39;Edges actually drawn:&#39;, edgesDrawn);
 
         // Draw nodes
         Object.values(nodePositions).forEach(node => {
@@ -3222,6 +3395,7 @@ window.APP_GLOBALS.user.init();
         
         // 初始化画布拖动（每次渲染后重新绑定）
         initCanvasPanning();
+        
     }
     
     // ==================== 节点拖动功能（优化版） ====================
@@ -3450,8 +3624,6 @@ window.APP_GLOBALS.user.init();
         canvas.addEventListener(&#39;mousemove&#39;, onPanning, false);
         canvas.addEventListener(&#39;mouseup&#39;, endPanning, false);
         canvas.addEventListener(&#39;mouseleave&#39;, endPanning, false);
-        
-        console.log(&#39;Canvas panning initialized&#39;);
     }
     
     /**
@@ -3566,7 +3738,6 @@ window.APP_GLOBALS.user.init();
         const canvas = document.getElementById(&#39;graphCanvas&#39;);
         const svg = canvas ? canvas.querySelector(&#39;svg&#39;) : null;
         if (!svg || !currentGraphData.initialViewBox || !currentGraphData.initialPositions) {
-            console.log(&#39;无初始状态数据&#39;);
             return;
         }
         
@@ -3641,8 +3812,6 @@ window.APP_GLOBALS.user.init();
         
         // 清除节点详情面板
         clearNodeDetails();
-        
-        console.log(&#39;图谱已重置到初始状态&#39;);
     }
     
     /**
@@ -5018,7 +5187,7 @@ window.APP_GLOBALS.user.init();
 
     // Download format selection - 直接触发下载
     window.downloadFormat = function(format) {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         if (!graphId) {
             window.showNotification(&#39;请先选择图谱&#39;, &#39;warning&#39;);
             return;
@@ -5067,7 +5236,7 @@ window.APP_GLOBALS.user.init();
     
     // 检查编辑权限并显示编辑区域
     async function checkAndShowEditSection() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         if (!graphId) return;
         
         try {
@@ -5084,7 +5253,6 @@ window.APP_GLOBALS.user.init();
             }
         } catch (error) {
             // 权限检查失败，默认不显示编辑区域
-            console.log(&#39;权限检查失败:&#39;, error);
         }
     }
     
@@ -5122,7 +5290,7 @@ window.APP_GLOBALS.user.init();
     
     // 执行导入节点（支持单个和批量）
     window.executeImportNodes = async function() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         if (!graphId) {
             window.showNotification(&#39;请先选择图谱&#39;, &#39;error&#39;);
             return;
@@ -5184,6 +5352,12 @@ window.APP_GLOBALS.user.init();
                 if (data) {
                     updatePageWithGraphData(data);
                     renderGraphFromData();
+                    // 同步更新封面
+                    setTimeout(function() { 
+                        if (window.updateGraphCover) {
+                            window.updateGraphCover(); 
+                        }
+                    }, 500);
                 }
             } else {
                 window.showNotification(result.error || &#39;操作失败&#39;, &#39;error&#39;);
@@ -5265,7 +5439,7 @@ window.APP_GLOBALS.user.init();
     }
     
     window.executeBatchDelete = async function() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         if (!graphId) {
             window.showNotification(&#39;请先选择图谱&#39;, &#39;error&#39;);
             return;
@@ -5301,128 +5475,8 @@ window.APP_GLOBALS.user.init();
                 if (data) {
                     updatePageWithGraphData(data);
                     renderGraphFromData();
-                }
-            } else {
-                window.showNotification(result.error || &#39;删除失败&#39;, &#39;error&#39;);
-            }
-        } catch (error) {
-            window.showNotification(&#39;删除请求失败: &#39; + error.message, &#39;error&#39;);
-        }
-    };
-    
-    // ==================== 关系管理功能 ====================
-    
-    // 打开删除关系模态框
-    window.openDeleteRelationModal = function() {
-        populateDeleteRelationModal();
-        document.getElementById(&#39;deleteRelationModal&#39;).showModal();
-    };
-    
-    // 填充删除关系模态框数据
-    function populateDeleteRelationModal() {
-        const edges = currentGraphData.edges || [];
-        const types = [...new Set(edges.map(e =&gt; e.type || &#39;关联&#39;))];
-        
-        const typeSelect = document.getElementById(&#39;deleteRelationTypeFilter&#39;);
-        typeSelect.innerHTML = &#39;<option value="">全部类型</option>&#39; + 
-            types.map(t =&gt; `<option value="${t}">${t}</option>`).join(&#39;&#39;);
-        
-        document.getElementById(&#39;deleteRelationSearchInput&#39;).value = &#39;&#39;;
-        renderDeleteRelationList(edges);
-        updateSelectedDeleteRelationCount();
-    }
-    
-    // 渲染删除关系列表
-    function renderDeleteRelationList(edges) {
-        const container = document.getElementById(&#39;deleteRelationList&#39;);
-        if (edges.length === 0) {
-            container.innerHTML = &#39;<div class="text-sm text-base-content/50 text-center">暂无关系</div>&#39;;
-            return;
-        }
-        
-        container.innerHTML = edges.map(edge =&gt; `
-            <label class="flex items-center gap-2 p-2 hover:bg-base-200 rounded cursor-pointer">
-                <input type="checkbox" class="checkbox checkbox-sm delete-relation-checkbox" data-relation-id="${edge.relationId}">
-                <span class="flex-1 text-sm">${edge.sourceNodeName || &#39;?&#39;} → ${edge.targetNodeName || &#39;?&#39;}</span>
-                <span class="badge badge-secondary badge-xs">${edge.type || &#39;关联&#39;}</span>
-            </label>
-        `).join(&#39;&#39;);
-        
-        container.querySelectorAll(&#39;.delete-relation-checkbox&#39;).forEach(cb =&gt; {
-            cb.addEventListener(&#39;change&#39;, updateSelectedDeleteRelationCount);
-        });
-    }
-    
-    window.filterDeleteRelations = function() {
-        const typeFilter = document.getElementById(&#39;deleteRelationTypeFilter&#39;).value;
-        const searchKeyword = document.getElementById(&#39;deleteRelationSearchInput&#39;).value.toLowerCase().trim();
-        
-        let filtered = currentGraphData.edges || [];
-        if (typeFilter) {
-            filtered = filtered.filter(e =&gt; (e.type || &#39;关联&#39;) === typeFilter);
-        }
-        if (searchKeyword) {
-            filtered = filtered.filter(e =&gt; 
-                (e.sourceNodeName || &#39;&#39;).toLowerCase().includes(searchKeyword) ||
-                (e.targetNodeName || &#39;&#39;).toLowerCase().includes(searchKeyword)
-            );
-        }
-        
-        renderDeleteRelationList(filtered);
-    };
-    
-    window.selectAllDeleteRelations = function() {
-        document.querySelectorAll(&#39;.delete-relation-checkbox&#39;).forEach(cb =&gt; cb.checked = true);
-        updateSelectedDeleteRelationCount();
-    };
-    
-    window.deselectAllDeleteRelations = function() {
-        document.querySelectorAll(&#39;.delete-relation-checkbox&#39;).forEach(cb =&gt; cb.checked = false);
-        updateSelectedDeleteRelationCount();
-    };
-    
-    function updateSelectedDeleteRelationCount() {
-        const count = document.querySelectorAll(&#39;.delete-relation-checkbox:checked&#39;).length;
-        document.getElementById(&#39;selectedDeleteRelationCount&#39;).textContent = `已选择 ${count} 个关系`;
-    }
-    
-    window.executeBatchDeleteRelations = async function() {
-        const graphId = currentGraphData.id;
-        if (!graphId) {
-            window.showNotification(&#39;请先选择图谱&#39;, &#39;error&#39;);
-            return;
-        }
-        
-        const selectedRelations = [];
-        document.querySelectorAll(&#39;.delete-relation-checkbox:checked&#39;).forEach(cb =&gt; {
-            selectedRelations.push(cb.getAttribute(&#39;data-relation-id&#39;));
-        });
-        
-        if (selectedRelations.length === 0) {
-            window.showNotification(&#39;请选择要删除的关系&#39;, &#39;warning&#39;);
-            return;
-        }
-        
-        if (!confirm(`确定要删除选中的 ${selectedRelations.length} 个关系吗？此操作不可恢复！`)) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/graph/${graphId}/relations/batch`, {
-                method: &#39;DELETE&#39;,
-                headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
-                credentials: &#39;include&#39;,
-                body: JSON.stringify(selectedRelations)
-            });
-            
-            const result = await response.json();
-            if (response.ok &amp;&amp; result.success) {
-                window.showNotification(result.message || &#39;删除成功&#39;, &#39;success&#39;);
-                document.getElementById(&#39;deleteRelationModal&#39;).close();
-                const data = await loadGraphData(graphId);
-                if (data) {
-                    updatePageWithGraphData(data);
-                    renderGraphFromData();
+                    // 同步更新封面
+                    setTimeout(function() { window.updateGraphCover(); }, 500);
                 }
             } else {
                 window.showNotification(result.error || &#39;删除失败&#39;, &#39;error&#39;);
@@ -5512,7 +5566,7 @@ window.APP_GLOBALS.user.init();
     };
     
     window.executeNeighborQuery = async function() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         const nodeName = document.getElementById(&#39;neighborTargetNodeInput&#39;).value.trim();
         const direction = document.getElementById(&#39;neighborDirection&#39;).value;
         
@@ -5591,7 +5645,7 @@ window.APP_GLOBALS.user.init();
     };
     
     window.executeAddRelation = async function() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         if (!graphId) {
             window.showNotification(&#39;请先选择图谱&#39;, &#39;error&#39;);
             return;
@@ -5644,6 +5698,8 @@ window.APP_GLOBALS.user.init();
                 if (data) {
                     updatePageWithGraphData(data);
                     renderGraphFromData();
+                    // 同步更新封面
+                    setTimeout(function() { window.updateGraphCover(); }, 500);
                 }
             } else {
                 window.showNotification(result.error || &#39;创建失败&#39;, &#39;error&#39;);
@@ -5737,7 +5793,7 @@ window.APP_GLOBALS.user.init();
     
     // 执行批量添加关系
     window.executeBatchAddRelations = async function() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         if (!graphId) {
             window.showNotification(&#39;请先选择图谱&#39;, &#39;error&#39;);
             return;
@@ -5808,6 +5864,8 @@ window.APP_GLOBALS.user.init();
             if (data) {
                 updatePageWithGraphData(data);
                 renderGraphFromData();
+                // 同步更新封面
+                setTimeout(function() { window.updateGraphCover(); }, 500);
             }
         } else {
             window.showNotification(&#39;批量添加失败&#39;, &#39;error&#39;);
@@ -5926,7 +5984,7 @@ window.APP_GLOBALS.user.init();
     
     // 执行批量删除关系
     window.executeBatchDeleteRelations = async function() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         if (!graphId) {
             window.showNotification(&#39;请先选择图谱&#39;, &#39;error&#39;);
             return;
@@ -5970,189 +6028,14 @@ window.APP_GLOBALS.user.init();
             if (data) {
                 updatePageWithGraphData(data);
                 renderGraphFromData();
+                // 同步更新封面
+                setTimeout(function() { window.updateGraphCover(); }, 500);
             }
         } else {
             window.showNotification(&#39;删除失败&#39;, &#39;error&#39;);
         }
     };
 
-    // ==================== 侧边栏折叠和拖拽调整功能 ====================
-    
-    let leftSidebarCollapsed = false;
-    let isResizing = false;
-    let startX = 0;
-    let startWidth = 0;
-    
-    // 折叠/展开左侧栏
-    window.toggleLeftSidebar = function() {
-        const sidebar = document.getElementById(&#39;leftSidebar&#39;);
-        const toggleBtn = document.getElementById(&#39;leftSidebarToggle&#39;);
-        const toggleIcon = document.getElementById(&#39;leftToggleIcon&#39;);
-        const resizeHandle = document.getElementById(&#39;leftResizeHandle&#39;);
-        
-        if (!sidebar) return;
-        
-        leftSidebarCollapsed = !leftSidebarCollapsed;
-        
-        if (leftSidebarCollapsed) {
-            sidebar.style.width = &#39;0px&#39;;
-            sidebar.style.minWidth = &#39;0&#39;;
-            sidebar.style.overflow = &#39;hidden&#39;;
-            toggleBtn.style.left = &#39;0px&#39;;
-            resizeHandle.style.left = &#39;0px&#39;;
-            resizeHandle.style.display = &#39;none&#39;;
-            toggleIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-right&#39;);
-        } else {
-            sidebar.style.width = &#39;320px&#39;;
-            sidebar.style.minWidth = &#39;200px&#39;;
-            sidebar.style.overflow = &#39;&#39;;
-            toggleBtn.style.left = &#39;320px&#39;;
-            resizeHandle.style.left = &#39;320px&#39;;
-            resizeHandle.style.display = &#39;&#39;;
-            toggleIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-left&#39;);
-        }
-        
-        // 调整画布可视区域
-        setTimeout(adjustCanvasViewBox, 350);
-    };
-    
-    // 拖拽调整左侧栏宽度
-    function initResizeHandle() {
-        const resizeHandle = document.getElementById(&#39;leftResizeHandle&#39;);
-        const sidebar = document.getElementById(&#39;leftSidebar&#39;);
-        const toggleBtn = document.getElementById(&#39;leftSidebarToggle&#39;);
-        
-        if (!resizeHandle || !sidebar) return;
-        
-        resizeHandle.addEventListener(&#39;mousedown&#39;, function(e) {
-            if (leftSidebarCollapsed) return;
-            
-            isResizing = true;
-            startX = e.clientX;
-            startWidth = sidebar.offsetWidth;
-            
-            resizeHandle.classList.add(&#39;active&#39;);
-            document.body.style.cursor = &#39;col-resize&#39;;
-            document.body.style.userSelect = &#39;none&#39;;
-            
-            e.preventDefault();
-        });
-        
-        document.addEventListener(&#39;mousemove&#39;, function(e) {
-            if (!isResizing) return;
-            
-            const diff = e.clientX - startX;
-            let newWidth = startWidth + diff;
-            
-            // 限制宽度范围
-            newWidth = Math.max(200, Math.min(450, newWidth));
-            
-            sidebar.style.width = newWidth + &#39;px&#39;;
-            toggleBtn.style.left = newWidth + &#39;px&#39;;
-            resizeHandle.style.left = newWidth + &#39;px&#39;;
-        });
-        
-        document.addEventListener(&#39;mouseup&#39;, function() {
-            if (!isResizing) return;
-            
-            isResizing = false;
-            resizeHandle.classList.remove(&#39;active&#39;);
-            document.body.style.cursor = &#39;&#39;;
-            document.body.style.userSelect = &#39;&#39;;
-        });
-    }
-    
-    // 拖拽功能已在主 DOMContentLoaded 中初始化
-    
-    // ==================== 右侧栏折叠和拖拽功能 ====================
-    
-    let rightSidebarCollapsed = false;
-    let isResizingRight = false;
-    let startXRight = 0;
-    let startWidthRight = 0;
-    const ACTION_PANEL_WIDTH = 56; // 右侧操作栏宽度 (w-16 = 3.5rem = 56px)
-    
-    // 折叠/展开右侧栏
-    window.toggleRightSidebar = function() {
-        const sidebar = document.getElementById(&#39;rightSidebar&#39;);
-        const toggleBtn = document.getElementById(&#39;rightSidebarToggle&#39;);
-        const toggleIcon = document.getElementById(&#39;rightToggleIcon&#39;);
-        const resizeHandle = document.getElementById(&#39;rightResizeHandle&#39;);
-        
-        if (!sidebar) return;
-        
-        rightSidebarCollapsed = !rightSidebarCollapsed;
-        
-        if (rightSidebarCollapsed) {
-            sidebar.style.width = &#39;0px&#39;;
-            sidebar.style.minWidth = &#39;0&#39;;
-            sidebar.style.overflow = &#39;hidden&#39;;
-            toggleBtn.style.right = ACTION_PANEL_WIDTH + &#39;px&#39;;
-            resizeHandle.style.right = ACTION_PANEL_WIDTH + &#39;px&#39;;
-            resizeHandle.style.display = &#39;none&#39;;
-            toggleIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-left&#39;);
-        } else {
-            sidebar.style.width = &#39;300px&#39;;
-            sidebar.style.minWidth = &#39;200px&#39;;
-            sidebar.style.overflow = &#39;&#39;;
-            toggleBtn.style.right = (300 + ACTION_PANEL_WIDTH) + &#39;px&#39;;
-            resizeHandle.style.right = (300 + ACTION_PANEL_WIDTH) + &#39;px&#39;;
-            resizeHandle.style.display = &#39;&#39;;
-            toggleIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-right&#39;);
-        }
-        
-        // 调整画布可视区域
-        setTimeout(adjustCanvasViewBox, 350);
-    };
-    
-    // 拖拽调整右侧栏宽度
-    function initRightResizeHandle() {
-        const resizeHandle = document.getElementById(&#39;rightResizeHandle&#39;);
-        const sidebar = document.getElementById(&#39;rightSidebar&#39;);
-        const toggleBtn = document.getElementById(&#39;rightSidebarToggle&#39;);
-        
-        if (!resizeHandle || !sidebar) return;
-        
-        resizeHandle.addEventListener(&#39;mousedown&#39;, function(e) {
-            if (rightSidebarCollapsed) return;
-            
-            isResizingRight = true;
-            startXRight = e.clientX;
-            startWidthRight = sidebar.offsetWidth;
-            
-            resizeHandle.classList.add(&#39;active&#39;);
-            document.body.style.cursor = &#39;col-resize&#39;;
-            document.body.style.userSelect = &#39;none&#39;;
-            
-            e.preventDefault();
-        });
-        
-        document.addEventListener(&#39;mousemove&#39;, function(e) {
-            if (!isResizingRight) return;
-            
-            const diff = startXRight - e.clientX; // 反向：向左拖动增加宽度
-            let newWidth = startWidthRight + diff;
-            
-            // 限制宽度范围
-            newWidth = Math.max(200, Math.min(450, newWidth));
-            
-            sidebar.style.width = newWidth + &#39;px&#39;;
-            toggleBtn.style.right = (newWidth + ACTION_PANEL_WIDTH) + &#39;px&#39;;
-            resizeHandle.style.right = (newWidth + ACTION_PANEL_WIDTH) + &#39;px&#39;;
-        });
-        
-        document.addEventListener(&#39;mouseup&#39;, function() {
-            if (!isResizingRight) return;
-            
-            isResizingRight = false;
-            resizeHandle.classList.remove(&#39;active&#39;);
-            document.body.style.cursor = &#39;&#39;;
-            document.body.style.userSelect = &#39;&#39;;
-        });
-    }
-    
-    // 右侧拖拽功能已在主 DOMContentLoaded 中初始化
-    
     // ==================== 节点详情显示功能 ====================
     
     // 更新节点详情面板
@@ -6262,7 +6145,7 @@ window.APP_GLOBALS.user.init();
     
     // 执行编辑节点
     window.executeEditNode = async function() {
-        const graphId = currentGraphData.id;
+        const graphId = getCurrentGraphId();
         const nodeId = document.getElementById(&#39;editNodeId&#39;).value;
         
         if (!graphId || !nodeId) {
@@ -6310,6 +6193,8 @@ window.APP_GLOBALS.user.init();
                             description: updatedNode.description
                         });
                     }
+                    // 同步更新封面
+                    setTimeout(function() { window.updateGraphCover(); }, 500);
                 }
             } else {
                 window.showNotification(result.error || &#39;更新失败&#39;, &#39;error&#39;);
@@ -6319,6 +6204,261 @@ window.APP_GLOBALS.user.init();
         }
     };
 
+    // ==================== 封面缩略图同步更新功能 ====================
+    
+    /**
+     * 生成缩略图 SVG（使用当前布局）
+     */
+    function generateThumbnailSVG(width, height) {
+        width = width || 400;
+        height = height || 300;
+        
+        const nodes = currentGraphData.nodes || [];
+        const edges = currentGraphData.edges || [];
+        const mainPositions = currentGraphData.nodePositions || {};
+        
+        if (nodes.length === 0) {
+            return &#39;&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 &#39; + width + &#39; &#39; + height + &#39;"&gt;&lt;rect width="100%" height="100%" fill="#f8fafc"/&gt;&lt;text x="50%" y="50%" text-anchor="middle" fill="#9ca3af"&gt;暂无数据&lt;/text&gt;&lt;/svg&gt;&#39;;
+        }
+        
+        let nodePositions = {};
+        const hasMainPositions = Object.keys(mainPositions).length &gt; 0;
+        
+        if (hasMainPositions) {
+            // 使用主图谱布局，缩放到缩略图尺寸
+            const xs = Object.values(mainPositions).map(function(p) { return p.x; });
+            const ys = Object.values(mainPositions).map(function(p) { return p.y; });
+            const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+            const minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+            const graphWidth = maxX - minX || 1;
+            const graphHeight = maxY - minY || 1;
+            
+            const padding = 30;
+            const availWidth = width - padding * 2;
+            const availHeight = height - padding * 2;
+            const scale = Math.min(availWidth / graphWidth, availHeight / graphHeight);
+            const offsetX = padding + (availWidth - graphWidth * scale) / 2;
+            const offsetY = padding + (availHeight - graphHeight * scale) / 2;
+            
+            nodes.forEach(function(n) {
+                const pos = mainPositions[n.nodeId];
+                if (pos) {
+                    nodePositions[n.nodeId] = {
+                        x: (pos.x - minX) * scale + offsetX,
+                        y: (pos.y - minY) * scale + offsetY
+                    };
+                }
+            });
+        } else {
+            // 圆形布局回退
+            const centerX = width / 2, centerY = height / 2;
+            const radius = Math.min(width, height) / 2 - 30;
+            nodes.forEach(function(n, i) {
+                const angle = (2 * Math.PI * i) / nodes.length;
+                nodePositions[n.nodeId] = {
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                };
+            });
+        }
+        
+        let svg = &#39;&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 &#39; + width + &#39; &#39; + height + &#39;"&gt;&#39;;
+        svg += &#39;&lt;rect width="100%" height="100%" fill="#f8fafc"/&gt;&#39;;
+        
+        // 绘制边
+        edges.forEach(function(e) {
+            const src = nodePositions[e.sourceNodeId];
+            const tgt = nodePositions[e.targetNodeId];
+            if (src &amp;&amp; tgt) {
+                svg += &#39;&lt;line x1="&#39; + src.x + &#39;" y1="&#39; + src.y + &#39;" x2="&#39; + tgt.x + &#39;" y2="&#39; + tgt.y + &#39;" stroke="#cbd5e1" stroke-width="1.5" opacity="0.6"/&gt;&#39;;
+            }
+        });
+        
+        // 绘制节点
+        nodes.forEach(function(n) {
+            const pos = nodePositions[n.nodeId];
+            if (pos) {
+                const color = getNodeColor(n.type || &#39;default&#39;);
+                svg += &#39;&lt;circle cx="&#39; + pos.x + &#39;" cy="&#39; + pos.y + &#39;" r="8" fill="&#39; + color + &#39;"/&gt;&#39;;
+            }
+        });
+        
+        svg += &#39;&lt;/svg&gt;&#39;;
+        return svg;
+    }
+    
+    /**
+     * SVG 转 PNG Blob
+     */
+    function svgToPngBlob(svgString, width, height) {
+        return new Promise(function(resolve) {
+            width = width || 400;
+            height = height || 300;
+            
+            const canvas = document.createElement(&#39;canvas&#39;);
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext(&#39;2d&#39;);
+            
+            const img = new Image();
+            const svgBlob = new Blob([svgString], { type: &#39;image/svg+xml;charset=utf-8&#39; });
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                ctx.fillStyle = &#39;#f8fafc&#39;;
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                URL.revokeObjectURL(url);
+                
+                canvas.toBlob(function(blob) {
+                    resolve(blob);
+                }, &#39;image/png&#39;);
+            };
+            
+            img.onerror = function() {
+                URL.revokeObjectURL(url);
+                resolve(null);
+            };
+            
+            img.src = url;
+        });
+    }
+    
+    /**
+     * 更新图谱封面（在修改节点/边后调用）
+     */
+    window.updateGraphCover = async function() {
+        const graphId = getCurrentGraphId();
+        if (!graphId) return;
+        
+        try {
+            const svgString = generateThumbnailSVG(400, 300);
+            const pngBlob = await svgToPngBlob(svgString, 400, 300);
+            
+            if (!pngBlob) return;
+            
+            const formData = new FormData();
+            formData.append(&#39;file&#39;, pngBlob, &#39;cover.png&#39;);
+            
+            await fetch(&#39;/api/graph/&#39; + graphId + &#39;/cover&#39;, {
+                method: &#39;PUT&#39;,
+                credentials: &#39;include&#39;,
+                body: formData
+            });
+        } catch (e) {
+            // 封面更新失败，静默处理
+        }
+    };
+    
+    // 首次加载后自动更新封面（使用真实布局替换圆形布局）
+    setTimeout(function() {
+        if (window.updateGraphCover &amp;&amp; currentGraphData.nodePositions &amp;&amp; Object.keys(currentGraphData.nodePositions).length &gt; 0) {
+            window.updateGraphCover();
+        }
+    }, 3000);
+
+})();
+
+// ==================== 侧边栏折叠和拖拽调整功能 ====================
+
+// 左侧栏折叠/展开
+function toggleLeftSidebar() {
+    var sidebar = document.getElementById(&#39;leftSidebar&#39;);
+    var icon = document.getElementById(&#39;leftToggleIcon&#39;);
+    if (sidebar.classList.contains(&#39;collapsed&#39;)) {
+        sidebar.classList.remove(&#39;collapsed&#39;);
+        sidebar.style.width = &#39;320px&#39;;
+        icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-left&#39;);
+    } else {
+        sidebar.classList.add(&#39;collapsed&#39;);
+        icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-right&#39;);
+    }
+    setTimeout(function() { window.dispatchEvent(new Event(&#39;resize&#39;)); }, 350);
+}
+
+// 右侧栏折叠/展开
+function toggleRightSidebar() {
+    var sidebar = document.getElementById(&#39;rightSidebar&#39;);
+    var icon = document.getElementById(&#39;rightToggleIcon&#39;);
+    if (sidebar.classList.contains(&#39;collapsed&#39;)) {
+        sidebar.classList.remove(&#39;collapsed&#39;);
+        sidebar.style.width = &#39;300px&#39;;
+        icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-right&#39;);
+    } else {
+        sidebar.classList.add(&#39;collapsed&#39;);
+        icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-left&#39;);
+    }
+    setTimeout(function() { window.dispatchEvent(new Event(&#39;resize&#39;)); }, 350);
+}
+
+// 左侧栏拖拽调整
+(function initLeftResize() {
+    var handle = document.getElementById(&#39;leftResizeHandle&#39;);
+    var sidebar = document.getElementById(&#39;leftSidebar&#39;);
+    if (!handle || !sidebar) return;
+    
+    var isResizing = false;
+    
+    handle.addEventListener(&#39;mousedown&#39;, function(e) {
+        isResizing = true;
+        handle.classList.add(&#39;active&#39;);
+        document.body.style.cursor = &#39;col-resize&#39;;
+        document.body.style.userSelect = &#39;none&#39;;
+        e.preventDefault();
+    });
+    
+    document.addEventListener(&#39;mousemove&#39;, function(e) {
+        if (!isResizing) return;
+        var newWidth = e.clientX;
+        if (newWidth &gt;= 200 &amp;&amp; newWidth &lt;= 500) {
+            sidebar.style.width = newWidth + &#39;px&#39;;
+            sidebar.classList.remove(&#39;collapsed&#39;);
+        }
+    });
+    
+    document.addEventListener(&#39;mouseup&#39;, function() {
+        if (isResizing) {
+            isResizing = false;
+            handle.classList.remove(&#39;active&#39;);
+            document.body.style.cursor = &#39;&#39;;
+            document.body.style.userSelect = &#39;&#39;;
+        }
+    });
+})();
+
+// 右侧栏拖拽调整
+(function initRightResize() {
+    var handle = document.getElementById(&#39;rightResizeHandle&#39;);
+    var sidebar = document.getElementById(&#39;rightSidebar&#39;);
+    if (!handle || !sidebar) return;
+    
+    var isResizing = false;
+    
+    handle.addEventListener(&#39;mousedown&#39;, function(e) {
+        isResizing = true;
+        handle.classList.add(&#39;active&#39;);
+        document.body.style.cursor = &#39;col-resize&#39;;
+        document.body.style.userSelect = &#39;none&#39;;
+        e.preventDefault();
+    });
+    
+    document.addEventListener(&#39;mousemove&#39;, function(e) {
+        if (!isResizing) return;
+        var newWidth = window.innerWidth - e.clientX;
+        if (newWidth &gt;= 200 &amp;&amp; newWidth &lt;= 500) {
+            sidebar.style.width = newWidth + &#39;px&#39;;
+            sidebar.classList.remove(&#39;collapsed&#39;);
+        }
+    });
+    
+    document.addEventListener(&#39;mouseup&#39;, function() {
+        if (isResizing) {
+            isResizing = false;
+            handle.classList.remove(&#39;active&#39;);
+            document.body.style.cursor = &#39;&#39;;
+            document.body.style.userSelect = &#39;&#39;;
+        }
+    });
 })();
 </script>
   

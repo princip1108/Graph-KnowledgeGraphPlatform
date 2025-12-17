@@ -127,6 +127,58 @@ public class FileUploadController {
     }
 
     /**
+     * 上传帖子图片（用于 Markdown 编辑器）
+     */
+    @PostMapping("/image")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(401).body(Map.of("error", "未登录"));
+        }
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "请选择要上传的文件"));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "只能上传图片文件"));
+        }
+
+        if (file.getSize() > 5 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body(Map.of("error", "图片大小不能超过5MB"));
+        }
+
+        try {
+            Path uploadPath = Paths.get(uploadBasePath + "/images");
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String newFilename = UUID.randomUUID().toString() + extension;
+
+            Path filePath = uploadPath.resolve(newFilename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            String imageUrl = "/uploads/images/" + newFilename;
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "url", imageUrl,
+                "message", "图片上传成功"
+            ));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(Map.of("error", "文件上传失败: " + e.getMessage()));
+        }
+    }
+
+    /**
      * 上传图谱封面
      */
     @PostMapping("/cover")

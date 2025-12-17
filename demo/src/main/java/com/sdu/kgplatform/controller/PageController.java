@@ -72,6 +72,16 @@ public class PageController {
         return "community/forum_list";
     }
 
+    @GetMapping("/community/post_detail.html")
+    public String postDetail() {
+        return "community/post_detail";
+    }
+
+    @GetMapping("/community/post_edit.html")
+    public String postEdit() {
+        return "community/post_edit";
+    }
+
     // ========== 其他页面 ==========
 
     @GetMapping("/pages/documentation.html")

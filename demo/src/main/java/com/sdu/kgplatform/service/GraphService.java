@@ -99,7 +99,7 @@ public class GraphService {
         graph.setShareLink(generateShareLink());
 
         KnowledgeGraph saved = graphRepository.save(graph);
-        return convertToDetailDto(saved, uploader.getUserName());
+        return convertToDetailDto(saved, uploader.getUserName(), uploader.getAvatar());
     }
 
     // ==================== 查询图谱 ====================
@@ -112,7 +112,8 @@ public class GraphService {
                 .orElseThrow(() -> new IllegalArgumentException("图谱不存在: " + graphId));
 
         String uploaderName = getUserName(graph.getUploaderId());
-        return convertToDetailDto(graph, uploaderName);
+        String uploaderAvatar = getUserAvatar(graph.getUploaderId());
+        return convertToDetailDto(graph, uploaderName, uploaderAvatar);
     }
 
     /**
@@ -124,7 +125,8 @@ public class GraphService {
             throw new IllegalArgumentException("分享链接无效");
         }
         String uploaderName = getUserName(graph.getUploaderId());
-        return convertToDetailDto(graph, uploaderName);
+        String uploaderAvatar = getUserAvatar(graph.getUploaderId());
+        return convertToDetailDto(graph, uploaderName, uploaderAvatar);
     }
 
     /**
@@ -222,7 +224,24 @@ public class GraphService {
 
         graph.setLastModified(LocalDateTime.now());
         KnowledgeGraph saved = graphRepository.save(graph);
-        return convertToDetailDto(saved, getUserName(saved.getUploaderId()));
+        return convertToDetailDto(saved, getUserName(saved.getUploaderId()), getUserAvatar(saved.getUploaderId()));
+    }
+
+    /**
+     * 更新图谱封面
+     */
+    @Transactional
+    public void updateGraphCover(Integer graphId, Integer userId, String coverUrl) {
+        KnowledgeGraph graph = graphRepository.findById(graphId)
+                .orElseThrow(() -> new IllegalArgumentException("图谱不存在: " + graphId));
+
+        if (!graph.getUploaderId().equals(userId)) {
+            throw new IllegalArgumentException("无权修改此图谱");
+        }
+
+        graph.setCoverImage(coverUrl);
+        graph.setLastModified(LocalDateTime.now());
+        graphRepository.save(graph);
     }
 
     /**
@@ -414,6 +433,13 @@ public class GraphService {
                 .orElse("未知用户");
     }
 
+    private String getUserAvatar(Integer userId) {
+        if (userId == null) return null;
+        return userRepository.findById(userId)
+                .map(User::getAvatar)
+                .orElse(null);
+    }
+
     private String generateShareLink() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
     }
@@ -434,11 +460,12 @@ public class GraphService {
         return PageRequest.of(page, size, sort);
     }
 
-    private GraphDetailDto convertToDetailDto(KnowledgeGraph graph, String uploaderName) {
+    private GraphDetailDto convertToDetailDto(KnowledgeGraph graph, String uploaderName, String uploaderAvatar) {
         return GraphDetailDto.builder()
                 .graphId(graph.getGraphId())
                 .uploaderId(graph.getUploaderId())
                 .uploaderName(uploaderName)
+                .uploaderAvatar(uploaderAvatar)
                 .name(graph.getName())
                 .description(graph.getDescription())
                 .status(graph.getStatus() != null ? graph.getStatus().name() : null)

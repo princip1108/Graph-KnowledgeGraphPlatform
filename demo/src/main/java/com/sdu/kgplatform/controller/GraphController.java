@@ -4,8 +4,13 @@ import com.sdu.kgplatform.dto.GraphCreateDto;
 import com.sdu.kgplatform.dto.GraphDetailDto;
 import com.sdu.kgplatform.dto.GraphListDto;
 import com.sdu.kgplatform.dto.GraphUpdateDto;
+import com.sdu.kgplatform.entity.GraphFavorite;
+import com.sdu.kgplatform.entity.GraphFavoriteId;
+import com.sdu.kgplatform.entity.KnowledgeGraph;
 import com.sdu.kgplatform.entity.Role;
 import com.sdu.kgplatform.entity.User;
+import com.sdu.kgplatform.repository.GraphFavoriteRepository;
+import com.sdu.kgplatform.repository.KnowledgeGraphRepository;
 import com.sdu.kgplatform.repository.UserRepository;
 import com.sdu.kgplatform.service.GraphService;
 import jakarta.validation.Valid;
@@ -28,10 +33,16 @@ public class GraphController {
 
     private final GraphService graphService;
     private final UserRepository userRepository;
+    private final GraphFavoriteRepository graphFavoriteRepository;
+    private final KnowledgeGraphRepository knowledgeGraphRepository;
 
-    public GraphController(GraphService graphService, UserRepository userRepository) {
+    public GraphController(GraphService graphService, UserRepository userRepository,
+                          GraphFavoriteRepository graphFavoriteRepository,
+                          KnowledgeGraphRepository knowledgeGraphRepository) {
         this.graphService = graphService;
         this.userRepository = userRepository;
+        this.graphFavoriteRepository = graphFavoriteRepository;
+        this.knowledgeGraphRepository = knowledgeGraphRepository;
     }
 
     // ==================== 创建图谱 ====================
@@ -236,6 +247,63 @@ public class GraphController {
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 更新图谱封面
+     * PUT /api/graphs/{id}/cover
+     */
+    @PutMapping("/{id}/cover")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<?> updateGraphCover(
+            @PathVariable("id") Integer graphId,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "未登录"));
+        }
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "请选择要上传的文件"));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "只能上传图片文件"));
+        }
+
+        try {
+            // 保存封面文件
+            String uploadBasePath = System.getProperty("user.dir") + "/uploads";
+            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadBasePath + "/covers");
+            if (!java.nio.file.Files.exists(uploadPath)) {
+                java.nio.file.Files.createDirectories(uploadPath);
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String newFilename = java.util.UUID.randomUUID().toString() + extension;
+
+            java.nio.file.Path filePath = uploadPath.resolve(newFilename);
+            java.nio.file.Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            String coverUrl = "/uploads/covers/" + newFilename;
+
+            // 更新图谱封面
+            graphService.updateGraphCover(graphId, userId, coverUrl);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "url", coverUrl,
+                "message", "封面更新成功"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "封面更新失败: " + e.getMessage()));
         }
     }
 
@@ -455,6 +523,101 @@ public class GraphController {
             return ResponseEntity.ok(Map.of("canEdit", false));
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of("canEdit", false));
+        }
+    }
+
+    // ==================== 图谱收藏 ====================
+
+    /**
+     * 收藏/取消收藏图谱
+     * POST /api/graph/{id}/favorite
+     */
+    @PostMapping("/{id}/favorite")
+    public ResponseEntity<?> toggleFavorite(@PathVariable("id") Integer graphId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "请先登录"));
+        }
+
+        try {
+            GraphFavoriteId favoriteId = new GraphFavoriteId(userId, graphId);
+            boolean isFavorited = graphFavoriteRepository.existsById(favoriteId);
+
+            if (isFavorited) {
+                // 取消收藏
+                graphFavoriteRepository.deleteById(favoriteId);
+                // 更新图谱收藏数
+                knowledgeGraphRepository.findById(graphId).ifPresent(graph -> {
+                    graph.setCollectCount(Math.max(0, (graph.getCollectCount() != null ? graph.getCollectCount() : 0) - 1));
+                    knowledgeGraphRepository.save(graph);
+                });
+                return ResponseEntity.ok(Map.of("success", true, "favorited", false, "message", "已取消收藏"));
+            } else {
+                // 添加收藏
+                GraphFavorite favorite = new GraphFavorite();
+                favorite.setId(favoriteId);
+                graphFavoriteRepository.save(favorite);
+                // 更新图谱收藏数
+                knowledgeGraphRepository.findById(graphId).ifPresent(graph -> {
+                    graph.setCollectCount((graph.getCollectCount() != null ? graph.getCollectCount() : 0) + 1);
+                    knowledgeGraphRepository.save(graph);
+                });
+                return ResponseEntity.ok(Map.of("success", true, "favorited", true, "message", "收藏成功"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 检查是否已收藏图谱
+     * GET /api/graph/{id}/favorite/status
+     */
+    @GetMapping("/{id}/favorite/status")
+    public ResponseEntity<?> getFavoriteStatus(@PathVariable("id") Integer graphId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.ok(Map.of("favorited", false));
+        }
+
+        boolean isFavorited = graphFavoriteRepository.existsByIdUserIdAndIdGraphId(userId, graphId);
+        return ResponseEntity.ok(Map.of("favorited", isFavorited));
+    }
+
+    /**
+     * 获取用户收藏的图谱列表
+     * GET /api/graph/favorites
+     */
+    @GetMapping("/favorites")
+    public ResponseEntity<?> getUserFavoriteGraphs() {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "请先登录"));
+        }
+
+        try {
+            List<GraphFavorite> favorites = graphFavoriteRepository.findByIdUserId(userId);
+            List<Map<String, Object>> graphs = new java.util.ArrayList<>();
+            
+            for (GraphFavorite fav : favorites) {
+                knowledgeGraphRepository.findById(fav.getId().getGraphId()).ifPresent(graph -> {
+                    Map<String, Object> graphMap = new java.util.HashMap<>();
+                    graphMap.put("graphId", graph.getGraphId());
+                    graphMap.put("name", graph.getName());
+                    graphMap.put("description", graph.getDescription());
+                    graphMap.put("coverImage", graph.getCoverImage());
+                    graphMap.put("nodeCount", graph.getNodeCount());
+                    graphMap.put("viewCount", graph.getViewCount());
+                    graphMap.put("collectCount", graph.getCollectCount());
+                    graphMap.put("uploadDate", graph.getUploadDate());
+                    graphMap.put("favoritedAt", fav.getCreatedAt());
+                    graphs.add(graphMap);
+                });
+            }
+            
+            return ResponseEntity.ok(Map.of("success", true, "favorites", graphs));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
 

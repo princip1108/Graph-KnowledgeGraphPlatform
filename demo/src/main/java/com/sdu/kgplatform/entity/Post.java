@@ -31,7 +31,7 @@ public class Post {
     private String postAbstract;
 
     @Lob
-    @Column(name = "post_text")
+    @Column(name = "post_text", columnDefinition = "LONGTEXT")
     private String postText;
 
     @Enumerated(EnumType.STRING)
@@ -43,4 +43,16 @@ public class Post {
 
     @Column(name = "upload_time")
     private LocalDateTime uploadTime;
+
+    @Column(name = "graph_id")
+    private Integer graphId;
+
+    @Column(name = "is_pinned")
+    private Boolean isPinned = false;
+
+    @Column(name = "view_count")
+    private Integer viewCount = 0;
+
+    @Column(name = "favorite_count")
+    private Integer favoriteCount = 0;
 }

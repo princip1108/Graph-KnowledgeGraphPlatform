@@ -64,7 +64,9 @@
       'about_page': '../pages/about.html',
       'feedback_page': '../community/feedback.html',
       'page_998124': './dashboard.html',
-      'page_998125': '../community/forum_list.html'
+      'page_998125': '../community/forum_list.html',
+      'post_edit_page': '../community/post_edit.html',
+      'post_detail_page': '../community/post_detail.html'
     };
     function adjustIframeSize() {
       const iframeWrapper = document.querySelector(".iframe-wrapper")
@@ -193,7 +195,7 @@
       <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
         <li class="menu-title"><span>用户中心</span></li>
         <li><a class="nav-hover focus-primary" onclick="navigateTo(&apos;user_profile_page&apos;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a></li>
-        <li><a class="nav-hover focus-primary" onclick="navigateTo(&apos;user_profile_page&apos;)"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a></li>
+        <li><a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a></li>
         <li><a class="nav-hover focus-primary" onclick="navigateTo(&apos;user_profile_page&apos;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a></li>
         <li id="admin-menu-item" style="display: none;"><a class="nav-hover focus-primary text-primary" onclick="navigateTo(&apos;page_998124&apos;)"><span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="16"></span><span>管理后台</span></a></li>
         <div class="divider my-1"></div>
@@ -214,6 +216,9 @@
         <nav class="space-y-2">
           <a data-section="graph-batch" class="nav-item active flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;graph-batch&apos;)">
             <span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="20"></span><span>图谱批量管理</span>
+          </a>
+          <a data-section="post-batch" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;post-batch&apos;)">
+            <span class="iconify text-primary" data-icon="heroicons:document-text" data-width="20"></span><span>帖子批量管理</span>
           </a>
           <a data-section="realtime-update" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;realtime-update&apos;)">
             <span class="iconify text-primary" data-icon="heroicons:clock" data-width="20"></span><span>实时更新图谱日期</span>
@@ -293,6 +298,63 @@
       <div class="flex justify-between items-center mt-6">
         <div id="paginationInfo" class="text-sm text-base-content/70">加载中...</div>
         <div id="paginationButtons" class="join"></div>
+      </div>
+    </div>
+
+    <!-- Post Batch Section -->
+    <div id="post-batch-section" class="content-section">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-base-content mb-2">帖子批量管理</h1>
+        <p class="text-base-content/70">批量管理您的论坛帖子，包括编辑、删除等操作</p>
+      </div>
+      <div class="flex flex-wrap gap-3 mb-6">
+        <button class="btn btn-primary gap-2" onclick="goToCreatePost()">
+          <span class="iconify" data-icon="heroicons:plus" data-width="20"></span>发布帖子
+        </button>
+        <button class="btn btn-success gap-2" onclick="handlePostBatchOnline()">
+          <span class="iconify" data-icon="heroicons:eye" data-width="20"></span>批量上线
+        </button>
+        <button class="btn btn-warning gap-2" onclick="handlePostBatchOffline()">
+          <span class="iconify" data-icon="heroicons:eye-slash" data-width="20"></span>批量下线
+        </button>
+        <button class="btn btn-error gap-2" onclick="handlePostBatchDelete()">
+          <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>批量删除
+        </button>
+      </div>
+      <div class="flex gap-4 mb-6">
+        <div class="join flex-1">
+          <input id="postSearchInput" type="text" placeholder="搜索帖子标题..." class="input input-bordered join-item flex-1" onkeypress="if(event.key===&apos;Enter&apos;) performPostSearch()">
+          <button class="btn join-item btn-primary" onclick="performPostSearch()">
+            <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+          </button>
+        </div>
+        <select id="postStatusFilter" class="select select-bordered w-48" onchange="filterPostsByStatus(this.value)">
+          <option value="all">全部状态</option>
+          <option value="已发布">已发布</option>
+          <option value="草稿">草稿</option>
+          <option value="仅自己可见">仅自己可见</option>
+        </select>
+      </div>
+      <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
+        <table class="table">
+          <thead>
+            <tr class="bg-base-200">
+              <th><input type="checkbox" class="checkbox checkbox-primary" id="postSelectAll" onchange="togglePostSelectAll(this)"></th>
+              <th>帖子信息</th>
+              <th>状态</th>
+              <th>发布时间</th>
+              <th>点赞数</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="postTableBody">
+            <tr><td colspan="6" class="text-center py-8 text-base-content/60"><span class="loading loading-spinner loading-md"></span><span class="ml-2">加载中...</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-between items-center mt-6">
+        <div id="postPaginationInfo" class="text-sm text-base-content/70">加载中...</div>
+        <div id="postPaginationButtons" class="join"></div>
       </div>
     </div>
 
@@ -448,6 +510,75 @@
   <form method="dialog" class="modal-backdrop"><button>close</button></form>
 </dialog>
 
+<!-- Create Post Modal -->
+<dialog id="createPostModal" class="modal">
+  <div class="modal-box w-11/12 max-w-2xl">
+    <h3 class="font-bold text-lg mb-4">发布新帖子</h3>
+    <form id="createPostForm">
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">标题 *</span></label>
+        <input type="text" id="postTitle" placeholder="请输入帖子标题" class="input input-bordered w-full" required>
+      </div>
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">摘要</span></label>
+        <textarea id="postAbstract" class="textarea textarea-bordered w-full" rows="2" placeholder="帖子摘要（可选）"></textarea>
+      </div>
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">内容 *</span></label>
+        <textarea id="postContent" class="textarea textarea-bordered w-full" rows="6" placeholder="帖子正文内容..." required></textarea>
+      </div>
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">标签</span></label>
+        <input type="text" id="postTags" placeholder="多个标签用逗号分隔，如：技术,分享" class="input input-bordered w-full">
+      </div>
+    </form>
+    <div class="modal-action">
+      <button class="btn btn-ghost" onclick="closeCreatePostModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitCreatePost()"><span class="iconify" data-icon="heroicons:paper-airplane" data-width="20"></span>发布</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<!-- Edit Post Modal -->
+<dialog id="editPostModal" class="modal">
+  <div class="modal-box w-11/12 max-w-2xl">
+    <h3 class="font-bold text-lg mb-4">编辑帖子</h3>
+    <form id="editPostForm">
+      <input type="hidden" id="editPostId">
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">标题 *</span></label>
+        <input type="text" id="editPostTitle" placeholder="请输入帖子标题" class="input input-bordered w-full" required>
+      </div>
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">摘要</span></label>
+        <textarea id="editPostAbstract" class="textarea textarea-bordered w-full" rows="2" placeholder="帖子摘要（可选）"></textarea>
+      </div>
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">标签</span></label>
+        <input type="text" id="editPostTags" placeholder="多个标签用逗号分隔" class="input input-bordered w-full">
+      </div>
+      <div class="form-control mb-4">
+        <label class="label"><span class="label-text">状态</span></label>
+        <select id="editPostStatus" class="select select-bordered w-full">
+          <option value="草稿">草稿</option>
+          <option value="已发布">已发布</option>
+          <option value="仅自己可见">仅自己可见</option>
+        </select>
+      </div>
+      <div class="text-sm text-base-content/60 mb-4">
+        <span class="iconify inline" data-icon="heroicons:information-circle" data-width="16"></span>
+        如需编辑正文内容，请点击帖子标题进入详情页编辑
+      </div>
+    </form>
+    <div class="modal-action">
+      <button class="btn btn-ghost" onclick="closeEditPostModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitEditPost()"><span class="iconify" data-icon="heroicons:check" data-width="20"></span>保存修改</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
 <script>
 // ==================== 全局变量 ====================
 let allGraphs = [];
@@ -457,12 +588,24 @@ const pageSize = 10;
 let currentStatusFilter = "all";
 let currentSearchQuery = "";
 
+// 帖子管理变量
+let allPosts = [];
+let filteredPosts = [];
+let postCurrentPage = 1;
+const postPageSize = 10;
+let postStatusFilter = "all";
+let postSearchQuery = "";
+
 // ==================== 导航 ====================
-window.navigateTo = function(targetPageId) {
+window.navigateTo = function(targetPageId, params) {
   const isInIframe = window.self !== window.top;
   if (isInIframe) {
-    window.parent.postMessage({ type: "iframeNavigation", targetPageId: targetPageId }, "*");
+    window.parent.postMessage({ type: "iframeNavigation", targetPageId: targetPageId, params: params }, "*");
   }
+};
+
+window.navigateToFavorites = function() {
+  navigateTo("user_profile_page", { section: "favorites" });
 };
 
 // ==================== APP_GLOBALS ====================
@@ -568,12 +711,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // ==================== 侧边栏 ====================
 function showSection(sectionId) {
-  document.querySelectorAll(".content-section").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.querySelectorAll(".content-section").forEach(s =&gt; s.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n =&gt; n.classList.remove("active"));
   const section = document.getElementById(sectionId + "-section");
   const navItem = document.querySelector("[data-section=" + sectionId + "]");
   if (section) section.classList.add("active");
   if (navItem) navItem.classList.add("active");
+  // 切换到帖子管理时加载帖子数据
+  if (sectionId === "post-batch" &amp;&amp; allPosts.length === 0) {
+    loadUserPosts();
+  }
 }
 
 // ==================== 通知 ====================
@@ -955,6 +1102,377 @@ async function handleBatchOperation(operation) {
   }
 }
 
+// ==================== 帖子管理功能 ====================
+async function loadUserPosts() {
+  try {
+    // 先获取当前用户信息
+    var authResponse = await fetch("/user/api/check-auth", { credentials: "include" });
+    var authData = await authResponse.json();
+    if (!authData.authenticated || !authData.user) {
+      showNotification("请先登录", "warning");
+      return;
+    }
+    var userId = authData.user.userId;
+    
+    var response = await fetch("/api/posts/user/" + userId + "?page=0&amp;size=100", { method: "GET", credentials: "include" });
+    if (!response.ok) {
+      if (response.status === 401) { showNotification("请先登录", "warning"); return; }
+      throw new Error("加载失败");
+    }
+    var data = await response.json();
+    allPosts = data.posts || data.content || [];
+    applyPostFilters();
+  } catch (error) {
+    console.error("加载帖子失败:", error);
+    showNotification("加载帖子数据失败", "error");
+    document.getElementById("postTableBody").innerHTML = "&lt;tr&gt;&lt;td colspan=\"6\" class=\"text-center py-8 text-error\"&gt;加载失败，请刷新重试&lt;/td&gt;&lt;/tr&gt;";
+  }
+}
+
+function applyPostFilters() {
+  filteredPosts = allPosts.slice();
+  if (postStatusFilter !== "all") {
+    filteredPosts = filteredPosts.filter(function(p) { return p.postStatus === postStatusFilter; });
+  }
+  if (postSearchQuery) {
+    var keyword = postSearchQuery.toLowerCase();
+    filteredPosts = filteredPosts.filter(function(p) {
+      return (p.postTitle || "").toLowerCase().indexOf(keyword) &gt;= 0 || (p.postAbstract || "").toLowerCase().indexOf(keyword) &gt;= 0;
+    });
+  }
+  postCurrentPage = 1;
+  renderPostTable();
+}
+
+function performPostSearch() {
+  postSearchQuery = document.getElementById("postSearchInput").value.trim();
+  applyPostFilters();
+  if (postSearchQuery) showNotification("搜索 \"" + postSearchQuery + "\"，找到 " + filteredPosts.length + " 条结果", "info");
+}
+
+function filterPostsByStatus(status) {
+  postStatusFilter = status;
+  applyPostFilters();
+}
+
+function renderPostTable() {
+  var tbody = document.getElementById("postTableBody");
+  var totalCount = filteredPosts.length;
+  var totalPages = Math.ceil(totalCount / postPageSize);
+  if (postCurrentPage &gt; totalPages &amp;&amp; totalPages &gt; 0) postCurrentPage = totalPages;
+  var startIndex = (postCurrentPage - 1) * postPageSize;
+  var pageData = filteredPosts.slice(startIndex, startIndex + postPageSize);
+  
+  if (pageData.length === 0) {
+    tbody.innerHTML = "&lt;tr&gt;&lt;td colspan=\"6\" class=\"text-center py-8 text-base-content/60\"&gt;" + (postSearchQuery ? "未找到匹配的帖子" : "暂无帖子数据，点击\"发布帖子\"开始创建") + "&lt;/td&gt;&lt;/tr&gt;";
+    document.getElementById("postPaginationInfo").textContent = "暂无记录";
+    document.getElementById("postPaginationButtons").innerHTML = "";
+    return;
+  }
+  
+  var html = "";
+  for (var i = 0; i &lt; pageData.length; i++) {
+    var post = pageData[i];
+    var statusMap = { "已发布": { text: "已发布", badge: "badge-success" }, "草稿": { text: "草稿", badge: "badge-info" } };
+    var status = statusMap[post.postStatus] || { text: post.postStatus || "未知", badge: "badge-ghost" };
+    var safeTitle = (post.postTitle || "").replace(/&apos;/g, "&amp;apos;&amp;apos;");
+    var uploadTime = post.uploadTime ? post.uploadTime.substring(0, 10) : "-";
+    html += "&lt;tr data-post-id=\"" + post.postId + "\"&gt;&lt;th&gt;&lt;input type=\"checkbox\" class=\"checkbox checkbox-primary post-checkbox\" data-id=\"" + post.postId + "\"&gt;&lt;/th&gt;&lt;td&gt;&lt;div class=\"cursor-pointer\" onclick=\"viewPost(" + post.postId + ")\"&gt;&lt;div class=\"font-semibold text-primary hover:underline\"&gt;" + (post.postTitle || "无标题") + "&lt;/div&gt;&lt;div class=\"text-sm text-base-content/70 truncate max-w-xs\"&gt;" + (post.postAbstract || "暂无摘要") + "&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;&lt;td&gt;&lt;span class=\"badge " + status.badge + " badge-outline\"&gt;" + status.text + "&lt;/span&gt;&lt;/td&gt;&lt;td&gt;" + uploadTime + "&lt;/td&gt;&lt;td&gt;" + (post.likeCount || 0) + "&lt;/td&gt;&lt;td&gt;&lt;div class=\"flex gap-1\"&gt;&lt;button class=\"btn btn-ghost btn-xs\" onclick=\"editPost(" + post.postId + ")\" title=\"编辑\"&gt;&lt;span class=\"iconify\" data-icon=\"heroicons:pencil\" data-width=\"16\"&gt;&lt;/span&gt;&lt;/button&gt;&lt;button class=\"btn btn-ghost btn-xs text-error\" onclick=\"deletePost(" + post.postId + ", &apos;" + safeTitle + "&apos;)\"&gt;&lt;span class=\"iconify\" data-icon=\"heroicons:trash\" data-width=\"16\"&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;";
+  }
+  tbody.innerHTML = html;
+  
+  var start = startIndex + 1;
+  var end = Math.min(startIndex + postPageSize, totalCount);
+  document.getElementById("postPaginationInfo").textContent = "显示 " + start + "-" + end + " 条，共 " + totalCount + " 条记录";
+  renderPostPagination(totalPages);
+}
+
+function renderPostPagination(totalPages) {
+  var container = document.getElementById("postPaginationButtons");
+  if (totalPages &lt;= 1) { container.innerHTML = ""; return; }
+  var html = "&lt;button class=\"join-item btn btn-sm\" onclick=\"goToPostPage(" + (postCurrentPage - 1) + ")\" " + (postCurrentPage === 1 ? "disabled" : "") + "&gt;«&lt;/button&gt;";
+  for (var i = 1; i &lt;= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i &gt;= postCurrentPage - 2 &amp;&amp; i &lt;= postCurrentPage + 2)) {
+      html += "&lt;button class=\"join-item btn btn-sm " + (i === postCurrentPage ? "btn-active" : "") + "\" onclick=\"goToPostPage(" + i + ")\"&gt;" + i + "&lt;/button&gt;";
+    } else if (i === postCurrentPage - 3 || i === postCurrentPage + 3) {
+      html += "&lt;button class=\"join-item btn btn-sm btn-disabled\"&gt;...&lt;/button&gt;";
+    }
+  }
+  html += "&lt;button class=\"join-item btn btn-sm\" onclick=\"goToPostPage(" + (postCurrentPage + 1) + ")\" " + (postCurrentPage === totalPages ? "disabled" : "") + "&gt;»&lt;/button&gt;";
+  container.innerHTML = html;
+}
+
+function goToPostPage(page) {
+  var totalPages = Math.ceil(filteredPosts.length / postPageSize);
+  if (page &lt; 1 || page &gt; totalPages) return;
+  postCurrentPage = page;
+  renderPostTable();
+}
+
+function togglePostSelectAll(checkbox) {
+  var checkboxes = document.querySelectorAll(".post-checkbox");
+  for (var i = 0; i &lt; checkboxes.length; i++) checkboxes[i].checked = checkbox.checked;
+}
+
+function getSelectedPostIds() {
+  var result = [];
+  var checkboxes = document.querySelectorAll(".post-checkbox:checked");
+  for (var i = 0; i &lt; checkboxes.length; i++) {
+    var id = parseInt(checkboxes[i].dataset.id);
+    if (!isNaN(id)) result.push(id);
+  }
+  return result;
+}
+
+function viewPost(postId) {
+  var isInIframe = window.self !== window.top;
+  if (isInIframe) {
+    window.parent.postMessage({ type: "iframeNavigation", targetPageId: "post_detail_page", params: { id: postId } }, "*");
+  } else {
+    window.location.href = "/community/post_detail.html?id=" + postId;
+  }
+}
+
+// 跳转到发布帖子页
+function goToCreatePost() {
+  var isInIframe = window.self !== window.top;
+  if (isInIframe) {
+    window.parent.postMessage({ type: "iframeNavigation", targetPageId: "post_edit_page" }, "*");
+  } else {
+    window.location.href = "/community/post_edit.html";
+  }
+}
+
+// 创建帖子
+function openCreatePostModal() { document.getElementById("createPostModal").showModal(); }
+function closeCreatePostModal() {
+  document.getElementById("createPostModal").close();
+  document.getElementById("createPostForm").reset();
+}
+
+async function submitCreatePost() {
+  var title = document.getElementById("postTitle").value.trim();
+  var postAbstract = document.getElementById("postAbstract").value.trim();
+  var content = document.getElementById("postContent").value.trim();
+  var tagsInput = document.getElementById("postTags").value.trim();
+  
+  if (!title) { showNotification("请输入帖子标题", "warning"); return; }
+  if (!content) { showNotification("请输入帖子内容", "warning"); return; }
+  
+  var tags = tagsInput ? tagsInput.split(",").map(function(t) { return t.trim(); }).filter(function(t) { return t; }) : [];
+  
+  try {
+    showNotification("正在发布...", "info");
+    var response = await fetch("/api/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ title: title, abstract: postAbstract, content: content, tags: tags })
+    });
+    var data = await response.json();
+    if (response.ok &amp;&amp; data.success) {
+      showNotification("帖子发布成功！", "success");
+      closeCreatePostModal();
+      loadUserPosts();
+    } else {
+      showNotification(data.error || "发布失败", "error");
+    }
+  } catch (error) {
+    console.error("发布帖子失败:", error);
+    showNotification("发布失败，请重试", "error");
+  }
+}
+
+// 编辑帖子
+async function editPost(postId) {
+  try {
+    var response = await fetch("/api/posts/" + postId, { credentials: "include" });
+    if (!response.ok) { showNotification("获取帖子信息失败", "error"); return; }
+    var data = await response.json();
+    var post = data.post || data;
+    
+    document.getElementById("editPostId").value = post.postId;
+    document.getElementById("editPostTitle").value = post.postTitle || "";
+    document.getElementById("editPostAbstract").value = post.postAbstract || "";
+    // 标签处理
+    var tags = data.tags || [];
+    document.getElementById("editPostTags").value = tags.map(function(t) { return t.tagName || t; }).join(", ");
+    // 状态处理
+    document.getElementById("editPostStatus").value = post.postStatus || "草稿";
+    
+    document.getElementById("editPostModal").showModal();
+  } catch (error) {
+    console.error("获取帖子失败:", error);
+    showNotification("获取帖子信息失败", "error");
+  }
+}
+
+function closeEditPostModal() {
+  document.getElementById("editPostModal").close();
+  document.getElementById("editPostForm").reset();
+}
+
+async function submitEditPost() {
+  var postId = document.getElementById("editPostId").value;
+  var title = document.getElementById("editPostTitle").value.trim();
+  var postAbstract = document.getElementById("editPostAbstract").value.trim();
+  var tagsInput = document.getElementById("editPostTags").value.trim();
+  var status = document.getElementById("editPostStatus").value;
+  
+  if (!title) { showNotification("请输入帖子标题", "warning"); return; }
+  
+  var tags = tagsInput ? tagsInput.split(",").map(function(t) { return t.trim(); }).filter(function(t) { return t; }) : [];
+  
+  try {
+    showNotification("正在保存...", "info");
+    var response = await fetch("/api/posts/" + postId, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ title: title, abstract: postAbstract, tags: tags, status: status })
+    });
+    var data = await response.json();
+    if (response.ok &amp;&amp; data.success) {
+      showNotification("帖子更新成功！", "success");
+      closeEditPostModal();
+      loadUserPosts();
+    } else {
+      showNotification(data.error || "更新失败", "error");
+    }
+  } catch (error) {
+    console.error("更新帖子失败:", error);
+    showNotification("更新失败，请重试", "error");
+  }
+}
+
+// 删除帖子
+async function deletePost(postId, postTitle) {
+  if (!confirm("确定要删除帖子\"" + postTitle + "\"吗？此操作不可恢复！")) return;
+  try {
+    var response = await fetch("/api/posts/" + postId, { method: "DELETE", credentials: "include" });
+    var data = await response.json();
+    if (response.ok &amp;&amp; data.success) {
+      showNotification("帖子\"" + postTitle + "\"已删除", "success");
+      loadUserPosts();
+    } else {
+      showNotification(data.error || "删除失败", "error");
+    }
+  } catch (error) {
+    showNotification("删除失败，请重试", "error");
+  }
+}
+
+// 批量删除帖子
+async function handlePostBatchDelete() {
+  var selectedIds = getSelectedPostIds();
+  if (selectedIds.length === 0) { 
+    showNotification("请先选择要删除的帖子", "warning"); 
+    return; 
+  }
+  
+  if (!confirm("确定要删除 " + selectedIds.length + " 个帖子吗？\n\n警告：此操作不可恢复！")) {
+    return;
+  }
+  
+  showNotification("正在删除...", "info");
+  
+  try {
+    var response = await fetch("/api/posts/batch/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ postIds: selectedIds })
+    });
+    
+    var result = await response.json();
+    
+    if (response.ok &amp;&amp; result.success) {
+      showNotification(result.message || ("成功删除 " + selectedIds.length + " 个帖子"), "success");
+      document.getElementById("postSelectAll").checked = false;
+      loadUserPosts();
+    } else {
+      showNotification(result.error || "批量删除失败", "error");
+    }
+  } catch (error) {
+    console.error("批量删除失败:", error);
+    showNotification("操作失败，请检查网络连接", "error");
+  }
+}
+
+// 批量上线帖子
+async function handlePostBatchOnline() {
+  var selectedIds = getSelectedPostIds();
+  if (selectedIds.length === 0) { 
+    showNotification("请先选择要上线的帖子", "warning"); 
+    return; 
+  }
+  
+  if (!confirm("确定要上线 " + selectedIds.length + " 个帖子吗？")) {
+    return;
+  }
+  
+  showNotification("正在上线...", "info");
+  
+  try {
+    var response = await fetch("/api/posts/batch/online", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ postIds: selectedIds })
+    });
+    
+    var result = await response.json();
+    
+    if (response.ok &amp;&amp; result.success) {
+      showNotification(result.message || ("成功上线 " + selectedIds.length + " 个帖子"), "success");
+      document.getElementById("postSelectAll").checked = false;
+      loadUserPosts();
+    } else {
+      showNotification(result.error || "批量上线失败", "error");
+    }
+  } catch (error) {
+    console.error("批量上线失败:", error);
+    showNotification("操作失败，请检查网络连接", "error");
+  }
+}
+
+// 批量下线帖子
+async function handlePostBatchOffline() {
+  var selectedIds = getSelectedPostIds();
+  if (selectedIds.length === 0) { 
+    showNotification("请先选择要下线的帖子", "warning"); 
+    return; 
+  }
+  
+  if (!confirm("确定要下线 " + selectedIds.length + " 个帖子吗？\n下线后帖子将变为仅自己可见")) {
+    return;
+  }
+  
+  showNotification("正在下线...", "info");
+  
+  try {
+    var response = await fetch("/api/posts/batch/offline", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ postIds: selectedIds })
+    });
+    
+    var result = await response.json();
+    
+    if (response.ok &amp;&amp; result.success) {
+      showNotification(result.message || ("成功下线 " + selectedIds.length + " 个帖子"), "success");
+      document.getElementById("postSelectAll").checked = false;
+      loadUserPosts();
+    } else {
+      showNotification(result.error || "批量下线失败", "error");
+    }
+  } catch (error) {
+    console.error("批量下线失败:", error);
+    showNotification("操作失败，请检查网络连接", "error");
+  }
+}
+
 // ==================== 上传功能 ====================
 function openUploadModal() { document.getElementById("uploadModal").showModal(); }
 function closeUploadModal() {
@@ -1105,9 +1623,12 @@ async function submitUploadForm() {
     var response = await fetch("/api/upload/graph", { method: "POST", credentials: "include", body: formData });
     var data = await response.json();
     if (response.ok) {
-      showNotification("图谱上传成功！节点: " + data.nodeCount + ", 关系: " + data.relationCount, "success");
+      showNotification("图谱上传成功！节点: " + data.nodeCount + ", 关系: " + data.relationCount + "，即将跳转到详情页...", "success");
       closeUploadModal();
-      loadUserGraphs();
+      // 跳转到图谱详情页
+      setTimeout(function() {
+        window.location.href = "/graph/graph_detail.html?id=" + data.graphId;
+      }, 1500);
     } else {
       showNotification(data.error || "上传失败", "error");
     }
