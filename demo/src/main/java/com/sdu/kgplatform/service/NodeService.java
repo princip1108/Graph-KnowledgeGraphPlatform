@@ -5,6 +5,8 @@ import com.sdu.kgplatform.entity.KnowledgeGraph;
 import com.sdu.kgplatform.entity.NodeEntity;
 import com.sdu.kgplatform.repository.KnowledgeGraphRepository;
 import com.sdu.kgplatform.repository.NodeRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class NodeService {
+
+    private static final Logger log = LoggerFactory.getLogger(NodeService.class);
 
     private final NodeRepository nodeRepository;
     private final KnowledgeGraphRepository graphRepository;
@@ -44,7 +48,7 @@ public class NodeService {
             throw e; // 重新抛出业务异常
         } catch (Exception e) {
             // Neo4j 连接问题，记录日志但继续创建节点
-            System.err.println("警告: Neo4j 查询失败，跳过重复检查: " + e.getMessage());
+            log.warn("警告: Neo4j 查询失败，跳过重复检查: {}", e.getMessage());
         }
 
         NodeEntity node = new NodeEntity();
@@ -59,15 +63,15 @@ public class NodeService {
         node.setTotalDegree(0);
 
         try {
-            System.out.println("DEBUG: Creating node - nodeId=" + node.getNodeId() + ", name=" + node.getName());
+            log.debug("Creating node - nodeId={}, name={}", node.getNodeId(), node.getName());
         NodeEntity saved = nodeRepository.save(node);
-            System.out.println("DEBUG: Saved node - nodeId=" + saved.getNodeId() + ", id=" + saved.getId() + ", name=" + saved.getName());
+            log.debug("Saved node - nodeId={}, id={}, name={}", saved.getNodeId(), saved.getId(), saved.getName());
         updateGraphNodeCount(graphId);
             NodeDto result = convertToDto(saved);
-            System.out.println("DEBUG: Returning DTO - nodeId=" + result.getNodeId());
+            log.debug("Returning DTO - nodeId={}", result.getNodeId());
             return result;
         } catch (Exception e) {
-            System.err.println("节点保存到Neo4j失败: " + e.getMessage());
+            log.error("节点保存到Neo4j失败: {}", e.getMessage());
             throw new RuntimeException("Neo4j 连接失败，请确保 Neo4j 数据库正在运行。错误: " + e.getMessage(), e);
         }
     }

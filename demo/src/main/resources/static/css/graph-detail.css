@@ -1,0 +1,551 @@
+/**
+ * Graph Detail Page Specific Styles
+ * 图谱详情页专用样式
+ */
+
+/* ==================== 文本截断 ==================== */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ==================== 侧边栏样式 ==================== */
+
+/* 左侧边栏 */
+#leftSidebar {
+    width: 320px;
+    min-width: 200px;
+    max-width: 500px;
+    position: relative;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+    align-self: stretch;
+}
+#leftSidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: visible;
+}
+#leftSidebar.collapsed .sidebar-content {
+    display: none;
+}
+#leftSidebar.collapsed .resize-handle {
+    display: none;
+}
+
+/* 右侧详情栏 */
+#rightSidebar {
+    width: 300px;
+    min-width: 200px;
+    max-width: 500px;
+    position: relative;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+    align-self: stretch;
+}
+#rightSidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: visible;
+}
+#rightSidebar.collapsed .sidebar-content {
+    display: none;
+}
+#rightSidebar.collapsed .resize-handle {
+    display: none;
+}
+
+/* 侧边栏折叠按钮 - 相对于侧边栏定位 */
+.sidebar-toggle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 48px;
+    background: var(--color-base-200);
+    border: 1px solid var(--color-base-300);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: background 0.2s;
+}
+.sidebar-toggle:hover {
+    background: var(--color-base-300);
+}
+#leftSidebarToggle {
+    right: -20px;
+    border-radius: 0 8px 8px 0;
+}
+#rightSidebarToggle {
+    left: -20px;
+    border-radius: 8px 0 0 8px;
+}
+
+/* 拖拽调整手柄 */
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background: transparent;
+    z-index: 20;
+}
+.resize-handle:hover {
+    background: rgba(59, 130, 246, 0.4);
+}
+.resize-handle-left {
+    right: 0;
+}
+.resize-handle-right {
+    left: 0;
+}
+
+/* ==================== 图谱画布样式 ==================== */
+
+/* Graph canvas styles with subtle grid background */
+#graphCanvas {
+    background: linear-gradient(45deg, rgba(229, 231, 235, 0.15) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(229, 231, 235, 0.15) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(229, 231, 235, 0.15) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(229, 231, 235, 0.15) 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+}
+
+/* ==================== 节点样式 ==================== */
+
+/* Node details card styling */
+.node-detail-card {
+    background: var(--color-base-100);
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    padding: 1.5rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.node-detail-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Graph node styles */
+.graph-node {
+    cursor: grab;
+}
+
+.graph-node:hover {
+    opacity: 0.85;
+}
+
+.node-label {
+    pointer-events: none;
+    user-select: none;
+}
+
+.graph-node.selected {
+    stroke: var(--color-primary);
+    stroke-width: 3px;
+    filter: drop-shadow(0 2px 4px rgba(30, 58, 138, 0.3));
+}
+
+/* ==================== 边/关系样式 ==================== */
+
+.graph-edge {
+    stroke: var(--color-base-content);
+    stroke-opacity: 0.5;
+    stroke-width: 1.5px;
+    pointer-events: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.graph-edge.highlighted {
+    stroke: var(--color-accent);
+    stroke-opacity: 0.8;
+    stroke-width: 2.5px;
+}
+
+/* ==================== 统计区域样式 ==================== */
+
+/* Statistics section collapsible */
+.statistics-collapsed #statisticsContent {
+    display: none;
+}
+
+/* Statistics cards styling */
+.stat {
+    border-radius: var(--radius-box);
+    border: var(--border) solid var(--color-base-300);
+    transition: all 0.15s ease-in-out;
+}
+
+.stat:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ==================== 表单控件样式增强 ==================== */
+
+/* Enhanced range slider styling for academic look */
+.range {
+    height: 0.375rem;
+    background: var(--color-base-300);
+    border-radius: var(--radius-field);
+}
+
+.range::-webkit-slider-thumb {
+    height: 1.125rem;
+    width: 1.125rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-base-100);
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+    transition: all 0.15s ease-in-out;
+}
+
+.range::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(30, 58, 138, 0.3);
+}
+
+.range::-moz-range-thumb {
+    height: 1.125rem;
+    width: 1.125rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-base-100);
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+    transition: all 0.15s ease-in-out;
+}
+
+/* Checkbox styling enhancements for academic look */
+.checkbox {
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-selector);
+}
+
+.checkbox:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.checkbox-secondary:checked {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+}
+
+/* Select dropdown styling */
+.select {
+    border-radius: var(--radius-field);
+    border: var(--border) solid var(--color-base-300);
+}
+
+/* Input field styling */
+.input {
+    border-radius: var(--radius-field);
+    border: var(--border) solid var(--color-base-300);
+}
+
+/* Smooth transitions for interactive elements */
+.checkbox,
+.range,
+.select,
+.input {
+    transition: all 0.15s ease-in-out;
+}
+
+/* Focus states for accessibility */
+.checkbox:focus,
+.range:focus,
+.select:focus,
+.input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ==================== 推荐区域滚动样式 ==================== */
+
+#recommendationsContainer::-webkit-scrollbar {
+    height: 8px;
+}
+
+#recommendationsContainer::-webkit-scrollbar-track {
+    background: var(--color-base-300);
+    border-radius: 4px;
+}
+
+#recommendationsContainer::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+}
+
+#recommendationsContainer::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+}
+
+/* ==================== 收藏按钮样式 ==================== */
+
+.favorite-active {
+    color: var(--color-error) !important;
+}
+
+/* ==================== 搜索高亮样式 ==================== */
+
+.search-highlight {
+    background-color: rgba(245, 158, 11, 0.25);
+    border-radius: var(--radius-selector);
+    padding: 1px 3px;
+}
+
+/* ==================== 加载遮罩样式 ==================== */
+
+.graph-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+}
+
+/* ==================== 图谱提示框样式 ==================== */
+
+.graph-tooltip {
+    position: absolute;
+    background: var(--color-base-100);
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    pointer-events: none;
+    max-width: 240px;
+}
+
+/* ==================== 按钮样式增强 ==================== */
+
+.btn {
+    border-radius: var(--radius-field);
+    transition: all 0.15s ease-in-out;
+    border: var(--border) solid transparent;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-circle {
+    border-radius: 50%;
+}
+
+/* Copy button animation */
+.btn.btn-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+}
+
+/* Download format buttons */
+.btn-outline:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== 卡片样式增强 ==================== */
+
+.card {
+    border-radius: var(--radius-box);
+    border: var(--border) solid var(--color-base-300);
+}
+
+/* ==================== 徽章样式 ==================== */
+
+.badge {
+    border-radius: var(--radius-selector);
+    border: var(--border) solid transparent;
+}
+
+.badge-outline {
+    border-color: var(--color-base-300);
+}
+
+/* ==================== 图表容器样式 ==================== */
+
+#chartContainer {
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    transition: all 0.15s ease-in-out;
+}
+
+#chartContainer:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Chart container loading animation */
+.chartContainer {
+    transition: all 0.3s ease-in-out;
+}
+
+.chartContainer img {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Enhanced loading spinner for charts */
+.loading.loading-spinner.loading-lg {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* ==================== 下拉菜单样式 ==================== */
+
+.dropdown-content {
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dropdown-content a {
+    transition: all 0.15s ease-in-out;
+    border-radius: var(--radius-selector);
+    margin: 2px;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--color-base-200);
+    transform: translateX(2px);
+}
+
+.dropdown-content a.active {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-content) !important;
+    font-weight: 500;
+}
+
+.dropdown-content a.active:hover {
+    background-color: var(--color-primary) !important;
+    transform: none;
+}
+
+/* ==================== Modal 样式增强 ==================== */
+
+.modal-box {
+    border-radius: var(--radius-box);
+    border: var(--border) solid var(--color-base-300);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+/* Modal close button styling */
+.modal-box .btn-circle {
+    background-color: var(--color-base-200);
+    border: var(--border) solid var(--color-base-300);
+}
+
+.modal-box .btn-circle:hover {
+    background-color: var(--color-base-300);
+}
+
+/* ==================== Join 输入框样式 ==================== */
+
+.join .input {
+    border-right: none;
+}
+
+.join .btn {
+    border-left: none;
+}
+
+/* ==================== 间距工具类 ==================== */
+
+.space-y-3 > * + * {
+    margin-top: 0.75rem;
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+.space-y-6 > * + * {
+    margin-top: 1.5rem;
+}
+
+/* ==================== 排版样式 ==================== */
+
+.label-text {
+    font-weight: 500;
+    color: var(--color-base-content);
+}
+
+.stat-title {
+    font-weight: 500;
+    color: var(--color-base-content);
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-weight: 600;
+}
+
+/* ==================== 分割线样式 ==================== */
+
+.divider {
+    border-color: var(--color-base-300);
+}
+
+/* ==================== 响应式调整 ==================== */
+
+@media (max-width: 1280px) {
+    .w-80 {
+        width: 18rem;
+    }
+    
+    .w-16 {
+        width: 3.5rem;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    .w-80 {
+        width: 16rem;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Stack the three main columns vertically */
+    .flex-1.flex { flex-direction: column; }
+    .w-80 { width: 100%; }
+    .w-16 { display: none; }
+    #graphVisualizationArea { min-height: 50vh; }
+    .p-6 { padding: 1rem; }
+}
+
+/* Extra small screens */
+@media (max-width: 640px) {
+    .header-height { height: 56px; }
+    .btn.btn-sm { height: 2.5rem; }
+    .join .input { height: 3rem; }
+    .join .btn { height: 3rem; }
+}

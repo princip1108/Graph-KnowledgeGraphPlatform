@@ -9,12 +9,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
 @Controller
 @RequestMapping("/user")
 public class UserController {
+
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
 
@@ -42,9 +47,9 @@ public class UserController {
     @ResponseBody
     public ResponseEntity<?> getCurrentUserProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("=== 获取用户资料 ===");
-        System.out.println("Auth: " + auth);
-        System.out.println("Auth Name: " + (auth != null ? auth.getName() : "null"));
+        log.debug("=== 获取用户资料 ===");
+        log.debug("Auth: {}", auth);
+        log.debug("Auth Name: {}", auth != null ? auth.getName() : "null");
         
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
@@ -52,10 +57,10 @@ public class UserController {
         
         try {
             UserProfileDto profile = userService.getUserProfile(auth.getName());
-            System.out.println("获取到用户: " + profile.getUserName());
+            log.debug("获取到用户: {}", profile.getUserName());
             return ResponseEntity.ok(profile);
         } catch (Exception e) {
-            System.out.println("获取用户失败: " + e.getMessage());
+            log.error("获取用户失败: {}", e.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", "获取用户信息失败"));
         }
     }

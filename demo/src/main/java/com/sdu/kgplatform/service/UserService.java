@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sdu.kgplatform.security.CustomUserDetails;
 
 import com.sdu.kgplatform.dto.UserProfileDto;
 
@@ -41,33 +42,36 @@ public class UserService implements UserDetailsService {
         if (account == null || account.trim().isEmpty()) {
             throw new UsernameNotFoundException("账号不能为空");
         }
-        
+
         User user = null;
-        
+
         // 尝试用邮箱查找（邮箱格式包含@）
         if (account.contains("@")) {
             user = userRepository.findByEmail(account).orElse(null);
         }
-        
+
         // 如果邮箱没找到，尝试用手机号查找
         if (user == null) {
             user = userRepository.findByPhone(account).orElse(null);
         }
-        
+
         if (user == null) {
             throw new UsernameNotFoundException("账号不存在: " + account);
         }
-        
+
         // 返回的用户名使用实际查询的账号
-        return new org.springframework.security.core.userdetails.User(
-            account,
-            user.getPasswordHash(),
-            Collections.singleton(user.getRole().toAuthority())
-        );
+        // 返回的用户名使用实际查询的账号
+        return new CustomUserDetails(
+                user.getUserId(),
+                account,
+                user.getPasswordHash(),
+                user.getAvatar(),
+                Collections.singleton(user.getRole().toAuthority()));
     }
-    
+
     /**
      * 用户注册（支持邮箱或手机号注册）
+     * 
      * @param dto 用户注册信息
      * @return 注册成功的用户
      */
@@ -141,23 +145,23 @@ public class UserService implements UserDetailsService {
         if (account == null || account.trim().isEmpty()) {
             throw new UsernameNotFoundException("账号不能为空");
         }
-        
+
         User user = null;
-        
+
         // 邮箱格式包含@
         if (account.contains("@")) {
             user = userRepository.findByEmail(account).orElse(null);
         }
-        
+
         // 尝试手机号查找
         if (user == null) {
             user = userRepository.findByPhone(account).orElse(null);
         }
-        
+
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在: " + account);
         }
-        
+
         return convertToProfileDto(user);
     }
 
@@ -175,8 +179,9 @@ public class UserService implements UserDetailsService {
      */
     @Transactional
     public void updateLastLoginTime(String account) {
-        if (account == null || account.trim().isEmpty()) return;
-        
+        if (account == null || account.trim().isEmpty())
+            return;
+
         User user = null;
         if (account.contains("@")) {
             user = userRepository.findByEmail(account).orElse(null);
@@ -198,7 +203,7 @@ public class UserService implements UserDetailsService {
         if (account == null || account.trim().isEmpty()) {
             throw new UsernameNotFoundException("账号不能为空");
         }
-        
+
         User user = null;
         if (account.contains("@")) {
             user = userRepository.findByEmail(account).orElse(null);
@@ -209,7 +214,7 @@ public class UserService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在: " + account);
         }
-        
+
         // 更新可修改的字段
         if (profileDto.getUserName() != null && !profileDto.getUserName().trim().isEmpty()) {
             user.setUserName(profileDto.getUserName().trim());
@@ -260,7 +265,7 @@ public class UserService implements UserDetailsService {
             }
             // 已绑定邮箱，忽略修改请求
         }
-        
+
         User savedUser = userRepository.save(user);
         return convertToProfileDto(savedUser);
     }
@@ -273,7 +278,7 @@ public class UserService implements UserDetailsService {
         if (account == null || account.trim().isEmpty()) {
             throw new UsernameNotFoundException("账号不能为空");
         }
-        
+
         User user = null;
         // 先按邮箱查找
         if (account.contains("@")) {
@@ -290,7 +295,7 @@ public class UserService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在: " + account);
         }
-        
+
         user.setAvatar(avatarUrl);
         userRepository.save(user);
     }

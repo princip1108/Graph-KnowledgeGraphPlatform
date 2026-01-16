@@ -37,8 +37,8 @@ public class GraphController {
     private final KnowledgeGraphRepository knowledgeGraphRepository;
 
     public GraphController(GraphService graphService, UserRepository userRepository,
-                          GraphFavoriteRepository graphFavoriteRepository,
-                          KnowledgeGraphRepository knowledgeGraphRepository) {
+            GraphFavoriteRepository graphFavoriteRepository,
+            KnowledgeGraphRepository knowledgeGraphRepository) {
         this.graphService = graphService;
         this.userRepository = userRepository;
         this.graphFavoriteRepository = graphFavoriteRepository;
@@ -62,10 +62,9 @@ public class GraphController {
         try {
             GraphDetailDto created = graphService.createGraph(userId, dto);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "图谱创建成功",
-                "data", created
-            ));
+                    "success", true,
+                    "message", "图谱创建成功",
+                    "data", created));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -79,15 +78,15 @@ public class GraphController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getGraphById(@PathVariable("id") Integer graphId,
-                                          @RequestParam(value = "incrementView", defaultValue = "true") boolean incrementView) {
+            @RequestParam(value = "incrementView", defaultValue = "true") boolean incrementView) {
         try {
             GraphDetailDto graph = graphService.getGraphById(graphId);
-            
+
             // 增加浏览量
             if (incrementView) {
                 graphService.incrementViewCount(graphId);
             }
-            
+
             return ResponseEntity.ok(graph);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
@@ -120,7 +119,7 @@ public class GraphController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String status) {
-        
+
         Integer userId = getCurrentUserId();
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
@@ -134,12 +133,11 @@ public class GraphController {
                 graphs = graphService.getUserGraphs(userId, page, size, sortBy);
             }
             return ResponseEntity.ok(Map.of(
-                "content", graphs.getContent(),
-                "totalElements", graphs.getTotalElements(),
-                "totalPages", graphs.getTotalPages(),
-                "currentPage", graphs.getNumber(),
-                "size", graphs.getSize()
-            ));
+                    "content", graphs.getContent(),
+                    "totalElements", graphs.getTotalElements(),
+                    "totalPages", graphs.getTotalPages(),
+                    "currentPage", graphs.getNumber(),
+                    "size", graphs.getSize()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -154,15 +152,14 @@ public class GraphController {
             @PathVariable Integer userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        
+
         try {
             Page<GraphListDto> graphs = graphService.getUserGraphsByStatus(userId, "PUBLISHED", page, size);
             return ResponseEntity.ok(Map.of(
-                "content", graphs.getContent(),
-                "totalElements", graphs.getTotalElements(),
-                "totalPages", graphs.getTotalPages(),
-                "currentPage", graphs.getNumber()
-            ));
+                    "content", graphs.getContent(),
+                    "totalElements", graphs.getTotalElements(),
+                    "totalPages", graphs.getTotalPages(),
+                    "currentPage", graphs.getNumber()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -177,14 +174,13 @@ public class GraphController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(required = false) String sortBy) {
-        
+
         Page<GraphListDto> graphs = graphService.getPublicGraphs(page, size, sortBy);
         return ResponseEntity.ok(Map.of(
-            "content", graphs.getContent(),
-            "totalElements", graphs.getTotalElements(),
-            "totalPages", graphs.getTotalPages(),
-            "currentPage", graphs.getNumber()
-        ));
+                "content", graphs.getContent(),
+                "totalElements", graphs.getTotalElements(),
+                "totalPages", graphs.getTotalPages(),
+                "currentPage", graphs.getNumber()));
     }
 
     /**
@@ -196,19 +192,18 @@ public class GraphController {
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
-        
+
         if (keyword == null || keyword.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "搜索关键词不能为空"));
         }
 
         Page<GraphListDto> graphs = graphService.searchPublicGraphs(keyword.trim(), page, size);
         return ResponseEntity.ok(Map.of(
-            "content", graphs.getContent(),
-            "totalElements", graphs.getTotalElements(),
-            "totalPages", graphs.getTotalPages(),
-            "currentPage", graphs.getNumber(),
-            "keyword", keyword
-        ));
+                "content", graphs.getContent(),
+                "totalElements", graphs.getTotalElements(),
+                "totalPages", graphs.getTotalPages(),
+                "currentPage", graphs.getNumber(),
+                "keyword", keyword));
     }
 
     /**
@@ -232,7 +227,7 @@ public class GraphController {
     public ResponseEntity<?> updateGraph(
             @PathVariable("id") Integer graphId,
             @Valid @RequestBody GraphUpdateDto dto) {
-        
+
         Integer userId = getCurrentUserId();
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
@@ -241,10 +236,9 @@ public class GraphController {
         try {
             GraphDetailDto updated = graphService.updateGraph(graphId, userId, dto);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "图谱更新成功",
-                "data", updated
-            ));
+                    "success", true,
+                    "message", "图谱更新成功",
+                    "data", updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -253,13 +247,15 @@ public class GraphController {
     /**
      * 更新图谱封面
      * PUT /api/graphs/{id}/cover
+     * @param isCustom true=用户手动上传，false=自动生成缩略图（默认false）
      */
     @PutMapping("/{id}/cover")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> updateGraphCover(
             @PathVariable("id") Integer graphId,
-            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-        
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "isCustom", defaultValue = "false") boolean isCustom) {
+
         Integer userId = getCurrentUserId();
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
@@ -290,18 +286,19 @@ public class GraphController {
             String newFilename = java.util.UUID.randomUUID().toString() + extension;
 
             java.nio.file.Path filePath = uploadPath.resolve(newFilename);
-            java.nio.file.Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            java.nio.file.Files.copy(file.getInputStream(), filePath,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
             String coverUrl = "/uploads/covers/" + newFilename;
 
             // 更新图谱封面
-            graphService.updateGraphCover(graphId, userId, coverUrl);
+            graphService.updateGraphCover(graphId, userId, coverUrl, isCustom);
 
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "url", coverUrl,
-                "message", "封面更新成功"
-            ));
+                    "success", true,
+                    "url", coverUrl,
+                    "isCustomCover", isCustom,
+                    "message", "封面更新成功"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "封面更新失败: " + e.getMessage()));
         }
@@ -316,7 +313,7 @@ public class GraphController {
     public ResponseEntity<?> updateGraphStatus(
             @PathVariable("id") Integer graphId,
             @RequestBody Map<String, String> request) {
-        
+
         Integer userId = getCurrentUserId();
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
@@ -330,10 +327,9 @@ public class GraphController {
         try {
             graphService.updateGraphStatus(graphId, userId, status);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "状态更新成功",
-                "status", status.toUpperCase()
-            ));
+                    "success", true,
+                    "message", "状态更新成功",
+                    "status", status.toUpperCase()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -356,9 +352,8 @@ public class GraphController {
         try {
             graphService.deleteGraph(graphId, userId);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "图谱已删除"
-            ));
+                    "success", true,
+                    "message", "图谱已删除"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -374,9 +369,8 @@ public class GraphController {
         try {
             graphService.adminDeleteGraph(graphId);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "图谱已删除（管理员操作）"
-            ));
+                    "success", true,
+                    "message", "图谱已删除（管理员操作）"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -404,11 +398,10 @@ public class GraphController {
         try {
             int successCount = graphService.batchUpdateStatus(graphIds, userId, "PUBLISHED");
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "成功上线 " + successCount + " 个图谱",
-                "successCount", successCount,
-                "totalCount", graphIds.size()
-            ));
+                    "success", true,
+                    "message", "成功上线 " + successCount + " 个图谱",
+                    "successCount", successCount,
+                    "totalCount", graphIds.size()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -434,11 +427,10 @@ public class GraphController {
         try {
             int successCount = graphService.batchUpdateStatus(graphIds, userId, "DRAFT");
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "成功下线 " + successCount + " 个图谱",
-                "successCount", successCount,
-                "totalCount", graphIds.size()
-            ));
+                    "success", true,
+                    "message", "成功下线 " + successCount + " 个图谱",
+                    "successCount", successCount,
+                    "totalCount", graphIds.size()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -464,11 +456,10 @@ public class GraphController {
         try {
             int successCount = graphService.batchDeleteGraphs(graphIds, userId);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "成功删除 " + successCount + " 个图谱",
-                "successCount", successCount,
-                "totalCount", graphIds.size()
-            ));
+                    "success", true,
+                    "message", "成功删除 " + successCount + " 个图谱",
+                    "successCount", successCount,
+                    "totalCount", graphIds.size()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -490,8 +481,7 @@ public class GraphController {
 
         long count = graphService.countUserGraphs(userId);
         return ResponseEntity.ok(Map.of(
-            "totalGraphs", count
-        ));
+                "totalGraphs", count));
     }
 
     /**
@@ -501,25 +491,25 @@ public class GraphController {
     @GetMapping("/{id}/can-edit")
     public ResponseEntity<?> canEditGraph(@PathVariable("id") Integer graphId) {
         Integer userId = getCurrentUserId();
-        
+
         // 未登录用户没有编辑权限
         if (userId == null) {
             return ResponseEntity.ok(Map.of("canEdit", false));
         }
-        
+
         try {
             // 检查是否是图谱创建者
             boolean isOwner = graphService.isGraphOwner(graphId, userId);
             if (isOwner) {
                 return ResponseEntity.ok(Map.of("canEdit", true, "reason", "owner"));
             }
-            
+
             // 检查是否是管理员
             User user = userRepository.findById(userId).orElse(null);
             if (user != null && user.getRole() == Role.ADMIN) {
                 return ResponseEntity.ok(Map.of("canEdit", true, "reason", "admin"));
             }
-            
+
             return ResponseEntity.ok(Map.of("canEdit", false));
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of("canEdit", false));
@@ -548,7 +538,8 @@ public class GraphController {
                 graphFavoriteRepository.deleteById(favoriteId);
                 // 更新图谱收藏数
                 knowledgeGraphRepository.findById(graphId).ifPresent(graph -> {
-                    graph.setCollectCount(Math.max(0, (graph.getCollectCount() != null ? graph.getCollectCount() : 0) - 1));
+                    graph.setCollectCount(
+                            Math.max(0, (graph.getCollectCount() != null ? graph.getCollectCount() : 0) - 1));
                     knowledgeGraphRepository.save(graph);
                 });
                 return ResponseEntity.ok(Map.of("success", true, "favorited", false, "message", "已取消收藏"));
@@ -598,7 +589,7 @@ public class GraphController {
         try {
             List<GraphFavorite> favorites = graphFavoriteRepository.findByIdUserId(userId);
             List<Map<String, Object>> graphs = new java.util.ArrayList<>();
-            
+
             for (GraphFavorite fav : favorites) {
                 knowledgeGraphRepository.findById(fav.getId().getGraphId()).ifPresent(graph -> {
                     Map<String, Object> graphMap = new java.util.HashMap<>();
@@ -614,7 +605,7 @@ public class GraphController {
                     graphs.add(graphMap);
                 });
             }
-            
+
             return ResponseEntity.ok(Map.of("success", true, "favorites", graphs));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -628,20 +619,10 @@ public class GraphController {
      */
     private Integer getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return null;
+        if (auth != null && auth.isAuthenticated()
+                && auth.getPrincipal() instanceof com.sdu.kgplatform.security.CustomUserDetails) {
+            return ((com.sdu.kgplatform.security.CustomUserDetails) auth.getPrincipal()).getUserId();
         }
-
-        String account = auth.getName();
-        User user = null;
-
-        if (account.contains("@")) {
-            user = userRepository.findByEmail(account).orElse(null);
-        }
-        if (user == null) {
-            user = userRepository.findByPhone(account).orElse(null);
-        }
-
-        return user != null ? user.getUserId() : null;
+        return null;
     }
 }

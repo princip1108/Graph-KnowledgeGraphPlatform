@@ -1,1055 +1,217 @@
-﻿
-                <!DOCTYPE html>
-                <html lang="zh">
-                <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>关于我们</title>
-                  <style>
-                    *,
-                    *::before,
-                    *::after {
-                      box-sizing: border-box;
-                      margin: 0;
-                    }
-                    .iframe-outer {
-                      position: fixed;
-                      top: 0;
-                      left: 0;
-                      bottom: 0;
-                      right: 0;
-                      display: flex;
-                      justify-content: center;
-                      background-color: #E0E0E0;
-                    }
-                    .iframe-wrapper {
-                      width: 100%;
-                      height: 100%;
-                      margin: 0 auto;
-                      transform-origin: center top;
-                      flex-shrink: 0;
-                    }
-                    #dynamicIframe {
-                      border: none;
-                      width: 100%;
-                      height: 100%;
-                    }
-                  </style>
-                  <script>
-                const width = 1920
-                const height = 1080
-                const resolutionRatio = width && height ? width / height : 1
-                const pageNameMap = {
-                  'home_page': '首页',
-    'login_register_page': '登录注册',
-    'registration_success_page': '注册成功',
-    'password_reset_page': '找回密码',
-    'graph_list_page': '图谱列表页',
-    'graph_detail_page': '图谱详情页',
-    'user_profile_page': '个人中心',
-    'documentation_page': '文档',
-    'about_page': '关于我们',
-    'feedback_page': '用户反馈',
-    'page_998124': '管理',
-    'page_998125': '论坛'
-                }
-                function setIframeSize(w, h) {
-                  const currentContainerRadio = w / h
-                  let widthValue = w
-                  let heightValue = h
-                  let zoom = 1
-                  if (currentContainerRadio > resolutionRatio) {
-                    widthValue = h * resolutionRatio
-                    heightValue = h
-                  } else {
-                    widthValue = w
-                    heightValue = w / resolutionRatio
-                  }
-                  zoom = width ? widthValue / width : 1
-                  return {
-                    width: widthValue / zoom + 'px',
-                    height: heightValue / zoom + 'px',
-                    zoom,
-                  }
-                }
-                function adjustIframeSize() {
-                  const iframeWrapper = document.querySelector(".iframe-wrapper")
-                  if (!iframeWrapper) return
-                  iframeWrapper.style.width = '100%'
-                  iframeWrapper.style.height = window.innerHeight + 'px'
-                  iframeWrapper.style.transform = ''
-                }
-                function sanitizeFilename(name) {
-                  return name.replace(/[\/:*?"<>|]/g, '_')
-                }
-                function handlePostMessage(event) {
-                  if (!event.data) {
-                    return
-                  }
-                  const { type, targetPageId, params } = event.data
-                  const pagePathMap = {
-                    'home_page': '../graph/home.html',
-                    'login_register_page': '../user/login_register.html',
-                    'registration_success_page': '../user/registration_success.html',
-                    'password_reset_page': '../user/password_reset.html',
-                    'graph_list_page': '../graph/graph_list.html',
-                    'graph_detail_page': '../graph/graph_detail.html',
-                    'user_profile_page': '../user/profile.html',
-                    'documentation_page': '../pages/documentation.html',
-                    'about_page': '../pages/about.html',
-                    'feedback_page': '../community/feedback.html',
-                    'page_998124': '../admin/dashboard.html',
-                    'page_998125': '../community/forum_list.html'
-                  };
-                  let targetPath = pagePathMap[targetPageId];
-                  if (type === "iframeNavigation" && targetPath) {
-                    if (params && params.graphId) {
-                      targetPath += '?id=' + params.graphId;
-                    }
-                    window.location.href = targetPath
-                  }
-                }
-                window.addEventListener('message', handlePostMessage)
-                window.onload = adjustIframeSize
-                window.onresize = adjustIframeSize
-                window.onunload = () => {
-                  window.removeEventListener('message', handlePostMessage)
-                }
-              </script>
-                </head>
-                <body>
-                  <div class="iframe-outer">
-                    <div class="iframe-wrapper">
-                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>关于我们 - Graph+知识图谱平台</title>
-    <link href="/assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
-    <script src="/assets/static/libs/tailwind-browser@4.js"></script>
-    <link href="/assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
-    <script src="/assets/3/3.1.1/iconify.min.js"></script>
-    <style>
-/* daisyUI Theme Variables Customization
-* Based on the selected daisyUI theme and UI guidance requirements,
-* customize only the CSS variables that need to be different from the theme defaults.
-*/
-:root {
-/* Corporate theme customization for knowledge graph platform */
---color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
---color-primary-content: rgba(255, 255, 255, 1);
---color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
---color-secondary-content: rgba(255, 255, 255, 1);
---color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
---color-accent-content: rgba(255, 255, 255, 1);
---color-base-100: rgba(255, 255, 255, 1);
---color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
---color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
---color-base-content: rgba(55, 65, 81, 1); /* #374151 */
---color-success: rgba(16, 185, 129, 1);
---color-warning: rgba(245, 158, 11, 1);
---color-error: rgba(239, 68, 68, 1);
---color-info: rgba(59, 130, 246, 1);
---radius-box: 0.375rem; /* 6px for micro-rounded corners */
---radius-field: 0.375rem;
---border: 1px;
-}
-
-/* Global component styles */
-.transition-width {
-transition: width 0.3s ease-in-out;
-}
-
-.nav-hover {
-transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-}
-
-.shadow-soft {
-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Header height consistency */
-.header-height {
-height: 64px;
-}
-
-/* Focus styles for accessibility */
-.focus-primary:focus {
-outline: 2px solid var(--color-primary);
-outline-offset: 2px;
-}
-
-/* Academic style enhancements */
-.academic-border {
-border: var(--border) solid var(--color-base-300);
-}
-
-.hover-lift {
-transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.hover-lift:hover {
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Professional grid spacing */
-.academic-grid {
-gap: 1.5rem;
-}
-
-/* Clean divider lines */
-.academic-divider {
-border-color: var(--color-base-300);
-border-width: var(--border);
-}
-</style> <style>
-/* About page specific styles */
-.hero-overlay {
-background: linear-gradient(135deg, var(--color-primary) 0%, rgba(30, 58, 138, 0.8) 100%);
-}
-
-.hover-lift {
-transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.hover-lift:hover {
-transform: translateY(-4px);
-box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.team-card {
-transition: all 0.2s ease-in-out;
-}
-
-.team-card:hover {
-transform: translateY(-2px);
-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Modal animations */
-.modal[open] {
-animation: modal-fade-in 0.3s ease-out;
-}
-
-@keyframes modal-fade-in {
-from {
-opacity: 0;
-transform: scale(0.9);
-}
-to {
-opacity: 1;
-transform: scale(1);
-}
-}
-
-/* Section spacing consistency */
-section {
-scroll-margin-top: 80px;
-}
-
-/* Enhanced visual hierarchy */
-.section-title {
-position: relative;
-}
-
-.section-title::after {
-content: &#39;&#39;;
-position: absolute;
-bottom: -8px;
-left: 50%;
-transform: translateX(-50%);
-width: 60px;
-height: 3px;
-background: var(--color-primary);
-border-radius: 2px;
-}
-
-/* Timeline styling enhancements */
-.timeline-item {
-position: relative;
-}
-
-.timeline-item::before {
-content: &#39;&#39;;
-position: absolute;
-left: 32px;
-top: 80px;
-width: 2px;
-height: calc(100% + 32px);
-background: var(--color-base-300);
-z-index: 0;
-}
-
-.timeline-item:last-child::before {
-display: none;
-}
-
-/* Contact section styling */
-.contact-item {
-transition: background-color 0.2s ease-in-out;
-padding: 16px;
-border-radius: var(--radius-box);
-}
-
-.contact-item:hover {
-background-color: var(--color-base-100);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-.hero h1 {
-font-size: 2.5rem;
-}
-
-.hero p {
-font-size: 1.125rem;
-}
-
-.timeline-item::before {
-display: none;
-}
-}
-
-/* Academic style enhancements */
-.academic-section {
-border-bottom: 1px solid var(--color-base-300);
-}
-
-.academic-section:last-child {
-border-bottom: none;
-}
-
-/* Enhanced card styling */
-.card {
-border: 1px solid var(--color-base-300);
-}
-
-.card:hover {
-border-color: var(--color-primary);
-}
-
-/* Button styling consistency */
-.btn-primary {
-transition: all 0.2s ease-in-out;
-}
-
-.btn-primary:hover {
-transform: translateY(-1px);
-box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
-}
-@media (max-width: 640px) {
-  .header-height { height: 56px; }
-}
-</style>
-  <script src="/assets/static/libs/25_6/holder.js"></script><style>
-#ijqd5.spark-custom-ijqd5 {
-  font-size: 70px;
-}
-
-#i848k.spark-custom-i848k {
-  font-size: 28px;
-}
-
-</style></head>
-  <body class="bg-base-100">
-    <div data-section-id="common_header" data-section-type="common_header">
-  <div id="izld" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 izld spark-custom-izld izld">
-    <!-- Left section: Logo -->
-    <div class="navbar-start">
-      <div class="flex items-center gap-4">
-        <button class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;home_page&#39;)">
-          <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
-          Graph+知识图谱平台
-        </button>
-      </div>
-      <!-- Mobile menu (visible on small screens) -->
-      <div class="dropdown lg:hidden">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
-          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
-        </div>
-        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
-        </ul>
-      </div>
-    </div>
-    <!-- Center section: Main navigation -->
-    <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 gap-2">
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
-        </li>
-      </ul>
-    </div>
-    <!-- Right section: User controls -->
-    <div class="navbar-end">
-      <!-- Login/Register buttons for logged-out users -->
-      <div data-user-control="logged-out" class="flex items-center gap-2" style="display: none;">
-        <button class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;login_register_page&#39;)">
-          登录</button><button class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100" onclick="navigateTo(&#39;login_register_page&#39;)">
-          注册
-        </button>
-      </div>
-      <!-- User profile dropdown for logged-in users -->
-      <div data-user-control="logged-in" id="ipzob" class="dropdown dropdown-end" style="display: none;">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
-          <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
-            <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
-            <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
-          </div>
-        </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
-          <li class="menu-title"><span>用户中心</span></li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
-          </li>
-          <div class="divider my-1"></div>
-          <li>
-            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-    <main class="min-h-screen">
-      <!-- Hero Section -->
-      <section class="hero min-h-96 relative" style="background-image: url(&amp;quot;https://images.unsplash.com/photo-1644088379091-d574269d422f?crop=entropy&amp;amp;cs=tinysrgb&amp;amp;fit=crop&amp;amp;fm=jpg&amp;amp;ixid=M3w3MjkzNDZ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHRlY2hub2xvZ3klMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2MTY2MzMyOHww&amp;amp;ixlib=rb-4.1.0&amp;amp;q=80&amp;amp;w=1920&amp;amp;h=600&amp;quot;);" id="ionnl">
-        <div id="i153o" class="hero-overlay bg-primary/80 i153o spark-custom-i153o"></div>
-        <div class="hero-content text-center text-primary-content">
-          <div class="max-w-4xl">
-            <h1 class="mb-8 text-5xl font-bold ijqd5 spark-custom-ijqd5" id="ijqd5">
-              关于我们
-            </h1>
-            <p class="mb-8 text-xl i848k spark-custom-i848k" id="i848k">
-              深入了解我们的愿景、团队和旅程
-            </p>
-          </div>
-        </div>
-      </section>
-      <!-- Our Mission and Vision Section -->
-      <section class="py-16 bg-base-100">
-        <div class="container mx-auto px-4 max-w-6xl">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div class="space-y-8">
-              <div>
-                <h2 class="text-3xl font-bold text-base-content mb-6">
-                  我们的使命
-                </h2>
-                <p class="text-lg text-base-content/80 leading-relaxed">
-                  我们致力于构建最先进的知识图谱平台，让复杂的知识关系变得清晰可见。通过创新的可视化技术和智能分析工具，我们帮助研究者、学者和企业更好地理解和利用知识，推动人类智慧的传承与发展。
-                </p>
-              </div>
-              <div>
-                <h2 class="text-3xl font-bold text-base-content mb-6">
-                  未来愿景
-                </h2>
-                <p class="text-lg text-base-content/80 leading-relaxed">
-                  成为全球领先的知识图谱解决方案提供商，构建一个连接所有知识领域的智能生态系统。我们相信，通过技术的力量，可以让知识的获取、理解和应用变得更加高效，为人类社会的进步贡献力量。
-                </p>
-              </div>
-            </div>
-            <div class="flex justify-center">
-              <div class="w-80 h-80 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
-                <span class="iconify text-primary" data-icon="heroicons:light-bulb" data-width="120"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- Our Story Section -->
-      <section class="py-16 bg-base-200">
-        <div class="container mx-auto px-4 max-w-6xl">
-          <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-base-content mb-4">
-              我们的故事
-            </h2>
-            <p class="text-xl text-base-content/70">创新之路：我们的里程碑</p>
-          </div>
-          <div class="space-y-8">
-            <div data-repeatable="true" class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
-              <div class="flex-shrink-0">
-                <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
-                  <span class="iconify text-primary" data-icon="heroicons:rocket-launch" data-width="32"></span>
-                </div>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-semibold text-base-content mb-2">
-                  2020年 - 项目启动
-                </h3>
-                <p class="text-base-content/80">
-                  团队成立，开始知识图谱平台的研发工作，确立了以用户体验为核心的产品理念。
-                </p>
-              </div>
-            </div>
-            <div data-repeatable="true" class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
-              <div class="flex-shrink-0">
-                <div class="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center">
-                  <span class="iconify text-accent" data-icon="heroicons:cpu-chip" data-width="32"></span>
-                </div>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-semibold text-base-content mb-2">
-                  2021年 - 技术突破
-                </h3>
-                <p class="text-base-content/80">
-                  成功开发出高性能的图数据处理引擎，实现了大规模知识图谱的实时可视化。
-                </p>
-              </div>
-            </div>
-            <div data-repeatable="true" class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
-              <div class="flex-shrink-0">
-                <div class="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center">
-                  <span class="iconify text-secondary" data-icon="heroicons:users" data-width="32"></span>
-                </div>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-semibold text-base-content mb-2">
-                  2022年 - 用户增长
-                </h3>
-                <p class="text-base-content/80">
-                  平台正式上线，获得了学术界和企业用户的广泛认可，用户数量快速增长。
-                </p>
-              </div>
-            </div>
-            <div data-repeatable="true" class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
-              <div class="flex-shrink-0">
-                <div class="w-16 h-16 bg-warning/20 rounded-full flex items-center justify-center">
-                  <span class="iconify text-warning" data-icon="heroicons:trophy" data-width="32"></span>
-                </div>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xl font-semibold text-base-content mb-2">
-                  2023年 - 行业认可
-                </h3>
-                <p class="text-base-content/80">
-                  荣获多项技术创新奖项，成为知识图谱领域的标杆产品。
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- Team Introduction Section -->
-      <section class="py-16 bg-base-100">
-        <div class="container mx-auto px-4 max-w-6xl">
-          <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-base-content mb-4">
-              我们的团队
-            </h2>
-            <p class="text-xl text-base-content/70">遇见推动知识的力量</p>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div data-repeatable="true" class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal(&#39;member1&#39;)">
-              <figure class="px-8 pt-8">
-                <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/7f0b60f9-2ecb-4583-9974-a6ac1c86ba3f.png" alt="张博士" class="rounded-full w-32 h-32 object-cover">
-              </figure>
-              <div class="card-body items-center text-center">
-                <h3 class="card-title text-lg">张博士</h3>
-                <p class="text-base-content/70">首席技术官</p>
-              </div>
-            </div>
-            <div data-repeatable="true" class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal(&#39;member2&#39;)">
-              <figure class="px-8 pt-8">
-                <img loading="lazy" decoding="async" fetchpriority="low" src="https://images.unsplash.com/photo-1675904581137-baf52052e6ce?crop=entropy&amp;amp;cs=tinysrgb&amp;amp;fit=crop&amp;amp;fm=jpg&amp;amp;ixid=M3w3MjkzNDZ8MHwxfHNlYXJjaHwzfHxhc2lhbiUyMGJ1c2luZXNzd29tYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjE2NjMzMjl8MA&amp;amp;ixlib=rb-4.1.0&amp;amp;q=80&amp;amp;w=200&amp;amp;h=200" alt="李经理" class="rounded-full w-32 h-32 object-cover">
-              </figure>
-              <div class="card-body items-center text-center">
-                <h3 class="card-title text-lg">李经理</h3>
-                <p class="text-base-content/70">产品总监</p>
-              </div>
-            </div>
-            <div data-repeatable="true" class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal(&#39;member3&#39;)">
-              <figure class="px-8 pt-8">
-                <img loading="lazy" decoding="async" fetchpriority="low" src="https://images.unsplash.com/photo-1681070909604-f555aa006564?crop=entropy&amp;amp;cs=tinysrgb&amp;amp;fit=crop&amp;amp;fm=jpg&amp;amp;ixid=M3w3MjkzNDZ8MHwxfHNlYXJjaHwyfHxhc2lhbiUyMG1hbGUlMjBlbmdpbmVlciUyMHBvcnRyYWl0fGVufDB8fHx8MTc2MTY2MzMyNnww&amp;amp;ixlib=rb-4.1.0&amp;amp;q=80&amp;amp;w=200&amp;amp;h=200" alt="王工程师" class="rounded-full w-32 h-32 object-cover">
-              </figure>
-              <div class="card-body items-center text-center">
-                <h3 class="card-title text-lg">王工程师</h3>
-                <p class="text-base-content/70">前端架构师</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- Contact Info Section -->
-      <section class="py-16 bg-base-200">
-        <div class="container mx-auto px-4 max-w-6xl">
-          <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-base-content mb-4">联系我们</h2>
-            <p class="text-xl text-base-content/70">
-              与我们取得联系或留下您的宝贵意见
-            </p>
-          </div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div class="space-y-8">
-              <div class="flex items-start gap-4">
-                <div class="flex-shrink-0">
-                  <span class="iconify text-primary" data-icon="heroicons:map-pin" data-width="24"></span>
-                </div>
-                <div>
-                  <h3 class="font-semibold text-base-content mb-2">公司地址</h3>
-                  <p class="text-base-content/80">
-                    北京市海淀区中关村软件园二期
-                  </p>
-                </div>
-              </div>
-              <div class="flex items-start gap-4">
-                <div class="flex-shrink-0">
-                  <span class="iconify text-primary" data-icon="heroicons:phone" data-width="24"></span>
-                </div>
-                <div>
-                  <h3 class="font-semibold text-base-content mb-2">联系电话</h3>
-                  <p class="text-base-content/80">400-123-4567</p>
-                </div>
-              </div>
-              <div class="flex items-start gap-4">
-                <div class="flex-shrink-0">
-                  <span class="iconify text-primary" data-icon="heroicons:envelope" data-width="24"></span>
-                </div>
-                <div>
-                  <h3 class="font-semibold text-base-content mb-2">电子邮箱</h3>
-                  <p class="text-base-content/80">contact@knowledgegraph.com</p>
-                </div>
-              </div>
-              <div class="flex items-start gap-4">
-                <div class="flex-shrink-0">
-                  <span class="iconify text-primary" data-icon="heroicons:clock" data-width="24"></span>
-                </div>
-                <div>
-                  <h3 class="font-semibold text-base-content mb-2">工作时间</h3>
-                  <p class="text-base-content/80">周一至周五 9:00-18:00</p>
-                </div>
-              </div>
-              <div class="mt-8">
-                <button class="btn btn-primary" onclick="navigateTo(&#39;feedback_page&#39;)">
-                  <span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
-                  提交反馈
-                </button>
-              </div>
-            </div>
-            <div class="bg-base-100 rounded-lg p-8 shadow-soft">
-              <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/d80a94a5-0449-4100-bca7-096f95629404.png" alt="公司位置地图" class="w-full h-64 object-cover rounded-lg">
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-    <!-- Team Member Modal -->
-    <dialog id="teamMemberModal" class="modal">
-      <div class="modal-box max-w-2xl">
-        <form method="dialog">
-          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-            ✕
-          </button>
-        </form>
-        <div id="modalContent" class="pt-4">
-          <!-- Modal content will be populated by JavaScript -->
-        </div>
-      </div>
-    </dialog>
-    <div data-section-id="common_footer" data-section-type="common_footer">
-<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
-<div class="grid grid-flow-col gap-4">
-<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
-<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
-<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
-<a class="link link-hover focus-primary">隐私政策</a>
-<a class="link link-hover focus-primary">服务条款</a>
-</div>
-<div class="grid grid-flow-col gap-4">
-<a class="link link-hover focus-primary" aria-label="官方微信">
-<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
-</a>
-<a class="link link-hover focus-primary" aria-label="企业QQ">
-<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
-</a>
-<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
-<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
-</a>
-</div>
-<div class="text-center">
-<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
-<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
-</div>
-</footer>
-</div><script>
-(function() {
-&#39;use strict&#39;;
-
-// Initialize global namespace
-window.APP_GLOBALS = window.APP_GLOBALS || {};
-
-// Global navigation utility
-window.navigateTo = function(targetPageId, params) {
-const isInIframe = window.self !== window.top;
-
-if (isInIframe) {
-window.parent.postMessage({
-type: &#39;iframeNavigation&#39;,
-targetPageId: targetPageId,
-params: params
-}, &#39;*&#39;);
-} else {
-let url = `${targetPageId}.html`;
-if (params) {
-const queryString = Object.keys(params).map(k =&gt; k + &#39;=&#39; + encodeURIComponent(params[k])).join(&#39;&amp;&#39;);
-url += &#39;?&#39; + queryString;
-}
-window.location.href = url;
-}
-};
-
-window.navigateToFavorites = function() {
-navigateTo(&#39;user_profile_page&#39;, { section: &#39;favorites&#39; });
-};
-
-// User authentication state management
-window.APP_GLOBALS.user = {
-isLoggedIn: false,
-userInfo: null,
-
-login: function(userInfo) {
-this.isLoggedIn = true;
-this.userInfo = userInfo;
-localStorage.setItem(&#39;userState&#39;, JSON.stringify({
-isLoggedIn: true,
-userInfo: userInfo
-}));
-this.updateUserInterface();
-},
-
-logout: function() {
-this.isLoggedIn = false;
-this.userInfo = null;
-localStorage.removeItem(&#39;userState&#39;);
-fetch(&#39;/api/auth/logout&#39;, { method: &#39;POST&#39;, credentials: &#39;include&#39; })
-.finally(() =&gt; {
-this.updateUserInterface();
-window.top.location.href = &#39;/graph/home.html&#39;;
-});
-},
-
-updateUserInterface: function() {
-const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
-userControls.forEach(control => {
-const controlType = control.getAttribute(&#39;data-user-control&#39;);
-if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
-control.style.display = &#39;none&#39;;
-} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
-control.style.display = &#39;none&#39;;
-} else {
-control.style.display = &#39;&#39;;
-}
-});
-if (this.isLoggedIn &amp;&amp; this.userInfo) {
-const avatarText = document.getElementById(&#39;nav-avatar-text&#39;);
-const avatarImg = document.getElementById(&#39;nav-avatar-img&#39;);
-if (avatarText &amp;&amp; avatarImg) {
-if (this.userInfo.avatar) {
-avatarText.classList.add(&#39;hidden&#39;);
-avatarImg.src = this.userInfo.avatar;
-avatarImg.classList.remove(&#39;hidden&#39;);
-} else {
-avatarText.textContent = (this.userInfo.userName || &#39;用&#39;).substring(0, 1);
-avatarText.classList.remove(&#39;hidden&#39;);
-avatarImg.classList.add(&#39;hidden&#39;);
-}
-}
-}
-},
-
-init: function() {
-const savedState = localStorage.getItem(&#39;userState&#39;);
-if (savedState) {
-const state = JSON.parse(savedState);
-this.isLoggedIn = state.isLoggedIn;
-this.userInfo = state.userInfo;
-this.updateUserInterface();
-}
-fetch(&#39;/user/api/check-auth&#39;, { credentials: &#39;include&#39; })
-.then(res => res.json())
-.then(data => {
-const wasLoggedIn = this.isLoggedIn;
-if (data.authenticated) {
-this.isLoggedIn = true;
-this.userInfo = data.user || { userName: data.username };
-localStorage.setItem(&#39;userState&#39;, JSON.stringify({ isLoggedIn: true, userInfo: this.userInfo }));
-} else {
-this.isLoggedIn = false;
-this.userInfo = null;
-localStorage.removeItem(&#39;userState&#39;);
-}
-if (wasLoggedIn !== this.isLoggedIn || !savedState) this.updateUserInterface();
-})
-.catch(() => {});
-}
-};
-
-// Search functionality
-window.APP_GLOBALS.search = {
-history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
-recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
-
-addToHistory: function(query) {
-if (query &amp;&amp; !this.history.includes(query)) {
-this.history.unshift(query);
-this.history = this.history.slice(0, 10); // Keep only last 10 searches
-localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
-}
-},
-
-getSearchSuggestions: function() {
-return this.history.length > 0 ? this.history : this.recommendations;
-},
-
-performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
-this.addToHistory(query);
-// Navigate to search results or graph detail based on context
-navigateTo(targetPage);
-}
-};
-
-// Notification utilities
-window.showNotification = function(message, type = &#39;info&#39;) {
-const notification = document.createElement(&#39;div&#39;);
-notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
-notification.innerHTML = `
-<div class="flex items-center gap-2">
-<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
-<span>${message}</span>
-</div>
-`;
-document.body.appendChild(notification);
-
-setTimeout(() => {
-notification.remove();
-}, 5000);
-};
-
-// Favorites management
-window.APP_GLOBALS.favorites = {
-items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
-
-add: function(graphId, graphData) {
-if (!this.items.find(item => item.id === graphId)) {
-this.items.push({
-id: graphId,
-data: graphData,
-addedAt: new Date().toISOString()
-});
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
-}
-},
-
-remove: function(graphId) {
-this.items = this.items.filter(item => item.id !== graphId);
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
-},
-
-isFavorited: function(graphId) {
-return this.items.some(item => item.id === graphId);
-},
-
-toggle: function(graphId, graphData) {
-if (this.isFavorited(graphId)) {
-this.remove(graphId);
-} else {
-this.add(graphId, graphData);
-}
-}
-};
-
-// Initialize components when DOM is loaded
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-window.APP_GLOBALS.user.init();
-});
-
-})();
-</script><script>
-// Team member data
-const teamMembers = {
-member1: {
-name: &#39;张博士&#39;,
-position: &#39;首席技术官&#39;,
-image: &#39;https://placehold.co/300x300.png?text=Dr.+Zhang&#39;,
-bio: &#39;张博士拥有计算机科学博士学位，在知识图谱和人工智能领域有超过15年的研究经验。曾在顶级学术期刊发表论文50余篇，主导了多个国家级科研项目。&#39;,
-expertise: [&#39;知识图谱&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;图数据库&#39;],
-education: &#39;清华大学计算机科学博士&#39;,
-experience: &#39;15年技术研发经验&#39;
-},
-member2: {
-name: &#39;李经理&#39;,
-position: &#39;产品总监&#39;,
-image: &#39;https://placehold.co/300x300.png?text=Li+Manager&#39;,
-bio: &#39;李经理在产品管理和用户体验设计方面有丰富经验，曾在多家知名科技公司担任产品负责人。擅长将复杂的技术转化为用户友好的产品功能。&#39;,
-expertise: [&#39;产品策略&#39;, &#39;用户体验&#39;, &#39;项目管理&#39;, &#39;市场分析&#39;],
-education: &#39;北京大学工商管理硕士&#39;,
-experience: &#39;12年产品管理经验&#39;
-},
-member3: {
-name: &#39;王工程师&#39;,
-position: &#39;前端架构师&#39;,
-image: &#39;https://placehold.co/300x300.png?text=Wang+Engineer&#39;,
-bio: &#39;王工程师是前端技术专家，在大规模Web应用开发和可视化技术方面有深厚造诣。负责平台的前端架构设计和用户界面开发。&#39;,
-expertise: [&#39;前端架构&#39;, &#39;数据可视化&#39;, &#39;JavaScript&#39;, &#39;React/Vue&#39;],
-education: &#39;中科院软件工程硕士&#39;,
-experience: &#39;10年前端开发经验&#39;
-}
-};
-
-// Open team member modal
-function openTeamMemberModal(memberId) {
-const member = teamMembers[memberId];
-if (!member) return;
-
-const modalContent = document.getElementById(&#39;modalContent&#39;);
-modalContent.innerHTML = `
-<div class="flex flex-col md:flex-row gap-6">
-<div class="flex-shrink-0 text-center">
-<img src="${member.image}" alt="${member.name}" class="w-48 h-48 rounded-full mx-auto object-cover mb-4" />
-<h3 class="text-2xl font-bold text-base-content">${member.name}</h3>
-<p class="text-lg text-primary font-semibold">${member.position}</p>
-</div>
-<div class="flex-1 space-y-4">
-<div>
-<h4 class="text-lg font-semibold text-base-content mb-2">个人简介</h4>
-<p class="text-base-content/80 leading-relaxed">${member.bio}</p>
-</div>
-<div>
-<h4 class="text-lg font-semibold text-base-content mb-2">专业领域</h4>
-<div class="flex flex-wrap gap-2">
-${member.expertise.map(skill => `<span class="badge badge-primary">${skill}</span>`).join(&#39;&#39;)}
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<div>
-<h4 class="text-sm font-semibold text-base-content/70 mb-1">教育背景</h4>
-<p class="text-base-content">${member.education}</p>
-</div>
-<div>
-<h4 class="text-sm font-semibold text-base-content/70 mb-1">工作经验</h4>
-<p class="text-base-content">${member.experience}</p>
-</div>
-</div>
-</div>
-</div>
-`;
-
-document.getElementById(&#39;teamMemberModal&#39;).showModal();
-}
-
-// Initialize page
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-// Add smooth scrolling for internal links
-const links = document.querySelectorAll(&#39;a[href^="#"]&#39;);
-links.forEach(link => {
-link.addEventListener(&#39;click&#39;, function(e) {
-e.preventDefault();
-const target = document.querySelector(this.getAttribute(&#39;href&#39;));
-if (target) {
-target.scrollIntoView({
-behavior: &#39;smooth&#39;,
-block: &#39;start&#39;
-});
-}
-});
-});
-
-// Add intersection observer for animations
-const observerOptions = {
-threshold: 0.1,
-rootMargin: &#39;0px 0px -50px 0px&#39;
-};
-
-const observer = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) {
-entry.target.style.opacity = &#39;1&#39;;
-entry.target.style.transform = &#39;translateY(0)&#39;;
-}
-});
-}, observerOptions);
-
-// Observe timeline items for animation
-const timelineItems = document.querySelectorAll(&#39;[data-repeatable="true"]&#39;);
-timelineItems.forEach(item => {
-item.style.opacity = &#39;0&#39;;
-item.style.transform = &#39;translateY(20px)&#39;;
-item.style.transition = &#39;opacity 0.6s ease-out, transform 0.6s ease-out&#39;;
-observer.observe(item);
-});
-
-// Add hover effects to contact items
-const contactItems = document.querySelectorAll(&#39;.contact-item&#39;);
-contactItems.forEach(item => {
-item.addEventListener(&#39;mouseenter&#39;, function() {
-this.style.backgroundColor = &#39;var(--color-base-100)&#39;;
-});
-item.addEventListener(&#39;mouseleave&#39;, function() {
-this.style.backgroundColor = &#39;transparent&#39;;
-});
-});
-});
-
-// Handle modal close with escape key
-document.addEventListener(&#39;keydown&#39;, function(e) {
-if (e.key === &#39;Escape&#39;) {
-const modal = document.getElementById(&#39;teamMemberModal&#39;);
-if (modal.open) {
-modal.close();
-}
-}
-});
-
-// Add parallax effect to hero section (subtle)
-window.addEventListener(&#39;scroll&#39;, function() {
-const scrolled = window.pageYOffset;
-const hero = document.querySelector(&#39;.hero&#39;);
-if (hero) {
-const rate = scrolled * -0.5;
-hero.style.transform = `translateY(${rate}px)`;
-}
-});
-</script>
-  
-
-<script>
-    setTimeout(() => {
-      Holder.run({
-        domain: "placehold.co"
-      })
-    }, 100)
-  </script></body></html>'></iframe>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
+<head>
+    <title>关于我们 - GraphWisdom智汇星图</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/about.css}">
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <main class="min-h-screen">
+            <!-- Hero Section -->
+            <section class="hero min-h-96 relative"
+                style="background-image: url('https://images.unsplash.com/photo-1644088379091-d574269d422f?crop=entropy&amp;cs=tinysrgb&amp;fit=crop&amp;fm=jpg&amp;ixid=M3w3MjkzNDZ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHRlY2hub2xvZ3klMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2MTY2MzMyOHww&amp;ixlib=rb-4.1.0&amp;q=80&amp;w=1920&amp;h=600'); background-size: cover; background-position: center;">
+                <div class="hero-overlay bg-primary/80"></div>
+                <div class="hero-content text-center text-primary-content">
+                    <div class="max-w-4xl">
+                        <h1 class="mb-8 text-5xl font-bold">关于我们</h1>
+                        <p class="mb-8 text-xl">深入了解我们的愿景、团队和旅程</p>
                     </div>
-                  </div>
+                </div>
+            </section>
 
-                </body>
-                </html>
-            
+            <!-- Mission and Vision Section -->
+            <section class="py-16 bg-base-100">
+                <div class="container mx-auto px-4 max-w-6xl">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <div class="space-y-8">
+                            <div>
+                                <h2 class="text-3xl font-bold text-base-content mb-6">我们的使命</h2>
+                                <p class="text-lg text-base-content/80 leading-relaxed">
+                                    我们致力于构建最先进的知识图谱平台，让复杂的知识关系变得清晰可见。通过创新的可视化技术和智能分析工具，我们帮助研究者、学者和企业更好地理解和利用知识，推动人类智慧的传承与发展。
+                                </p>
+                            </div>
+                            <div>
+                                <h2 class="text-3xl font-bold text-base-content mb-6">未来愿景</h2>
+                                <p class="text-lg text-base-content/80 leading-relaxed">
+                                    成为全球领先的知识图谱解决方案提供商，构建一个连接所有知识领域的智能生态系统。我们相信，通过技术的力量，可以让知识的获取、理解和应用变得更加高效，为人类社会的进步贡献力量。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex justify-center">
+                            <div class="w-80 h-80 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
+                                <span class="iconify text-primary" data-icon="heroicons:light-bulb" data-width="120"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Our Story Section -->
+            <section class="py-16 bg-base-200">
+                <div class="container mx-auto px-4 max-w-6xl">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold text-base-content mb-4">我们的故事</h2>
+                        <p class="text-xl text-base-content/70">创新之路：我们的里程碑</p>
+                    </div>
+                    <div class="space-y-8">
+                        <div class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
+                            <div class="flex-shrink-0">
+                                <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                                    <span class="iconify text-primary" data-icon="heroicons:rocket-launch" data-width="32"></span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-semibold text-base-content mb-2">2020年 - 项目启动</h3>
+                                <p class="text-base-content/80">团队成立，开始知识图谱平台的研发工作，确立了以用户体验为核心的产品理念。</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
+                            <div class="flex-shrink-0">
+                                <div class="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center">
+                                    <span class="iconify text-accent" data-icon="heroicons:cpu-chip" data-width="32"></span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-semibold text-base-content mb-2">2021年 - 技术突破</h3>
+                                <p class="text-base-content/80">成功开发出高性能的图数据处理引擎，实现了大规模知识图谱的实时可视化。</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
+                            <div class="flex-shrink-0">
+                                <div class="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center">
+                                    <span class="iconify text-secondary" data-icon="heroicons:users" data-width="32"></span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-semibold text-base-content mb-2">2022年 - 用户增长</h3>
+                                <p class="text-base-content/80">平台正式上线，获得了学术界和企业用户的广泛认可，用户数量快速增长。</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row items-center gap-8 hover-lift bg-base-100 p-8 rounded-lg shadow-soft">
+                            <div class="flex-shrink-0">
+                                <div class="w-16 h-16 bg-warning/20 rounded-full flex items-center justify-center">
+                                    <span class="iconify text-warning" data-icon="heroicons:trophy" data-width="32"></span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-semibold text-base-content mb-2">2023年 - 行业认可</h3>
+                                <p class="text-base-content/80">荣获多项技术创新奖项，成为知识图谱领域的标杆产品。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Team Section -->
+            <section class="py-16 bg-base-100">
+                <div class="container mx-auto px-4 max-w-6xl">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold text-base-content mb-4">我们的团队</h2>
+                        <p class="text-xl text-base-content/70">遇见推动知识的力量</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal('member1')">
+                            <figure class="px-8 pt-8">
+                                <img loading="lazy" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/7f0b60f9-2ecb-4583-9974-a6ac1c86ba3f.png" alt="张博士" class="rounded-full w-32 h-32 object-cover">
+                            </figure>
+                            <div class="card-body items-center text-center">
+                                <h3 class="card-title text-lg">张博士</h3>
+                                <p class="text-base-content/70">首席技术官</p>
+                            </div>
+                        </div>
+                        <div class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal('member2')">
+                            <figure class="px-8 pt-8">
+                                <img loading="lazy" src="https://images.unsplash.com/photo-1675904581137-baf52052e6ce?w=200&amp;h=200" alt="李经理" class="rounded-full w-32 h-32 object-cover">
+                            </figure>
+                            <div class="card-body items-center text-center">
+                                <h3 class="card-title text-lg">李经理</h3>
+                                <p class="text-base-content/70">产品总监</p>
+                            </div>
+                        </div>
+                        <div class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal('member3')">
+                            <figure class="px-8 pt-8">
+                                <img loading="lazy" src="https://images.unsplash.com/photo-1681070909604-f555aa006564?w=200&amp;h=200" alt="王工程师" class="rounded-full w-32 h-32 object-cover">
+                            </figure>
+                            <div class="card-body items-center text-center">
+                                <h3 class="card-title text-lg">王工程师</h3>
+                                <p class="text-base-content/70">前端架构师</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section class="py-16 bg-base-200">
+                <div class="container mx-auto px-4 max-w-6xl">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold text-base-content mb-4">联系我们</h2>
+                        <p class="text-xl text-base-content/70">与我们取得联系或留下您的宝贵意见</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div class="space-y-8">
+                            <div class="flex items-start gap-4">
+                                <span class="iconify text-primary" data-icon="heroicons:map-pin" data-width="24"></span>
+                                <div>
+                                    <h3 class="font-semibold text-base-content mb-2">公司地址</h3>
+                                    <p class="text-base-content/80">北京市海淀区中关村软件园二期</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <span class="iconify text-primary" data-icon="heroicons:phone" data-width="24"></span>
+                                <div>
+                                    <h3 class="font-semibold text-base-content mb-2">联系电话</h3>
+                                    <p class="text-base-content/80">400-123-4567</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <span class="iconify text-primary" data-icon="heroicons:envelope" data-width="24"></span>
+                                <div>
+                                    <h3 class="font-semibold text-base-content mb-2">电子邮箱</h3>
+                                    <p class="text-base-content/80">contact@knowledgegraph.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <span class="iconify text-primary" data-icon="heroicons:clock" data-width="24"></span>
+                                <div>
+                                    <h3 class="font-semibold text-base-content mb-2">工作时间</h3>
+                                    <p class="text-base-content/80">周一至周五 9:00-18:00</p>
+                                </div>
+                            </div>
+                            <div class="mt-8">
+                                <a th:href="@{/community/feedback.html}" class="btn btn-primary">
+                                    <span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+                                    提交反馈
+                                </a>
+                            </div>
+                        </div>
+                        <div class="bg-base-100 rounded-lg p-8 shadow-soft">
+                            <img loading="lazy" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/d80a94a5-0449-4100-bca7-096f95629404.png" alt="公司位置地图" class="w-full h-64 object-cover rounded-lg">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Team Member Modal -->
+        <dialog id="teamMemberModal" class="modal">
+            <div class="modal-box max-w-2xl">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <div id="modalContent" class="pt-4"></div>
+            </div>
+        </dialog>
+    </div>
+
+    <th:block layout:fragment="js">
+        <script th:src="@{/js/about.js}"></script>
+    </th:block>
+</body>
+
+</html>

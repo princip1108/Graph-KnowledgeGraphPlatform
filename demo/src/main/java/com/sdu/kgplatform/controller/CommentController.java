@@ -1,13 +1,11 @@
 package com.sdu.kgplatform.controller;
 
+import com.sdu.kgplatform.common.SecurityUtils;
 import com.sdu.kgplatform.entity.Comment;
 import com.sdu.kgplatform.entity.User;
 import com.sdu.kgplatform.repository.UserRepository;
 import com.sdu.kgplatform.service.CommentService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,21 +19,16 @@ import java.util.Map;
 @RequestMapping("/api")
 public class CommentController {
 
-    @Autowired
-    private CommentService commentService;
+    private final CommentService commentService;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    public CommentController(CommentService commentService, UserRepository userRepository) {
+        this.commentService = commentService;
+        this.userRepository = userRepository;
+    }
 
     private User getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return null;
-        }
-        String username = auth.getName();
-        return userRepository.findByEmail(username)
-                .or(() -> userRepository.findByPhone(username))
-                .orElse(null);
+        return SecurityUtils.getCurrentUser(userRepository);
     }
 
     /**

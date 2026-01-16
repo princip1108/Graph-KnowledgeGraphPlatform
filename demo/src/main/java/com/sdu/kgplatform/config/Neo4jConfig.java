@@ -12,6 +12,8 @@ import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.data.neo4j.core.Neo4jTemplate;
 import org.springframework.data.neo4j.core.mapping.Neo4jMappingContext;
 import org.springframework.data.neo4j.core.transaction.Neo4jTransactionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 /**
@@ -33,6 +35,8 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 )
 public class Neo4jConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(Neo4jConfig.class);
+
     @Value("${spring.neo4j.uri}")
     private String neo4jUri;
 
@@ -47,9 +51,9 @@ public class Neo4jConfig {
      */
     @Bean
     public Driver neo4jDriver() {
-        System.out.println("=== 初始化 Neo4j Driver ===");
-        System.out.println("URI: " + neo4jUri);
-        System.out.println("Username: " + neo4jUsername);
+        log.info("=== 初始化 Neo4j Driver ===");
+        log.info("URI: {}", neo4jUri);
+        log.info("Username: {}", neo4jUsername);
         
         try {
             Driver driver = GraphDatabase.driver(
@@ -59,11 +63,11 @@ public class Neo4jConfig {
             
             // 验证连接
             driver.verifyConnectivity();
-            System.out.println("Neo4j 连接成功！");
+            log.info("Neo4j 连接成功！");
             
             return driver;
         } catch (Exception e) {
-            System.err.println("Neo4j 连接失败: " + e.getMessage());
+            log.error("Neo4j 连接失败: {}", e.getMessage());
             e.printStackTrace();
             throw e;
         }

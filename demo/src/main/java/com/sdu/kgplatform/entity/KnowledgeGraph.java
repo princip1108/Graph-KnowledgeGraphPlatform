@@ -45,6 +45,9 @@ public class KnowledgeGraph {
     @Column(name = "cover_image", length = 512)
     private String coverImage;
 
+    @Column(name = "is_custom_cover")
+    private Boolean isCustomCover = false;
+
     @Column(name = "share_link", length = 255)
     private String shareLink;
 

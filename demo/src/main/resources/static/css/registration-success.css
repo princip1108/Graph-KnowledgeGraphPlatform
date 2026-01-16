@@ -1,0 +1,72 @@
+/**
+ * Registration Success Page Styles
+ * 注册成功页面样式
+ */
+
+/* Success icon animation */
+.success-icon-wrapper {
+    animation: successPulse 2s ease-out;
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Button hover effects */
+.btn-primary.btn-lg {
+    border-radius: var(--radius-field);
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+.btn-outline.btn-lg {
+    border-radius: var(--radius-field);
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-outline.btn-lg:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-primary-content);
+}
+
+/* Main content spacing */
+main {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+/* Background pattern */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, transparent 0%, rgba(30, 58, 138, 0.02) 50%, transparent 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}

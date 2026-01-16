@@ -1,0 +1,1075 @@
+
+                <!DOCTYPE html>
+                <html lang="zh">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>找回密码</title>
+                  <style>
+                    *,
+                    *::before,
+                    *::after {
+                      box-sizing: border-box;
+                      margin: 0;
+                    }
+                    .iframe-outer {
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      bottom: 0;
+                      right: 0;
+                      display: flex;
+                      justify-content: center;
+                      background-color: #E0E0E0;
+                    }
+                    .iframe-wrapper {
+                      width: 100%;
+                      height: 100%;
+                      margin: 0 auto;
+                      transform-origin: center top;
+                      flex-shrink: 0;
+                    }
+                    #dynamicIframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  </style>
+                  <script>
+                const width = 1920
+                const height = 1080
+                const resolutionRatio = width && height ? width / height : 1
+                const pageNameMap = {
+                  'home_page': '首页',
+    'login_register_page': '登录注册',
+    'registration_success_page': '注册成功',
+    'password_reset_page': '找回密码',
+    'graph_list_page': '图谱列表页',
+    'graph_detail_page': '图谱详情页',
+    'user_profile_page': '个人中心',
+    'documentation_page': '文档',
+    'about_page': '关于我们',
+    'feedback_page': '用户反馈',
+    'page_998124': '管理',
+    'page_998125': '论坛'
+                }
+                function setIframeSize(w, h) {
+                  const currentContainerRadio = w / h
+                  let widthValue = w
+                  let heightValue = h
+                  let zoom = 1
+                  if (currentContainerRadio > resolutionRatio) {
+                    widthValue = h * resolutionRatio
+                    heightValue = h
+                  } else {
+                    widthValue = w
+                    heightValue = w / resolutionRatio
+                  }
+                  zoom = width ? widthValue / width : 1
+                  return {
+                    width: widthValue / zoom + 'px',
+                    height: heightValue / zoom + 'px',
+                    zoom,
+                  }
+                }
+                function adjustIframeSize() {
+                  const iframeWrapper = document.querySelector(".iframe-wrapper")
+                  if (!iframeWrapper) return
+                  iframeWrapper.style.width = '100%'
+                  iframeWrapper.style.height = window.innerHeight + 'px'
+                  iframeWrapper.style.transform = ''
+                }
+                function sanitizeFilename(name) {
+                  return name.replace(/[\/:*?"<>|]/g, '_')
+                }
+                function handlePostMessage(event) {
+                  if (!event.data) {
+                    return
+                  }
+                  const { type, targetPageId } = event.data
+                  const targetPageName = pageNameMap[targetPageId]
+                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
+                    window.location.href = targetPageName + '.html'
+                  }
+                }
+                window.addEventListener('message', handlePostMessage)
+                window.onload = adjustIframeSize
+                window.onresize = adjustIframeSize
+                window.onunload = () => {
+                  window.removeEventListener('message', handlePostMessage)
+                }
+              </script>
+                </head>
+                <body>
+                  <div class="iframe-outer">
+                    <div class="iframe-wrapper">
+                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>找回密码 - Graph+知识图谱平台</title>
+<link href="./assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
+<script src="./assets/static/libs/tailwind-browser@4.js"></script>
+<link href="./assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
+<script src="./assets/3/3.1.1/iconify.min.js"></script>
+<style>
+/* daisyUI Theme Variables Customization
+* Based on the selected daisyUI theme and UI guidance requirements,
+* customize only the CSS variables that need to be different from the theme defaults.
+*/
+:root {
+/* Corporate theme customization for knowledge graph platform */
+--color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
+--color-primary-content: rgba(255, 255, 255, 1);
+--color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
+--color-secondary-content: rgba(255, 255, 255, 1);
+--color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
+--color-accent-content: rgba(255, 255, 255, 1);
+--color-base-100: rgba(255, 255, 255, 1);
+--color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
+--color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
+--color-base-content: rgba(55, 65, 81, 1); /* #374151 */
+--color-success: rgba(16, 185, 129, 1);
+--color-warning: rgba(245, 158, 11, 1);
+--color-error: rgba(239, 68, 68, 1);
+--color-info: rgba(59, 130, 246, 1);
+--radius-box: 0.375rem; /* 6px for micro-rounded corners */
+--radius-field: 0.375rem;
+--border: 1px;
+}
+
+/* Global component styles */
+.transition-width {
+transition: width 0.3s ease-in-out;
+}
+
+.nav-hover {
+transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.shadow-soft {
+box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header height consistency */
+.header-height {
+height: 64px;
+}
+
+/* Focus styles for accessibility */
+.focus-primary:focus {
+outline: 2px solid var(--color-primary);
+outline-offset: 2px;
+}
+
+/* Academic style enhancements */
+.academic-border {
+border: var(--border) solid var(--color-base-300);
+}
+
+.hover-lift {
+transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional grid spacing */
+.academic-grid {
+gap: 1.5rem;
+}
+
+/* Clean divider lines */
+.academic-divider {
+border-color: var(--color-base-300);
+border-width: var(--border);
+}
+</style>
+<style>
+/* Password Reset Page Styles */
+.password-toggle {
+  transition: color 0.15s ease-in-out;
+}
+
+.password-toggle:hover {
+  color: var(--color-primary);
+}
+
+.focus-primary:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.error-message {
+  animation: error-fade-in 0.3s ease-in-out;
+}
+
+@keyframes error-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.input-error {
+  border-color: var(--color-error) !important;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Progress Steps Customization */
+.steps .step::before {
+  transition: all 0.3s ease-in-out;
+}
+
+.steps .step.step-primary::before {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.steps .step.step-success::before {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+/* Password Strength Indicator */
+.strength-weak { background-color: var(--color-error) !important; }
+.strength-fair { background-color: var(--color-warning) !important; }
+.strength-good { background-color: var(--color-info) !important; }
+.strength-strong { background-color: var(--color-success) !important; }
+
+/* Countdown Timer */
+.countdown-active {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* Button Loading State */
+.btn-loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Card Hover Effect */
+.card {
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+/* Step Transition */
+.step-transition {
+  animation: step-fade-in 0.4s ease-in-out;
+}
+
+@keyframes step-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Success Animation */
+.success-bounce {
+  animation: success-bounce 0.6s ease-in-out;
+}
+
+@keyframes success-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+@media (max-width: 640px) {
+  .header-height { height: 56px; }
+  .join .input { height: 3rem; }
+  .join .btn { height: 3rem; }
+}
+</style>
+<script src="./assets/static/libs/25_6/holder.js"></script></head>
+<body class="bg-base-200 min-h-screen">
+<div data-section-id="common_header" data-section-type="common_header">
+<div class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4">
+<!-- Left section: Logo -->
+<div class="navbar-start">
+<div class="flex items-center cursor-pointer" onclick="navigateTo(&#39;home_page&#39;)">
+<img src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/4da31d39-450b-4557-950c-260a4e6eca63.png" alt="Graph+知识图谱平台 Logo" class="w-10 h-10">
+<span class="ml-3 text-xl font-semibold text-primary hidden lg:block">Graph+知识图谱平台</span>
+</div>
+<!-- Mobile menu -->
+<div class="dropdown lg:hidden ml-2">
+  <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+    <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
+  </div>
+  <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
+    <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
+    <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
+    <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
+    <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
+  </ul>
+</div>
+</div>
+
+<!-- Center section: Main navigation -->
+<div class="navbar-center hidden xl:flex">
+<ul class="menu menu-horizontal px-1 gap-1">
+<li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
+<li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
+<li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
+<li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
+</ul>
+</div>
+
+<!-- Right section: User controls -->
+<div class="navbar-end">
+<!-- Login/Register buttons for logged-out users -->
+<div data-user-control="logged-out" class="flex items-center gap-2">
+<button class="btn btn-ghost btn-sm nav-hover focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+登录
+</button>
+<button class="btn btn-primary btn-sm focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+注册
+</button>
+</div>
+
+<!-- User profile dropdown for logged-in users -->
+<div data-user-control="logged-in" class="dropdown dropdown-end" style="display: none;">
+<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
+<div class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content">
+<span class="font-semibold text-lg">用</span>
+</div>
+</div>
+<ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
+<li class="menu-title"><span>用户中心</span></li>
+<li><a onclick="navigateTo(&#39;user_profile_page&#39;)" class="nav-hover focus-primary">
+<span class="iconify" data-icon="heroicons:user" data-width="16"></span>
+<span>个人资料</span>
+</a></li>
+<li><a onclick="navigateTo(&#39;user_profile_page&#39;)" class="nav-hover focus-primary">
+<span class="iconify" data-icon="heroicons:heart" data-width="16"></span>
+<span>我的收藏</span>
+</a></li>
+<li><a onclick="navigateTo(&#39;user_profile_page&#39;)" class="nav-hover focus-primary">
+<span class="iconify" data-icon="heroicons:clock" data-width="16"></span>
+<span>历史记录</span>
+</a></li>
+<div class="divider my-1"></div>
+<li><a onclick="window.APP_GLOBALS.user.logout()" class="nav-hover focus-primary text-error">
+<span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span>
+<span>退出登录</span>
+</a></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Authentication Layout -->
+<div class="flex-1 flex items-center justify-center py-8 px-4" style="background-image: url(&amp;quot;https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/cbbbeed4-b24d-4ed8-a649-f6fd1eb7f280.png&amp;quot;); background-size: cover; background-position: center center; background-attachment: fixed;">
+  <div class="absolute inset-0 bg-base-100/80 backdrop-blur-sm"></div>
+  
+  <div class="relative z-10 w-full max-w-5xl">
+    <!-- Main Card Container -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body p-0">
+        <!-- Header Section -->
+        <div class="flex items-center justify-center p-6 border-b academic-border">
+          <div class="flex items-center gap-3">
+            <img src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/f45dbf91-f7e9-48de-8c29-295cd7ed0add.png" alt="Graph+知识图谱平台 Logo" class="w-12 h-12">
+            <div>
+              <h1 class="text-2xl font-bold text-base-content">Graph+知识图谱平台</h1>
+              <p class="text-sm text-base-content/70">安全可靠的密码重置</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex flex-col lg:flex-row">
+          <!-- Left Side: Progress Tracker -->
+          <div class="w-full lg:w-2/5 p-8 bg-base-200/50">
+            <div class="space-y-6">
+              <h2 class="text-lg font-semibold text-base-content mb-6">密码重置流程</h2>
+              
+              <!-- Progress Steps -->
+              <div class="steps steps-vertical lg:steps-vertical">
+                <div class="step step-primary" id="step-1">
+                  <div class="flex flex-col items-start text-left ml-4">
+                    <span class="font-medium">验证身份</span>
+                    <span class="text-sm text-base-content/70">输入邮箱或手机号获取验证码</span>
+                  </div>
+                </div>
+                <div class="step" id="step-2">
+                  <div class="flex flex-col items-start text-left ml-4">
+                    <span class="font-medium">设置新密码</span>
+                    <span class="text-sm text-base-content/70">创建安全的新密码</span>
+                  </div>
+                </div>
+                <div class="step" id="step-3">
+                  <div class="flex flex-col items-start text-left ml-4">
+                    <span class="font-medium">完成重置</span>
+                    <span class="text-sm text-base-content/70">密码重置成功</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Security Tips -->
+              <div class="alert alert-info mt-8">
+                <span class="iconify" data-icon="heroicons:shield-check" data-width="20"></span>
+                <div class="text-sm">
+                  <div class="font-medium">安全提示</div>
+                  <div class="text-base-content/70 mt-1">
+                    • 验证码有效期为5分钟<br>
+                    • 新密码需包含字母和数字<br>
+                    • 建议使用强密码保护账户安全
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Side: Reset Form -->
+          <div class="w-full lg:w-3/5 p-8">
+            <div class="max-w-md mx-auto">
+              <h2 class="text-2xl font-bold text-base-content mb-2">找回密码</h2>
+              <p class="text-base-content/70 mb-8">请按照以下步骤重置您的密码</p>
+
+              <!-- Step 1: Identity Verification -->
+              <div id="verification-step" class="space-y-6">
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-medium">邮箱或手机号 *</span>
+                  </label>
+                  <input type="text" placeholder="请输入您的邮箱或手机号" class="input input-bordered w-full focus-primary" id="contact-input" data-type="input">
+                  <div class="error-container h-6 mt-1"></div>
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-medium">验证码 *</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <input type="text" placeholder="请输入6位验证码" class="input input-bordered flex-1 focus-primary" id="verification-code" maxlength="6" data-type="input">
+                    <button class="btn btn-outline btn-primary" id="send-code-btn" onclick="sendVerificationCode()" data-type="button">
+                      获取验证码
+                    </button>
+                  </div>
+                  <div class="error-container h-6 mt-1"></div>
+                  <div class="label">
+                    <span class="label-text-alt text-base-content/70">
+                      <span id="resend-timer" class="hidden">
+                        <span id="countdown">60</span>秒后可重新发送
+                      </span>
+                      <a href="#" class="link link-primary" id="resend-link" onclick="sendVerificationCode()" style="display: none;">重新发送验证码</a>
+                    </span>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary w-full" onclick="verifyCode()" data-type="button">
+                  验证
+                </button>
+              </div>
+
+              <!-- Step 2: Set New Password -->
+              <div id="password-step" class="space-y-6 hidden">
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-medium">新密码 *</span>
+                  </label>
+                  <div class="relative">
+                    <input type="password" placeholder="请设置8-20位包含字母和数字的密码" class="input input-bordered w-full pr-10 focus-primary" id="new-password" data-type="input">
+                    <span class="absolute right-3 top-3 cursor-pointer password-toggle" onclick="togglePasswordVisibility(&#39;new-password&#39;)" data-type="icon">
+                      <span class="iconify" data-icon="heroicons:eye" data-width="20"></span>
+                    </span>
+                  </div>
+                  <div class="error-container h-6 mt-1"></div>
+                  
+                  <!-- Password Strength Indicator -->
+                  <div class="mt-2">
+                    <div class="text-sm text-base-content/70 mb-1">密码强度</div>
+                    <div class="flex gap-1">
+                      <div class="h-2 flex-1 bg-base-300 rounded" id="strength-1"></div>
+                      <div class="h-2 flex-1 bg-base-300 rounded" id="strength-2"></div>
+                      <div class="h-2 flex-1 bg-base-300 rounded" id="strength-3"></div>
+                      <div class="h-2 flex-1 bg-base-300 rounded" id="strength-4"></div>
+                    </div>
+                    <div class="text-xs text-base-content/70 mt-1" id="strength-text">请输入密码</div>
+                  </div>
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-medium">确认新密码 *</span>
+                  </label>
+                  <div class="relative">
+                    <input type="password" placeholder="请再次输入新密码" class="input input-bordered w-full pr-10 focus-primary" id="confirm-password" data-type="input">
+                    <span class="absolute right-3 top-3 cursor-pointer password-toggle" onclick="togglePasswordVisibility(&#39;confirm-password&#39;)" data-type="icon">
+                      <span class="iconify" data-icon="heroicons:eye" data-width="20"></span>
+                    </span>
+                  </div>
+                  <div class="error-container h-6 mt-1"></div>
+                </div>
+
+                <button class="btn btn-primary w-full" onclick="resetPassword()" data-type="button">
+                  重置密码
+                </button>
+              </div>
+
+              <!-- Step 3: Success -->
+              <div id="success-step" class="text-center space-y-6 hidden">
+                <div class="flex justify-center">
+                  <div class="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center">
+                    <span class="iconify text-success" data-icon="heroicons:check-circle" data-width="32"></span>
+                  </div>
+                </div>
+                <div>
+                  <h3 class="text-xl font-semibold text-base-content mb-2">密码重置成功！</h3>
+                  <p class="text-base-content/70">您的密码已成功重置，请使用新密码登录</p>
+                </div>
+                <button class="btn btn-primary w-full" onclick="navigateTo(&#39;login_register_page&#39;)" data-type="button">
+                  立即登录
+                </button>
+              </div>
+
+              <!-- Back to Login Link -->
+              <div class="text-center mt-8" id="back-link">
+                <span class="text-base-content/70">想起密码了？</span>
+                <a class="link link-primary font-medium cursor-pointer ml-1" onclick="navigateTo(&#39;login_register_page&#39;)" data-type="text">
+                  返回登录
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div data-section-id="common_footer" data-section-type="common_footer">
+<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
+<div class="grid grid-flow-col gap-4">
+<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
+<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
+<a class="link link-hover focus-primary">隐私政策</a>
+<a class="link link-hover focus-primary">服务条款</a>
+</div>
+<div class="grid grid-flow-col gap-4">
+<a class="link link-hover focus-primary" aria-label="官方微信">
+<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
+</a>
+<a class="link link-hover focus-primary" aria-label="企业QQ">
+<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
+</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
+<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+</a>
+</div>
+<div class="text-center">
+<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
+<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
+</div>
+</footer>
+</div>
+<script>
+(function() {
+&#39;use strict&#39;;
+
+// Initialize global namespace
+window.APP_GLOBALS = window.APP_GLOBALS || {};
+
+// Global navigation utility
+window.navigateTo = function(targetPageId) {
+const isInIframe = window.self !== window.top;
+const targetFileName = `${targetPageId}.html`;
+
+if (isInIframe) {
+window.parent.postMessage({
+type: &#39;iframeNavigation&#39;,
+targetPageId: targetPageId
+}, &#39;*&#39;);
+} else {
+window.location.href = targetFileName;
+}
+};
+
+// User authentication state management
+window.APP_GLOBALS.user = {
+isLoggedIn: false,
+userInfo: null,
+
+login: function(userInfo) {
+this.isLoggedIn = true;
+this.userInfo = userInfo;
+localStorage.setItem(&#39;userState&#39;, JSON.stringify({
+isLoggedIn: true,
+userInfo: userInfo
+}));
+this.updateUserInterface();
+},
+
+logout: function() {
+this.isLoggedIn = false;
+this.userInfo = null;
+localStorage.removeItem(&#39;userState&#39;);
+this.updateUserInterface();
+navigateTo(&#39;home_page&#39;);
+},
+
+updateUserInterface: function() {
+const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
+userControls.forEach(control => {
+const controlType = control.getAttribute(&#39;data-user-control&#39;);
+if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else {
+control.style.display = &#39;&#39;;
+}
+});
+},
+
+init: function() {
+const savedState = localStorage.getItem(&#39;userState&#39;);
+if (savedState) {
+const state = JSON.parse(savedState);
+this.isLoggedIn = state.isLoggedIn;
+this.userInfo = state.userInfo;
+}
+this.updateUserInterface();
+}
+};
+
+// Search functionality
+window.APP_GLOBALS.search = {
+history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
+recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
+
+addToHistory: function(query) {
+if (query &amp;&amp; !this.history.includes(query)) {
+this.history.unshift(query);
+this.history = this.history.slice(0, 10); // Keep only last 10 searches
+localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
+}
+},
+
+getSearchSuggestions: function() {
+return this.history.length > 0 ? this.history : this.recommendations;
+},
+
+performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
+this.addToHistory(query);
+// Navigate to search results or graph detail based on context
+navigateTo(targetPage);
+}
+};
+
+// Notification utilities
+window.showNotification = function(message, type = &#39;info&#39;) {
+const notification = document.createElement(&#39;div&#39;);
+notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+notification.innerHTML = `
+<div class="flex items-center gap-2">
+<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
+<span>${message}</span>
+</div>
+`;
+document.body.appendChild(notification);
+
+setTimeout(() => {
+notification.remove();
+}, 5000);
+};
+
+// Favorites management
+window.APP_GLOBALS.favorites = {
+items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+
+add: function(graphId, graphData) {
+if (!this.items.find(item => item.id === graphId)) {
+this.items.push({
+id: graphId,
+data: graphData,
+addedAt: new Date().toISOString()
+});
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+}
+},
+
+remove: function(graphId) {
+this.items = this.items.filter(item => item.id !== graphId);
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+},
+
+isFavorited: function(graphId) {
+return this.items.some(item => item.id === graphId);
+},
+
+toggle: function(graphId, graphData) {
+if (this.isFavorited(graphId)) {
+this.remove(graphId);
+} else {
+this.add(graphId, graphData);
+}
+}
+};
+
+// Initialize components when DOM is loaded
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+window.APP_GLOBALS.user.init();
+});
+
+})();
+</script>
+<script>
+let currentStep = 1;
+let countdownTimer = null;
+let isCodeSent = false;
+
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+  // Initialize form validation listeners
+  const inputs = document.querySelectorAll(&#39;input&#39;);
+  inputs.forEach(input => {
+    input.addEventListener(&#39;blur&#39;, function() {
+      validateField(this.id);
+    });
+    
+    input.addEventListener(&#39;input&#39;, function() {
+      clearError(this.id);
+      if (this.id === &#39;new-password&#39;) {
+        updatePasswordStrength(this.value);
+      }
+    });
+  });
+  
+  // Auto-focus verification code input when typing
+  const codeInput = document.getElementById(&#39;verification-code&#39;);
+  codeInput.addEventListener(&#39;input&#39;, function() {
+    this.value = this.value.replace(/\D/g, &#39;&#39;).substring(0, 6);
+  });
+});
+
+function sendVerificationCode() {
+  const contactInput = document.getElementById(&#39;contact-input&#39;);
+  const contact = contactInput.value.trim();
+  
+  if (!validateContactInput(contact)) {
+    return;
+  }
+  
+  const sendBtn = document.getElementById(&#39;send-code-btn&#39;);
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = &#39;<span class="loading loading-spinner loading-xs"></span> 发送中...&#39;;
+  
+  // Simulate API call
+  setTimeout(() => {
+    showNotification(&#39;验证码已发送，请查收&#39;, &#39;success&#39;);
+    startCountdown();
+    isCodeSent = true;
+    sendBtn.innerHTML = &#39;获取验证码&#39;;
+  }, 1000);
+}
+
+function startCountdown() {
+  let seconds = 60;
+  const timerElement = document.getElementById(&#39;resend-timer&#39;);
+  const countdownElement = document.getElementById(&#39;countdown&#39;);
+  const resendLink = document.getElementById(&#39;resend-link&#39;);
+  const sendBtn = document.getElementById(&#39;send-code-btn&#39;);
+  
+  timerElement.classList.remove(&#39;hidden&#39;);
+  resendLink.style.display = &#39;none&#39;;
+  sendBtn.disabled = true;
+  
+  countdownTimer = setInterval(() => {
+    seconds--;
+    countdownElement.textContent = seconds;
+    
+    if (seconds <= 0) {
+      clearInterval(countdownTimer);
+      timerElement.classList.add(&#39;hidden&#39;);
+      resendLink.style.display = &#39;inline&#39;;
+      sendBtn.disabled = false;
+    }
+  }, 1000);
+}
+
+function validateContactInput(contact) {
+  if (!contact) {
+    showError(&#39;contact-input&#39;, &#39;请输入邮箱或手机号&#39;);
+    return false;
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^1[3-9]\d{9}$/;
+  
+  if (!emailRegex.test(contact) &amp;&amp; !phoneRegex.test(contact)) {
+    showError(&#39;contact-input&#39;, &#39;请输入有效的邮箱或手机号&#39;);
+    return false;
+  }
+  
+  clearError(&#39;contact-input&#39;);
+  return true;
+}
+
+function verifyCode() {
+  const code = document.getElementById(&#39;verification-code&#39;).value.trim();
+  
+  if (!code) {
+    showError(&#39;verification-code&#39;, &#39;请输入验证码&#39;);
+    return;
+  }
+  
+  if (code.length !== 6) {
+    showError(&#39;verification-code&#39;, &#39;验证码应为6位数字&#39;);
+    return;
+  }
+  
+  if (!isCodeSent) {
+    showError(&#39;verification-code&#39;, &#39;请先获取验证码&#39;);
+    return;
+  }
+  
+  // Simulate verification
+  setTimeout(() => {
+    showNotification(&#39;验证成功&#39;, &#39;success&#39;);
+    nextStep();
+  }, 800);
+}
+
+function nextStep() {
+  currentStep++;
+  updateStepDisplay();
+  updateProgressTracker();
+}
+
+function updateStepDisplay() {
+  // Hide all steps
+  document.getElementById(&#39;verification-step&#39;).classList.add(&#39;hidden&#39;);
+  document.getElementById(&#39;password-step&#39;).classList.add(&#39;hidden&#39;);
+  document.getElementById(&#39;success-step&#39;).classList.add(&#39;hidden&#39;);
+  
+  // Show current step
+  switch(currentStep) {
+    case 1:
+      document.getElementById(&#39;verification-step&#39;).classList.remove(&#39;hidden&#39;);
+      break;
+    case 2:
+      document.getElementById(&#39;password-step&#39;).classList.remove(&#39;hidden&#39;);
+      document.getElementById(&#39;password-step&#39;).classList.add(&#39;step-transition&#39;);
+      break;
+    case 3:
+      document.getElementById(&#39;success-step&#39;).classList.remove(&#39;hidden&#39;);
+      document.getElementById(&#39;success-step&#39;).classList.add(&#39;step-transition&#39;, &#39;success-bounce&#39;);
+      document.getElementById(&#39;back-link&#39;).classList.add(&#39;hidden&#39;);
+      break;
+  }
+}
+
+function updateProgressTracker() {
+  for (let i = 1; i <= 3; i++) {
+    const step = document.getElementById(`step-${i}`);
+    step.classList.remove(&#39;step-primary&#39;, &#39;step-success&#39;);
+    
+    if (i < currentStep) {
+      step.classList.add(&#39;step-success&#39;);
+    } else if (i === currentStep) {
+      step.classList.add(&#39;step-primary&#39;);
+    }
+  }
+}
+
+function updatePasswordStrength(password) {
+  const indicators = [&#39;strength-1&#39;, &#39;strength-2&#39;, &#39;strength-3&#39;, &#39;strength-4&#39;];
+  const strengthText = document.getElementById(&#39;strength-text&#39;);
+  
+  // Reset all indicators
+  indicators.forEach(id => {
+    const element = document.getElementById(id);
+    element.className = &#39;h-2 flex-1 bg-base-300 rounded&#39;;
+  });
+  
+  if (!password) {
+    strengthText.textContent = &#39;请输入密码&#39;;
+    return;
+  }
+  
+  let strength = 0;
+  let strengthLabel = &#39;&#39;;
+  
+  // Check password criteria
+  if (password.length >= 8) strength++;
+  if (/[a-z]/.test(password)) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/\d/.test(password)) strength++;
+  if (/[!@#$%^&amp;*(),.?":{}|<>]/.test(password)) strength++;
+  
+  // Update indicators based on strength
+  const strengthClasses = [&#39;strength-weak&#39;, &#39;strength-fair&#39;, &#39;strength-good&#39;, &#39;strength-strong&#39;];
+  const strengthLabels = [&#39;弱&#39;, &#39;一般&#39;, &#39;良好&#39;, &#39;强&#39;];
+  
+  if (strength <= 1) {
+    document.getElementById(&#39;strength-1&#39;).classList.add(&#39;strength-weak&#39;);
+    strengthLabel = &#39;弱&#39;;
+  } else if (strength <= 2) {
+    document.getElementById(&#39;strength-1&#39;).classList.add(&#39;strength-fair&#39;);
+    document.getElementById(&#39;strength-2&#39;).classList.add(&#39;strength-fair&#39;);
+    strengthLabel = &#39;一般&#39;;
+  } else if (strength <= 3) {
+    document.getElementById(&#39;strength-1&#39;).classList.add(&#39;strength-good&#39;);
+    document.getElementById(&#39;strength-2&#39;).classList.add(&#39;strength-good&#39;);
+    document.getElementById(&#39;strength-3&#39;).classList.add(&#39;strength-good&#39;);
+    strengthLabel = &#39;良好&#39;;
+  } else {
+    indicators.forEach(id => {
+      document.getElementById(id).classList.add(&#39;strength-strong&#39;);
+    });
+    strengthLabel = &#39;强&#39;;
+  }
+  
+  strengthText.textContent = `密码强度：${strengthLabel}`;
+}
+
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  const icon = input.nextElementSibling.querySelector(&#39;.iconify&#39;);
+  
+  if (input.type === &#39;password&#39;) {
+    input.type = &#39;text&#39;;
+    icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:eye-slash&#39;);
+  } else {
+    input.type = &#39;password&#39;;
+    icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:eye&#39;);
+  }
+}
+
+function resetPassword() {
+  const newPassword = document.getElementById(&#39;new-password&#39;).value;
+  const confirmPassword = document.getElementById(&#39;confirm-password&#39;).value;
+  
+  if (!validatePassword(newPassword, confirmPassword)) {
+    return;
+  }
+  
+  // Simulate password reset
+  setTimeout(() => {
+    showNotification(&#39;密码重置成功！&#39;, &#39;success&#39;);
+    nextStep();
+  }, 1000);
+}
+
+function validatePassword(newPassword, confirmPassword) {
+  if (!newPassword) {
+    showError(&#39;new-password&#39;, &#39;请输入新密码&#39;);
+    return false;
+  }
+  
+  if (newPassword.length < 8 || newPassword.length > 20) {
+    showError(&#39;new-password&#39;, &#39;密码长度应为8-20位&#39;);
+    return false;
+  }
+  
+  if (!/^(?=.*[A-Za-z])(?=.*\d)/.test(newPassword)) {
+    showError(&#39;new-password&#39;, &#39;密码必须包含字母和数字&#39;);
+    return false;
+  }
+  
+  if (!confirmPassword) {
+    showError(&#39;confirm-password&#39;, &#39;请确认新密码&#39;);
+    return false;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    showError(&#39;confirm-password&#39;, &#39;两次输入的密码不一致&#39;);
+    return false;
+  }
+  
+  clearError(&#39;new-password&#39;);
+  clearError(&#39;confirm-password&#39;);
+  return true;
+}
+
+function validateField(fieldId) {
+  const field = document.getElementById(fieldId);
+  if (!field) return true;
+  
+  const value = field.value.trim();
+  
+  switch(fieldId) {
+    case &#39;contact-input&#39;:
+      return validateContactInput(value);
+    case &#39;verification-code&#39;:
+      if (!value) {
+        showError(fieldId, &#39;请输入验证码&#39;);
+        return false;
+      }
+      if (value.length !== 6) {
+        showError(fieldId, &#39;验证码应为6位数字&#39;);
+        return false;
+      }
+      break;
+  }
+  
+  clearError(fieldId);
+  return true;
+}
+
+function showError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  const errorContainer = field.closest(&#39;.form-control&#39;).querySelector(&#39;.error-container&#39;);
+  
+  clearError(fieldId);
+  
+  const errorElement = document.createElement(&#39;div&#39;);
+  errorElement.className = &#39;text-error text-sm error-message&#39;;
+  errorElement.textContent = message;
+  errorContainer.appendChild(errorElement);
+  
+  field.classList.add(&#39;input-error&#39;);
+}
+
+function clearError(fieldId) {
+  const field = document.getElementById(fieldId);
+  const errorContainer = field.closest(&#39;.form-control&#39;).querySelector(&#39;.error-container&#39;);
+  
+  while (errorContainer.firstChild) {
+    errorContainer.removeChild(errorContainer.firstChild);
+  }
+  
+  field.classList.remove(&#39;input-error&#39;);
+}
+</script>
+
+<script>
+    setTimeout(() => {
+      Holder.run({
+        domain: "placehold.co"
+      })
+    }, 100)
+  </script></body></html>'></iframe>
+                    </div>
+                  </div>
+
+                </body>
+                </html>
+            

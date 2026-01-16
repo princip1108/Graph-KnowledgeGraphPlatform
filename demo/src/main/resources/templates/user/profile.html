@@ -1,2187 +1,255 @@
-﻿
-                <!DOCTYPE html>
-                <html lang="zh">
-                <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>个人中心</title>
-                  <style>
-                    *,
-                    *::before,
-                    *::after {
-                      box-sizing: border-box;
-                      margin: 0;
-                    }
-                    .iframe-outer {
-                      position: fixed;
-                      top: 0;
-                      left: 0;
-                      bottom: 0;
-                      right: 0;
-                      display: flex;
-                      justify-content: center;
-                      background-color: #E0E0E0;
-                    }
-                    .iframe-wrapper {
-                      width: 100%;
-                      height: 100%;
-                      margin: 0 auto;
-                      transform-origin: center top;
-                      flex-shrink: 0;
-                    }
-                    #dynamicIframe {
-                      border: none;
-                      width: 100%;
-                      height: 100%;
-                    }
-                  </style>
-                  <script>
-                const width = 1920
-                const height = 1080
-                const resolutionRatio = width && height ? width / height : 1
-                const pageNameMap = {
-                  'home_page': '首页',
-    'login_register_page': '登录注册',
-    'registration_success_page': '注册成功',
-    'password_reset_page': '找回密码',
-    'graph_list_page': '图谱列表页',
-    'graph_detail_page': '图谱详情页',
-    'user_profile_page': '个人中心',
-    'documentation_page': '文档',
-    'about_page': '关于我们',
-    'feedback_page': '用户反馈',
-    'page_998124': '管理',
-    'page_998125': '论坛'
-                }
-                function setIframeSize(w, h) {
-                  const currentContainerRadio = w / h
-                  let widthValue = w
-                  let heightValue = h
-                  let zoom = 1
-                  if (currentContainerRadio > resolutionRatio) {
-                    widthValue = h * resolutionRatio
-                    heightValue = h
-                  } else {
-                    widthValue = w
-                    heightValue = w / resolutionRatio
-                  }
-                  zoom = width ? widthValue / width : 1
-                  return {
-                    width: widthValue / zoom + 'px',
-                    height: heightValue / zoom + 'px',
-                    zoom,
-                  }
-                }
-                function adjustIframeSize() {
-                  const iframeWrapper = document.querySelector(".iframe-wrapper")
-                  if (!iframeWrapper) return
-                  iframeWrapper.style.width = '100%'
-                  iframeWrapper.style.height = window.innerHeight + 'px'
-                  iframeWrapper.style.transform = ''
-                }
-                function sanitizeFilename(name) {
-                  return name.replace(/[\/:*?"<>|]/g, '_')
-                }
-                function handlePostMessage(event) {
-                  if (!event.data) {
-                    return
-                  }
-                  const { type, targetPageId, params } = event.data
-                  const pagePathMap = {
-                    'home_page': '../graph/home.html',
-                    'login_register_page': '../user/login_register.html',
-                    'registration_success_page': '../user/registration_success.html',
-                    'password_reset_page': '../user/password_reset.html',
-                    'graph_list_page': '../graph/graph_list.html',
-                    'graph_detail_page': '../graph/graph_detail.html',
-                    'user_profile_page': '../user/profile.html',
-                    'documentation_page': '../pages/documentation.html',
-                    'about_page': '../pages/about.html',
-                    'feedback_page': '../community/feedback.html',
-                    'page_998124': '../admin/dashboard.html',
-                    'page_998125': '../community/forum_list.html',
-                    'post_edit_page': '../community/post_edit.html',
-                    'post_detail_page': '../community/post_detail.html'
-                  };
-                  let targetPath = pagePathMap[targetPageId];
-                  if (type === "iframeNavigation" && targetPath) {
-                    // 如果有 params，拼接到 URL 上
-                    if (params && typeof params === 'object') {
-                      const queryString = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
-                      targetPath += (targetPath.includes('?') ? '&' : '?') + queryString;
-                    }
-                    window.location.href = targetPath
-                  }
-                }
-                window.addEventListener('message', handlePostMessage)
-                window.onload = adjustIframeSize
-                window.onresize = adjustIframeSize
-                window.onunload = () => {
-                  window.removeEventListener('message', handlePostMessage)
-                }
-              </script>
-                </head>
-                <body>
-                  <div class="iframe-outer">
-                    <div class="iframe-wrapper">
-                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
+<head>
     <title>个人中心 - Graph+知识图谱平台</title>
-    <link href="/assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
-    <script src="/assets/static/libs/tailwind-browser@4.js"></script>
-    <link href="/assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
-    <script src="/assets/3/3.1.1/iconify.min.js"></script>
-    <style>
-/* daisyUI Theme Variables Customization
-* Based on the selected daisyUI theme and UI guidance requirements,
-* customize only the CSS variables that need to be different from the theme defaults.
-*/
-:root {
-/* Corporate theme customization for knowledge graph platform */
---color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
---color-primary-content: rgba(255, 255, 255, 1);
---color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
---color-secondary-content: rgba(255, 255, 255, 1);
---color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
---color-accent-content: rgba(255, 255, 255, 1);
---color-base-100: rgba(255, 255, 255, 1);
---color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
---color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
---color-base-content: rgba(55, 65, 81, 1); /* #374151 */
---color-success: rgba(16, 185, 129, 1);
---color-warning: rgba(245, 158, 11, 1);
---color-error: rgba(239, 68, 68, 1);
---color-info: rgba(59, 130, 246, 1);
---radius-box: 0.375rem; /* 6px for micro-rounded corners */
---radius-field: 0.375rem;
---border: 1px;
-}
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/profile.css}">
+    </th:block>
+</head>
 
-/* Global component styles */
-.transition-width {
-transition: width 0.3s ease-in-out;
-}
-
-.nav-hover {
-transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-}
-
-.shadow-soft {
-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Header height consistency */
-.header-height {
-height: 64px;
-}
-
-/* Focus styles for accessibility */
-.focus-primary:focus {
-outline: 2px solid var(--color-primary);
-outline-offset: 2px;
-}
-
-/* Academic style enhancements */
-.academic-border {
-border: var(--border) solid var(--color-base-300);
-}
-
-.hover-lift {
-transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.hover-lift:hover {
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Professional grid spacing */
-.academic-grid {
-gap: 1.5rem;
-}
-
-/* Clean divider lines */
-.academic-divider {
-border-color: var(--color-base-300);
-border-width: var(--border);
-}
-</style> <style>
-/* 用户中心页面样式 */
-.content-section {
-    animation: section-fade-in 0.3s ease-in-out;
-}
-
-@keyframes section-fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* 导航菜单活动状态 */
-.menu li a.active {
-    background-color: var(--color-primary);
-    color: var(--color-primary-content);
-}
-
-.menu li a.active .iconify {
-    color: var(--color-primary-content);
-}
-
-/* 卡片悬停效果增强 */
-.hover-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* 表单输入框聚焦效果 */
-.focus-primary:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
-}
-
-/* 头像文字样式 */
-.avatar-text {
-    font-family: -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, Roboto, sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-/* 收藏卡片特殊样式 */
-.favorite-card {
-    transition: all 0.2s ease-in-out;
-    border: 1px solid transparent;
-}
-
-.favorite-card:hover {
-    border-color: var(--color-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(30, 58, 138, 0.15);
-}
-
-/* 历史记录项样式 */
-.history-item {
-    transition: background-color 0.15s ease-in-out;
-}
-
-.history-item:hover {
-    background-color: var(--color-base-300);
-}
-
-/* 设置项分组样式 */
-.settings-group {
-    border-left: 3px solid var(--color-primary);
-    padding-left: 1rem;
-}
-
-/* 危险操作警告样式 */
-.danger-zone {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.1) 100%);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: var(--radius-box);
-    padding: 1.5rem;
-}
-
-/* 骨架屏样式 */
-.skeleton-item {
-    background: linear-gradient(90deg, var(--color-base-200) 25%, var(--color-base-300) 50%, var(--color-base-200) 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-}
-
-@keyframes skeleton-loading {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-    .content-section {
-        padding: 1rem;
-    }
-    
-    .grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
-        grid-template-columns: 1fr;
-    }
-}
-@media (max-width: 640px) {
-    .header-height { height: 56px; }
-}
-
-/* 模态框样式增强 */
-.modal-box {
-    border: 1px solid var(--color-base-300);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-/* 成功/错误状态指示器 */
-.status-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 0.5rem;
-}
-
-.status-success {
-    background-color: var(--color-success);
-}
-
-.status-error {
-    background-color: var(--color-error);
-}
-
-.status-warning {
-    background-color: var(--color-warning);
-}
-
-/* 加载状态样式 */
-.loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-z-index: 10;
-}
-
-/* 收件箱样式 */
-.menu details summary {
-    list-style: none;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.15s ease-in-out;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.menu details summary:hover {
-    background-color: var(--color-base-200);
-}
-
-.menu details[open] summary {
-    background-color: var(--color-primary);
-    color: var(--color-primary-content);
-}
-
-.menu details[open] summary .iconify {
-    color: var(--color-primary-content);
-}
-
-.menu details ul {
-    padding-left: 0;
-    margin-top: 0.5rem;
-}
-
-.menu details ul li a {
-    padding: 0.5rem 0.75rem;
-    margin-left: 1rem;
-    border-radius: 0.375rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: background-color 0.15s ease-in-out;
-}
-
-.menu details ul li a:hover {
-    background-color: var(--color-base-200);
-}
-
-.menu details ul li a.active {
-    background-color: var(--color-primary);
-    color: var(--color-primary-content);
-}
-
-/* 私信和评论卡片样式 */
-.message-card {
-    transition: all 0.2s ease-in-out;
-    border: 1px solid transparent;
-}
-
-.message-card:hover {
-    border-color: var(--color-primary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.1);
-}
-
-.comment-quote {
-    border-left: 3px solid var(--color-primary);
-    background: var(--color-base-100);
-    padding: 0.75rem;
-    border-radius: 0.375rem;
-    margin: 0.75rem 0;
-}
-
-/* 未读消息指示器 */
-.unread-indicator {
-    width: 8px;
-    height: 8px;
-    background-color: var(--color-accent);
-    border-radius: 50%;
-    position: absolute;
-    top: 0;
-    right: 0;
-    border: 2px solid var(--color-base-100);
-}
-
-/* 收件箱徽章样式 */
-.inbox-badge {
-    font-size: 0.75rem;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.625rem;
-}
-
-/* 消息状态样式 */
-.message-status-new {
-    background-color: var(--color-accent);
-    color: var(--color-accent-content);
-}
-
-.message-status-read {
-    background-color: var(--color-info);
-    color: var(--color-info-content);
-}
-
-.comment-status-new {
-    background-color: var(--color-warning);
-    color: var(--color-warning-content);
-}
-</style>
-  <script src="/assets/static/libs/25_6/holder.js"></script></head>
-  <body>
-    <div data-section-id="common_header" data-section-type="common_header">
-  <div id="i0ok" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 i0ok spark-custom-i0ok i0ok">
-    <!-- Left section: Logo -->
-    <div class="navbar-start">
-      <div class="flex items-center gap-4">
-        <button class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;home_page&#39;)">
-          <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
-          Graph+知识图谱平台
-        </button>
-      </div>
-      <!-- Mobile menu (visible on small screens) -->
-      <div class="dropdown lg:hidden">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
-          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
-        </div>
-        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
-        </ul>
-      </div>
-    </div>
-    <!-- Center section: Main navigation -->
-    <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 gap-2">
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
-        </li>
-      </ul>
-    </div>
-    <!-- Right section: User controls -->
-    <div class="navbar-end">
-      <!-- Login/Register buttons for logged-out users -->
-      <div data-user-control="logged-out" class="flex items-center gap-2" style="display: none;">
-        <button class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;login_register_page&#39;)">
-          登录</button><button class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100" onclick="navigateTo(&#39;login_register_page&#39;)">
-          注册
-        </button>
-      </div>
-      <!-- User profile dropdown for logged-in users -->
-      <div data-user-control="logged-in" id="ibiav" class="dropdown dropdown-end" style="display: none;">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
-          <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
-            <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
-            <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
-          </div>
-        </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
-          <li class="menu-title"><span>用户中心</span></li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
-          </li>
-          <li id="admin-menu-item" style="display: none;">
-            <a class="nav-hover focus-primary text-primary" onclick="navigateTo(&#39;admin_dashboard_page&#39;)"><span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="16"></span><span>管理后台</span></a>
-          </li>
-          <div class="divider my-1"></div>
-          <li>
-            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-    <div class="flex min-h-screen bg-base-200">
-      <div class="flex-1 flex flex-col">
-        <main class="flex-1 flex">
-          <!-- 左侧导航栏 -->
-          <div id="iq3gf" class="w-56 bg-base-100 shadow-soft border-r academic-border flex-shrink-0">
-            <!-- 用户头像和名称 - 居中显示 -->
-            <div class="p-6 text-center">
-              <div id="sidebar-avatar" class="w-24 h-24 mx-auto rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-bold overflow-hidden mb-4">
-                <span id="sidebar-avatar-text">--</span>
-                <img id="sidebar-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
-              </div>
-              <h3 id="sidebar-username" class="font-semibold text-base-content text-lg">加载中...</h3>
-              <p id="sidebar-email" class="text-sm text-base-content/60">--</p>
-            </div>
-            <!-- 导航菜单 -->
-            <nav class="px-3 pb-6">
-              <ul class="menu menu-vertical w-full gap-1">
-                <li>
-                  <a id="nav-profile" class="focus-primary active" onclick="showSection(&#39;profile&#39;)">
-                    <span class="iconify" data-icon="heroicons:user" data-width="18"></span>
-                    个人资料
-                  </a>
-                </li>
-                <li>
-                  <a id="nav-search-history" class="focus-primary" onclick="showSection(&#39;search-history&#39;)">
-                    <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="18"></span>
-                    搜索历史
-                  </a>
-                </li>
-                <li>
-                  <a id="nav-browse-history" class="focus-primary" onclick="showSection(&#39;browse-history&#39;)">
-                    <span class="iconify" data-icon="heroicons:clock" data-width="18"></span>
-                    浏览历史
-                  </a>
-                </li>
-                <li>
-                  <a id="nav-favorites" class="focus-primary" onclick="showSection(&#39;favorites&#39;)">
-                    <span class="iconify" data-icon="heroicons:heart" data-width="18"></span>
-                    我的收藏
-                  </a>
-                </li>
-                <li>
-                  <a id="nav-messages" class="focus-primary" onclick="showSection(&#39;messages&#39;)">
-                    <span class="iconify" data-icon="heroicons:inbox" data-width="18"></span>
-                    收件箱
-                    <span id="inbox-badge" class="badge badge-primary badge-sm hidden">0</span>
-                  </a>
-                </li>
-                <li>
-                  <a id="nav-settings" class="focus-primary" onclick="showSection(&#39;settings&#39;)">
-                    <span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="18"></span>
-                    账户设置
-                  </a>
-                </li>
-              </ul>
-            </nav>
-          </div>
-          <!-- 右侧内容区域 -->
-          <div class="flex-1 p-8">
-            <!-- 个人资料部分 -->
-            <div id="profile-section" class="content-section">
-              <div class="card bg-base-100 shadow-soft">
-                <div class="card-body">
-                  <h2 class="card-title text-2xl font-semibold mb-6">
-                    个人资料
-                  </h2>
-                  <form id="profile-form" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <!-- 头像 -->
-                      <div class="form-control md:col-span-2">
-                        <label class="label"><span class="label-text font-medium text-base-content">头像</span></label>
-                        <div class="flex items-center gap-4">
-                          <div id="form-avatar-container" class="w-20 h-20 rounded-full bg-primary text-primary-content flex items-center justify-center text-xl font-bold overflow-hidden">
-                            <span id="form-avatar-text">--</span>
-                            <img id="form-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
-                          </div>
-                          <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarUpload(this)">
-                          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById(&#39;avatar-input&#39;).click()">
-                            <span class="iconify" data-icon="heroicons:camera" data-width="16"></span>
-                            更换头像
-                          </button>
-                        </div>
-                      </div>
-                      <!-- 用户名 -->
-                      <div class="form-control w-full">
-                        <label class="label">
-                          <span class="label-text font-medium text-base-content">用户名</span>
-                        </label>
-                        <input id="form-username" type="text" value="" placeholder="用户名" class="input input-bordered w-full focus-primary placeholder:font-semibold">
-                      </div>
-                      <!-- 邮箱 -->
-                      <div class="form-control w-full">
-                        <label class="label">
-                          <span class="label-text font-medium text-base-content">邮箱</span>
-                        </label>
-                        <input id="form-email" type="email" value="" placeholder="邮箱" class="input input-bordered w-full focus-primary placeholder:font-semibold">
-                      </div>
-                      <!-- 手机号 -->
-                      <div class="form-control w-full">
-                        <label class="label">
-                          <span class="label-text font-medium text-base-content">手机号</span>
-                        </label>
-                        <input id="form-phone" type="tel" value="" placeholder="手机号" class="input input-bordered w-full focus-primary placeholder:font-semibold">
-                      </div>
-                      <!-- 性别 -->
-                      <div class="form-control w-full">
-                        <label class="label">
-                          <span class="label-text font-medium text-base-content">性别</span>
-                        </label>
-                        <select id="form-gender" class="select select-bordered w-full focus-primary">
-                          <option value="">请选择</option>
-                          <option value="MALE">男</option>
-                          <option value="FEMALE">女</option>
-                          <option value="OTHER">其他</option>
-                        </select>
-                      </div>
-                      <!-- 生日 -->
-                      <div class="form-control w-full">
-                        <label class="label">
-                          <span class="label-text font-medium text-base-content">生日</span>
-                        </label>
-                        <input id="form-birthday" type="date" value="" placeholder="yyyy/mm/日" class="input input-bordered w-full focus-primary">
-                      </div>
-                      <!-- 所属机构 -->
-                      <div class="form-control w-full">
-                        <label class="label">
-                          <span class="label-text font-medium text-base-content">所属机构</span>
-                        </label>
-                        <input id="form-institution" type="text" value="" placeholder="学校/公司" class="input input-bordered w-full focus-primary placeholder:font-semibold">
-                      </div>
-                      <!-- 个人简介 -->
-                      <div class="form-control w-full md:col-span-2">
-                        <label class="label">
-                          <span class="label-text font-medium text-base-content">个人简介</span>
-                        </label>
-                        <textarea id="form-bio" placeholder="介绍一下自己..." class="textarea textarea-bordered w-full h-24 focus-primary placeholder:font-semibold"></textarea>
-                      </div>
-                    </div>
-                    <div class="flex gap-4 mt-8">
-                      <button type="submit" class="btn btn-primary">
-                        <span class="iconify" data-icon="heroicons:check" data-width="16"></span>
-                        保存修改</button><button type="button" class="btn btn-ghost" onclick="loadUserProfile()">取消</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <!-- 搜索历史部分 -->
-            <div id="search-history-section" class="content-section hidden">
-              <div class="card bg-base-100 shadow-soft">
-                <div class="card-body">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="card-title text-2xl font-semibold">搜索历史</h2>
-                    <button class="btn btn-outline btn-sm text-error" onclick="clearAllSearchHistory()">
-                      <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
-                      清空所有
-                    </button>
-                  </div>
-                  <div class="space-y-4">
-                    <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                      <div class="flex items-center gap-3">
-                        <span class="iconify text-base-content/70" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                        <div>
-                          <p class="font-medium">人工智能</p>
-                          <p class="text-sm text-base-content/70">
-                            2024-10-28 14:30
-                          </p>
-                        </div>
-                      </div>
-                      <div class="flex gap-2">
-                        <button class="btn btn-ghost btn-sm" onclick="searchAgain(&#39;人工智能&#39;)">
-                          <span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span>
-                          再次搜索</button><button class="btn btn-ghost btn-sm text-error" onclick="deleteSearchItem(this)">
-                          <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
-                        </button>
-                      </div>
-                    </div>
-                    <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                      <div class="flex items-center gap-3">
-                        <span class="iconify text-base-content/70" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                        <div>
-                          <p class="font-medium">机器学习算法</p>
-                          <p class="text-sm text-base-content/70">
-                            2024-10-27 16:45
-                          </p>
-                        </div>
-                      </div>
-                      <div class="flex gap-2">
-                        <button class="btn btn-ghost btn-sm" onclick="searchAgain(&#39;机器学习算法&#39;)">
-                          <span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span>
-                          再次搜索</button><button class="btn btn-ghost btn-sm text-error" onclick="deleteSearchItem(this)">
-                          <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
-                        </button>
-                      </div>
-                    </div>
-                    <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                      <div class="flex items-center gap-3">
-                        <span class="iconify text-base-content/70" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                        <div>
-                          <p class="font-medium">深度学习网络</p>
-                          <p class="text-sm text-base-content/70">
-                            2024-10-26 10:20
-                          </p>
-                        </div>
-                      </div>
-                      <div class="flex gap-2">
-                        <button class="btn btn-ghost btn-sm" onclick="searchAgain(&#39;深度学习网络&#39;)">
-                          <span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span>
-                          再次搜索</button><button class="btn btn-ghost btn-sm text-error" onclick="deleteSearchItem(this)">
-                          <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- 浏览历史部分 -->
-            <div id="browse-history-section" class="content-section hidden">
-              <div class="card bg-base-100 shadow-soft">
-                <div class="card-body">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="card-title text-2xl font-semibold">浏览历史</h2>
-                    <button class="btn btn-outline btn-sm text-error" onclick="clearAllBrowseHistory()">
-                      <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
-                      清空所有
-                    </button>
-                  </div>
-                  <div class="space-y-4">
-                    <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                      <div class="flex items-center gap-3">
-                        <span class="iconify text-base-content/70" data-icon="heroicons:document-text" data-width="20"></span>
-                        <div>
-                          <p class="font-medium">人工智能技术发展图谱</p>
-                          <p class="text-sm text-base-content/70">
-                            2024-10-28 15:20
-                          </p>
-                        </div>
-                      </div>
-                      <div class="flex gap-2">
-                        <button class="btn btn-ghost btn-sm" onclick="navigateTo(&#39;graph_detail_page&#39;)">
-                          <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
-                          前往查看</button><button class="btn btn-ghost btn-sm text-error" onclick="deleteBrowseItem(this)">
-                          <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
-                        </button>
-                      </div>
-                    </div>
-                    <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                      <div class="flex items-center gap-3">
-                        <span class="iconify text-base-content/70" data-icon="heroicons:document-text" data-width="20"></span>
-                        <div>
-                          <p class="font-medium">机器学习算法分类体系</p>
-                          <p class="text-sm text-base-content/70">
-                            2024-10-27 14:35
-                          </p>
-                        </div>
-                      </div>
-                      <div class="flex gap-2">
-                        <button class="btn btn-ghost btn-sm" onclick="navigateTo(&#39;graph_detail_page&#39;)">
-                          <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
-                          前往查看</button><button class="btn btn-ghost btn-sm text-error" onclick="deleteBrowseItem(this)">
-                          <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
-                        </button>
-                      </div>
-                    </div>
-                    <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                      <div class="flex items-center gap-3">
-                        <span class="iconify text-base-content/70" data-icon="heroicons:document-text" data-width="20"></span>
-                        <div>
-                          <p class="font-medium">自然语言处理技术栈</p>
-                          <p class="text-sm text-base-content/70">
-                            2024-10-26 11:15
-                          </p>
-                        </div>
-                      </div>
-                      <div class="flex gap-2">
-                        <button class="btn btn-ghost btn-sm" onclick="navigateTo(&#39;graph_detail_page&#39;)">
-                          <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
-                          前往查看</button><button class="btn btn-ghost btn-sm text-error" onclick="deleteBrowseItem(this)">
-                          <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- 我的收藏部分 -->
-            <div id="favorites-section" class="content-section hidden">
-              <div class="card bg-base-100 shadow-soft">
-                <div class="card-body">
-                  <h2 class="card-title text-2xl font-semibold mb-6">
-                    我的收藏
-                  </h2>
-                  <!-- 收藏分类标签 -->
-                  <div class="tabs tabs-boxed mb-6">
-                    <a id="tab-posts" class="tab tab-active" onclick="switchFavoriteTab(&#39;posts&#39;)">
-                      <span class="iconify mr-1" data-icon="heroicons:document-text" data-width="16"></span>
-                      帖子收藏
-                    </a>
-                    <a id="tab-graphs" class="tab" onclick="switchFavoriteTab(&#39;graphs&#39;)">
-                      <span class="iconify mr-1" data-icon="heroicons:share" data-width="16"></span>
-                      图谱收藏
-                    </a>
-                  </div>
-                  <!-- 帖子收藏列表 -->
-                  <div id="post-favorites-container" class="space-y-4">
-                    <div class="text-center py-8 text-base-content/70">
-                      <span class="loading loading-spinner loading-md"></span>
-                      <p class="mt-2">加载中...</p>
-                    </div>
-                  </div>
-                  <!-- 图谱收藏列表 -->
-                  <div id="graph-favorites-container" class="space-y-4 hidden">
-                    <div class="text-center py-8 text-base-content/70">
-                      <span class="loading loading-spinner loading-md"></span>
-                      <p class="mt-2">加载中...</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- 账户设置部分 -->
-            <div id="settings-section" class="content-section hidden">
-              <div class="card bg-base-100 shadow-soft">
-                <div class="card-body">
-                  <h2 class="card-title text-2xl font-semibold mb-6">
-                    账户设置
-                  </h2>
-                  <div class="space-y-8">
-                    <!-- 修改密码 -->
-                    <div class="border-b academic-border pb-6">
-                      <h3 class="text-lg font-semibold mb-4">修改密码</h3>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        <div class="flex items-center gap-4">
-                          <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">当前密码</label>
-                          <input type="password" placeholder="请输入当前密码" class="input input-bordered focus-primary flex-1">
-                        </div>
-                        <div class="flex items-center gap-4">
-                          <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[4rem]">新密码</label>
-                          <input type="password" placeholder="请输入新密码" class="input input-bordered focus-primary flex-1">
-                        </div>
-                        <div class="flex items-center gap-4">
-                          <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">确认新密码</label>
-                          <input type="password" placeholder="请再次输入新密码" class="input input-bordered focus-primary flex-1">
-                        </div>
-                      </div>
-                      <button class="btn btn-primary mt-4" onclick="changePassword()">
-                        <span class="iconify" data-icon="heroicons:key" data-width="16"></span>
-                        修改密码
-                      </button>
-                    </div>
-                    <!-- 联系方式管理 -->
-                    <div class="border-b academic-border pb-6">
-                      <h3 class="text-lg font-semibold mb-4">联系方式管理</h3>
-                      <div class="space-y-4">
-                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
-                          <div class="flex items-center gap-3">
-                            <span class="iconify text-base-content/70" data-icon="heroicons:envelope" data-width="20"></span>
-                            <div>
-                              <p class="font-medium">邮箱地址</p>
-                              <p class="text-sm text-base-content/70">
-                                zhang.san@example.com
-                              </p>
+<body>
+    <div layout:fragment="content">
+        <div class="flex min-h-screen">
+            <div class="flex-1 flex flex-col">
+                <main class="flex-1 flex">
+                    <!-- 左侧导航栏 -->
+                    <div class="w-56 bg-base-100 shadow-soft border-r academic-border flex-shrink-0">
+                        <div class="p-6 text-center">
+                            <div id="sidebar-avatar" class="w-24 h-24 mx-auto rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-bold overflow-hidden mb-4">
+                                <span id="sidebar-avatar-text">--</span>
+                                <img id="sidebar-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
                             </div>
-                          </div>
-                          <button class="btn btn-outline btn-sm">更新</button>
+                            <h3 id="sidebar-username" class="font-semibold text-base-content text-lg">加载中...</h3>
+                            <p id="sidebar-email" class="text-sm text-base-content/60">--</p>
                         </div>
-                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
-                          <div class="flex items-center gap-3">
-                            <span class="iconify text-base-content/70" data-icon="heroicons:phone" data-width="20"></span>
-                            <div>
-                              <p class="font-medium">手机号码</p>
-                              <p class="text-sm text-base-content/70">
-                                138****8888
-                              </p>
+                        <nav class="px-3 pb-6">
+                            <ul class="menu menu-vertical w-full gap-1">
+                                <li><a id="nav-profile" class="focus-primary active" onclick="showSection('profile')"><span class="iconify" data-icon="heroicons:user" data-width="18"></span>个人资料</a></li>
+                                <li><a id="nav-search-history" class="focus-primary" onclick="showSection('search-history')"><span class="iconify" data-icon="heroicons:magnifying-glass" data-width="18"></span>搜索历史</a></li>
+                                <li><a id="nav-browse-history" class="focus-primary" onclick="showSection('browse-history')"><span class="iconify" data-icon="heroicons:clock" data-width="18"></span>浏览历史</a></li>
+                                <li><a id="nav-favorites" class="focus-primary" onclick="showSection('favorites')"><span class="iconify" data-icon="heroicons:heart" data-width="18"></span>我的收藏</a></li>
+                                <li><a id="nav-messages" class="focus-primary" onclick="showSection('messages')"><span class="iconify" data-icon="heroicons:inbox" data-width="18"></span>收件箱<span id="inbox-badge" class="badge badge-primary badge-sm hidden">0</span></a></li>
+                                <li><a id="nav-settings" class="focus-primary" onclick="showSection('settings')"><span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="18"></span>账户设置</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    
+                    <!-- 右侧内容区域 -->
+                    <div class="flex-1 p-8">
+                        <!-- 个人资料部分 -->
+                        <div id="profile-section" class="content-section">
+                            <div class="card bg-base-100 shadow-soft">
+                                <div class="card-body">
+                                    <h2 class="card-title text-2xl font-semibold mb-6">个人资料</h2>
+                                    <form id="profile-form" class="space-y-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div class="form-control md:col-span-2">
+                                                <label class="label"><span class="label-text font-medium">头像</span></label>
+                                                <div class="flex items-center gap-4">
+                                                    <div id="form-avatar-container" class="w-20 h-20 rounded-full bg-primary text-primary-content flex items-center justify-center text-xl font-bold overflow-hidden">
+                                                        <span id="form-avatar-text">--</span>
+                                                        <img id="form-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
+                                                    </div>
+                                                    <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarUpload(this)">
+                                                    <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('avatar-input').click()">
+                                                        <span class="iconify" data-icon="heroicons:camera" data-width="16"></span>更换头像
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label"><span class="label-text font-medium">用户名</span></label>
+                                                <input id="form-username" type="text" placeholder="用户名" class="input input-bordered w-full focus-primary">
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label"><span class="label-text font-medium">邮箱</span></label>
+                                                <input id="form-email" type="email" placeholder="邮箱" class="input input-bordered w-full focus-primary">
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label"><span class="label-text font-medium">手机号</span></label>
+                                                <input id="form-phone" type="tel" placeholder="手机号" class="input input-bordered w-full focus-primary">
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label"><span class="label-text font-medium">性别</span></label>
+                                                <select id="form-gender" class="select select-bordered w-full focus-primary">
+                                                    <option value="">请选择</option>
+                                                    <option value="MALE">男</option>
+                                                    <option value="FEMALE">女</option>
+                                                    <option value="OTHER">其他</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label"><span class="label-text font-medium">生日</span></label>
+                                                <input id="form-birthday" type="date" class="input input-bordered w-full focus-primary">
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label"><span class="label-text font-medium">所属机构</span></label>
+                                                <input id="form-institution" type="text" placeholder="学校/公司" class="input input-bordered w-full focus-primary">
+                                            </div>
+                                            <div class="form-control w-full md:col-span-2">
+                                                <label class="label"><span class="label-text font-medium">个人简介</span></label>
+                                                <textarea id="form-bio" placeholder="介绍一下自己..." class="textarea textarea-bordered w-full h-24 focus-primary"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4 mt-8">
+                                            <button type="submit" class="btn btn-primary"><span class="iconify" data-icon="heroicons:check" data-width="16"></span>保存修改</button>
+                                            <button type="button" class="btn btn-ghost" onclick="loadUserProfile()">取消</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                          </div>
-                          <button class="btn btn-outline btn-sm">更新</button>
                         </div>
-                      </div>
-                    </div>
-                    <!-- 第三方登录 -->
-                    <div class="border-b academic-border pb-6">
-                      <h3 class="text-lg font-semibold mb-4">第三方登录管理</h3>
-                      <div class="space-y-4">
-                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
-                          <div class="flex items-center gap-3">
-                            <span class="iconify text-success" data-icon="heroicons:check-circle" data-width="20"></span>
-                            <div>
-                              <p class="font-medium">微信账号</p>
-                              <p class="text-sm text-base-content/70">已绑定</p>
+                        
+                        <!-- 搜索历史部分 -->
+                        <div id="search-history-section" class="content-section hidden">
+                            <div class="card bg-base-100 shadow-soft">
+                                <div class="card-body">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h2 class="card-title text-2xl font-semibold">搜索历史</h2>
+                                        <button class="btn btn-outline btn-sm text-error" onclick="clearAllSearchHistory()"><span class="iconify" data-icon="heroicons:trash" data-width="16"></span>清空所有</button>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
+                                            <div class="flex items-center gap-3">
+                                                <span class="iconify text-base-content/70" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+                                                <div><p class="font-medium">人工智能</p><p class="text-sm text-base-content/70">2024-10-28 14:30</p></div>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button class="btn btn-ghost btn-sm" onclick="searchAgain('人工智能')"><span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span>再次搜索</button>
+                                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteSearchItem(this)"><span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                          </div>
-                          <button class="btn btn-outline btn-sm text-error">
-                            解绑
-                          </button>
                         </div>
-                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
-                          <div class="flex items-center gap-3">
-                            <span class="iconify text-base-content/70" data-icon="heroicons:x-circle" data-width="20"></span>
-                            <div>
-                              <p class="font-medium">QQ账号</p>
-                              <p class="text-sm text-base-content/70">未绑定</p>
+                        
+                        <!-- 浏览历史部分 -->
+                        <div id="browse-history-section" class="content-section hidden">
+                            <div class="card bg-base-100 shadow-soft">
+                                <div class="card-body">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h2 class="card-title text-2xl font-semibold">浏览历史</h2>
+                                        <button class="btn btn-outline btn-sm text-error" onclick="clearAllBrowseHistory()"><span class="iconify" data-icon="heroicons:trash" data-width="16"></span>清空所有</button>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
+                                            <div class="flex items-center gap-3">
+                                                <span class="iconify text-base-content/70" data-icon="heroicons:document-text" data-width="20"></span>
+                                                <div><p class="font-medium">人工智能技术发展图谱</p><p class="text-sm text-base-content/70">2024-10-28 15:20</p></div>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <a th:href="@{/graph/graph_detail.html}" class="btn btn-ghost btn-sm"><span class="iconify" data-icon="heroicons:eye" data-width="16"></span>前往查看</a>
+                                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteBrowseItem(this)"><span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                          </div>
-                          <button class="btn btn-outline btn-sm">绑定</button>
                         </div>
-                      </div>
+                        
+                        <!-- 我的收藏部分 -->
+                        <div id="favorites-section" class="content-section hidden">
+                            <div class="card bg-base-100 shadow-soft">
+                                <div class="card-body">
+                                    <h2 class="card-title text-2xl font-semibold mb-6">我的收藏</h2>
+                                    <div class="tabs tabs-boxed mb-6">
+                                        <a id="tab-posts" class="tab tab-active" onclick="switchFavoriteTab('posts')"><span class="iconify mr-1" data-icon="heroicons:document-text" data-width="16"></span>帖子收藏</a>
+                                        <a id="tab-graphs" class="tab" onclick="switchFavoriteTab('graphs')"><span class="iconify mr-1" data-icon="heroicons:share" data-width="16"></span>图谱收藏</a>
+                                    </div>
+                                    <div id="post-favorites-container" class="space-y-4">
+                                        <div class="text-center py-8 text-base-content/70"><span class="loading loading-spinner loading-md"></span><p class="mt-2">加载中...</p></div>
+                                    </div>
+                                    <div id="graph-favorites-container" class="space-y-4 hidden">
+                                        <div class="text-center py-8 text-base-content/70"><span class="loading loading-spinner loading-md"></span><p class="mt-2">加载中...</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 收件箱部分 -->
+                        <div id="messages-section" class="content-section hidden">
+                            <div class="card bg-base-100 shadow-soft">
+                                <div class="card-body">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h2 class="card-title text-2xl font-semibold">私信</h2>
+                                        <button class="btn btn-primary btn-sm"><span class="iconify" data-icon="heroicons:plus" data-width="16"></span>发送私信</button>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div data-repeatable="true" class="flex items-start gap-4 p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="openMessage('msg1')">
+                                            <div class="w-12 h-12 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-sm font-bold">李四</div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <h4 class="font-semibold">李四</h4>
+                                                    <div class="flex items-center gap-2"><span class="badge badge-accent badge-sm">新消息</span><span class="text-sm text-base-content/70">2小时前</span></div>
+                                                </div>
+                                                <p class="text-sm text-base-content/80 mb-2">关于人工智能图谱的问题咨询...</p>
+                                                <div class="flex gap-2">
+                                                    <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage('msg1')"><span class="iconify" data-icon="heroicons:arrow-uturn-left" data-width="14"></span>回复</button>
+                                                    <button class="btn btn-ghost btn-xs text-error" onclick="event.stopPropagation(); deleteMessage('msg1')"><span class="iconify" data-icon="heroicons:trash" data-width="14"></span>删除</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 账户设置部分 -->
+                        <div id="settings-section" class="content-section hidden">
+                            <div class="card bg-base-100 shadow-soft">
+                                <div class="card-body">
+                                    <h2 class="card-title text-2xl font-semibold mb-6">账户设置</h2>
+                                    <div class="space-y-8">
+                                        <div class="border-b academic-border pb-6">
+                                            <h3 class="text-lg font-semibold mb-4">修改密码</h3>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                                <div class="flex items-center gap-4">
+                                                    <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">当前密码</label>
+                                                    <input type="password" placeholder="请输入当前密码" class="input input-bordered focus-primary flex-1">
+                                                </div>
+                                                <div class="flex items-center gap-4">
+                                                    <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[4rem]">新密码</label>
+                                                    <input type="password" placeholder="请输入新密码" class="input input-bordered focus-primary flex-1">
+                                                </div>
+                                                <div class="flex items-center gap-4">
+                                                    <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">确认新密码</label>
+                                                    <input type="password" placeholder="请再次输入新密码" class="input input-bordered focus-primary flex-1">
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-primary mt-4" onclick="changePassword()"><span class="iconify" data-icon="heroicons:key" data-width="16"></span>修改密码</button>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-semibold mb-4 text-error">危险操作</h3>
+                                            <div class="alert alert-warning mb-4"><span class="iconify" data-icon="heroicons:exclamation-triangle" data-width="20"></span><span>以下操作不可逆，请谨慎操作</span></div>
+                                            <button class="btn btn-error" onclick="confirmAccountDeletion()"><span class="iconify" data-icon="heroicons:trash" data-width="16"></span>注销账户</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- 危险操作 -->
-                    <div>
-                      <h3 class="text-lg font-semibold mb-4 text-error">
-                        危险操作
-                      </h3>
-                      <div class="alert alert-warning mb-4">
-                        <span class="iconify" data-icon="heroicons:exclamation-triangle" data-width="20"></span><span>以下操作不可逆，请谨慎操作</span>
-                      </div>
-                      <button class="btn btn-error" onclick="confirmAccountDeletion()">
-                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
-                        注销账户
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                </main>
             </div>
-            <!-- 私信部分 -->
-            <div id="messages-section" class="content-section hidden">
-              <div class="card bg-base-100 shadow-soft">
-                <div class="card-body">
-                  <div class="flex justify-between items-center mb-6">
-                    <h2 class="card-title text-2xl font-semibold">私信</h2>
-                    <button class="btn btn-primary btn-sm">
-                      <span class="iconify" data-icon="heroicons:plus" data-width="16"></span>
-                      发送私信
-                    </button>
-                  </div>
-                  <div class="space-y-4">
-                    <div data-repeatable="true" class="flex items-start gap-4 p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="openMessage(&#39;msg1&#39;)">
-                      <div class="w-12 h-12 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-sm font-bold">
-                        李四
-                      </div>
-                      <div class="flex-1">
-                        <div class="flex justify-between items-start mb-2">
-                          <h4 class="font-semibold">李四</h4>
-                          <div class="flex items-center gap-2">
-                            <span class="badge badge-accent badge-sm">新消息</span><span class="text-sm text-base-content/70">2小时前</span>
-                          </div>
-                        </div>
-                        <p class="text-sm text-base-content/80 mb-2">
-                          关于人工智能图谱的问题咨询...
-                        </p>
-                        <div class="flex gap-2">
-                          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage(&#39;msg1&#39;)">
-                            <span class="iconify" data-icon="heroicons:arrow-uturn-left" data-width="14"></span>
-                            回复</button><button class="btn btn-ghost btn-xs text-error" onclick="event.stopPropagation(); deleteMessage(&#39;msg1&#39;)">
-                            <span class="iconify" data-icon="heroicons:trash" data-width="14"></span>
-                            删除
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div data-repeatable="true" class="flex items-start gap-4 p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="openMessage(&#39;msg2&#39;)">
-                      <div class="w-12 h-12 rounded-full bg-accent text-accent-content flex items-center justify-center text-sm font-bold">
-                        王五
-                      </div>
-                      <div class="flex-1">
-                        <div class="flex justify-between items-start mb-2">
-                          <h4 class="font-semibold">王五</h4>
-                          <div class="flex items-center gap-2">
-                            <span class="badge badge-info badge-sm">已读</span><span class="text-sm text-base-content/70">1天前</span>
-                          </div>
-                        </div>
-                        <p class="text-sm text-base-content/80 mb-2">
-                          感谢您分享的机器学习资料，非常有用！
-                        </p>
-                        <div class="flex gap-2">
-                          <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage(&#39;msg2&#39;)">
-                            <span class="iconify" data-icon="heroicons:arrow-uturn-left" data-width="14"></span>
-                            回复</button><button class="btn btn-ghost btn-xs text-error" onclick="event.stopPropagation(); deleteMessage(&#39;msg2&#39;)">
-                            <span class="iconify" data-icon="heroicons:trash" data-width="14"></span>
-                            删除
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- 评论部分 -->
-            <div id="comments-section" class="content-section hidden">
-              <div class="card bg-base-100 shadow-soft">
-                <div class="card-body">
-                  <h2 class="card-title text-2xl font-semibold mb-6">
-                    评论通知
-                  </h2>
-                  <div class="space-y-4">
-                    <div data-repeatable="true" class="flex items-start gap-4 p-4 bg-base-200 rounded-lg hover-lift">
-                      <div class="w-12 h-12 rounded-full bg-warning text-warning-content flex items-center justify-center text-sm font-bold">
-                        赵六
-                      </div>
-                      <div class="flex-1">
-                        <div class="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 class="font-semibold">赵六</h4>
-                            <p class="text-sm text-base-content/70">
-                              评论了您的图谱：<span class="font-medium">人工智能技术发展图谱</span>
-                            </p>
-                          </div>
-                          <div class="flex items-center gap-2">
-                            <span class="badge badge-warning badge-sm">新评论</span><span class="text-sm text-base-content/70">30分钟前</span>
-                          </div>
-                        </div>
-                        <div class="bg-base-100 p-3 rounded border-l-4 border-primary mb-3">
-                          <p class="text-sm">
-                            这个图谱整理得非常详细，对我的研究很有帮助。能否请教一下关于深度学习部分的具体实现？
-                          </p>
-                        </div>
-                        <div class="flex gap-2">
-                          <button class="btn btn-primary btn-xs" onclick="navigateTo(&#39;graph_detail_page&#39;)">
-                            <span class="iconify" data-icon="heroicons:eye" data-width="14"></span>
-                            查看图谱</button><button class="btn btn-ghost btn-xs" onclick="replyComment(&#39;comment1&#39;)">
-                            <span class="iconify" data-icon="heroicons:chat-bubble-left" data-width="14"></span>
-                            回复</button><button class="btn btn-ghost btn-xs text-error" onclick="deleteComment(&#39;comment1&#39;)">
-                            <span class="iconify" data-icon="heroicons:trash" data-width="14"></span>
-                            删除
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-        <div data-section-id="common_footer" data-section-type="common_footer">
-<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
-<div class="grid grid-flow-col gap-4">
-<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
-<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
-<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
-<a class="link link-hover focus-primary">隐私政策</a>
-<a class="link link-hover focus-primary">服务条款</a>
-</div>
-<div class="grid grid-flow-col gap-4">
-<a class="link link-hover focus-primary" aria-label="官方微信">
-<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
-</a>
-<a class="link link-hover focus-primary" aria-label="企业QQ">
-<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
-</a>
-<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
-<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
-</a>
-</div>
-<div class="text-center">
-<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
-<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
-</div>
-</footer>
-</div>
-      </div>
-    </div>
-    <!-- 确认对话框 -->
-    <dialog id="confirmModal" class="modal">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg">确认操作</h3>
-        <p id="confirmMessage" class="py-4">您确定要执行此操作吗？</p>
-        <div class="modal-action">
-          <button class="btn" onclick="closeConfirmModal()">取消</button><button id="confirmButton" class="btn btn-error" onclick="executeConfirmedAction()">
-            确认
-          </button>
         </div>
-      </div>
-    </dialog>
-    <script>
-(function() {
-&#39;use strict&#39;;
-
-// Initialize global namespace
-window.APP_GLOBALS = window.APP_GLOBALS || {};
-
-// Global navigation utility
-window.navigateTo = function(targetPageId, params) {
-const isInIframe = window.self !== window.top;
-
-if (isInIframe) {
-window.parent.postMessage({
-type: &#39;iframeNavigation&#39;,
-targetPageId: targetPageId,
-params: params
-}, &#39;*&#39;);
-} else {
-let url = `${targetPageId}.html`;
-if (params) {
-const queryString = Object.keys(params).map(k =&gt; k + &#39;=&#39; + encodeURIComponent(params[k])).join(&#39;&amp;&#39;);
-url += &#39;?&#39; + queryString;
-}
-window.location.href = url;
-}
-};
-
-// 跳转到收藏页面
-window.navigateToFavorites = function() {
-navigateTo(&#39;user_profile_page&#39;, { section: &#39;favorites&#39; });
-};
-
-// User authentication state management
-window.APP_GLOBALS.user = {
-isLoggedIn: false,
-userInfo: null,
-
-login: function(userInfo) {
-this.isLoggedIn = true;
-this.userInfo = userInfo;
-localStorage.setItem(&#39;userState&#39;, JSON.stringify({
-isLoggedIn: true,
-userInfo: userInfo
-}));
-this.updateUserInterface();
-},
-
-logout: function() {
-this.isLoggedIn = false;
-this.userInfo = null;
-localStorage.removeItem(&#39;userState&#39;);
-fetch(&#39;/api/auth/logout&#39;, { method: &#39;POST&#39;, credentials: &#39;include&#39; })
-.finally(() =&gt; {
-this.updateUserInterface();
-window.top.location.href = &#39;/graph/home.html&#39;;
-});
-},
-
-updateUserInterface: function() {
-const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
-userControls.forEach(control => {
-const controlType = control.getAttribute(&#39;data-user-control&#39;);
-if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
-control.style.display = &#39;none&#39;;
-} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
-control.style.display = &#39;none&#39;;
-} else {
-control.style.display = &#39;&#39;;
-}
-});
-if (this.isLoggedIn &amp;&amp; this.userInfo) {
-const avatarText = document.getElementById(&#39;nav-avatar-text&#39;);
-const avatarImg = document.getElementById(&#39;nav-avatar-img&#39;);
-if (avatarText &amp;&amp; avatarImg) {
-if (this.userInfo.avatar) {
-avatarText.classList.add(&#39;hidden&#39;);
-avatarImg.src = this.userInfo.avatar;
-avatarImg.classList.remove(&#39;hidden&#39;);
-} else {
-avatarText.textContent = (this.userInfo.userName || &#39;用&#39;).substring(0, 1);
-avatarText.classList.remove(&#39;hidden&#39;);
-avatarImg.classList.add(&#39;hidden&#39;);
-}
-}
-const adminMenuItem = document.getElementById(&#39;admin-menu-item&#39;);
-if (adminMenuItem) {
-adminMenuItem.style.display = this.userInfo.role === &#39;ADMIN&#39; ? &#39;&#39; : &#39;none&#39;;
-}
-}
-},
-
-init: function() {
-const savedState = localStorage.getItem(&#39;userState&#39;);
-if (savedState) {
-const state = JSON.parse(savedState);
-this.isLoggedIn = state.isLoggedIn;
-this.userInfo = state.userInfo;
-this.updateUserInterface();
-}
-fetch(&#39;/user/api/check-auth&#39;, { credentials: &#39;include&#39; })
-.then(res => res.json())
-.then(data => {
-const wasLoggedIn = this.isLoggedIn;
-if (data.authenticated) {
-this.isLoggedIn = true;
-this.userInfo = data.user || { userName: data.username };
-localStorage.setItem(&#39;userState&#39;, JSON.stringify({ isLoggedIn: true, userInfo: this.userInfo }));
-} else {
-this.isLoggedIn = false;
-this.userInfo = null;
-localStorage.removeItem(&#39;userState&#39;);
-}
-if (wasLoggedIn !== this.isLoggedIn || !savedState) this.updateUserInterface();
-})
-.catch(() => {});
-}
-};
-
-// Search functionality
-window.APP_GLOBALS.search = {
-history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
-recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
-
-addToHistory: function(query) {
-if (query &amp;&amp; !this.history.includes(query)) {
-this.history.unshift(query);
-this.history = this.history.slice(0, 10); // Keep only last 10 searches
-localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
-}
-},
-
-getSearchSuggestions: function() {
-return this.history.length > 0 ? this.history : this.recommendations;
-},
-
-performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
-this.addToHistory(query);
-// Navigate to search results or graph detail based on context
-navigateTo(targetPage);
-}
-};
-
-// Notification utilities
-window.showNotification = function(message, type = &#39;info&#39;) {
-const notification = document.createElement(&#39;div&#39;);
-notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
-notification.innerHTML = `
-<div class="flex items-center gap-2">
-<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
-<span>${message}</span>
-</div>
-`;
-document.body.appendChild(notification);
-
-setTimeout(() => {
-notification.remove();
-}, 5000);
-};
-
-// Favorites management
-window.APP_GLOBALS.favorites = {
-items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
-
-add: function(graphId, graphData) {
-if (!this.items.find(item => item.id === graphId)) {
-this.items.push({
-id: graphId,
-data: graphData,
-addedAt: new Date().toISOString()
-});
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
-}
-},
-
-remove: function(graphId) {
-this.items = this.items.filter(item => item.id !== graphId);
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
-},
-
-isFavorited: function(graphId) {
-return this.items.some(item => item.id === graphId);
-},
-
-toggle: function(graphId, graphData) {
-if (this.isFavorited(graphId)) {
-this.remove(graphId);
-} else {
-this.add(graphId, graphData);
-}
-}
-};
-
-// Initialize components when DOM is loaded
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-window.APP_GLOBALS.user.init();
-});
-
-})();
-</script><script>
-let currentSection = &#39;profile&#39;;
-let confirmAction = null;
-
-// 页面初始化
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-    // 检测URL参数，支持直接跳转到指定section
-    const urlParams = new URLSearchParams(window.location.search);
-    const section = urlParams.get(&#39;section&#39;);
-    if (section &amp;&amp; document.getElementById(section + &#39;-section&#39;)) {
-        showSection(section);
-    } else {
-        // 默认显示个人资料部分
-        showSection(&#39;profile&#39;);
-    }
-    
-    // 初始化用户数据
-    initializeUserData();
-});
-
-// 显示指定部分
-function showSection(sectionName) {
-    // 隐藏所有内容部分
-    const sections = document.querySelectorAll(&#39;.content-section&#39;);
-    sections.forEach(section => {
-        section.classList.add(&#39;hidden&#39;);
-    });
-    
-    // 移除所有导航项的活动状态
-    const navItems = document.querySelectorAll(&#39;.menu li a&#39;);
-    navItems.forEach(item => {
-        item.classList.remove(&#39;active&#39;);
-    });
-    
-    // 显示目标部分
-    const targetSection = document.getElementById(sectionName + &#39;-section&#39;);
-    if (targetSection) {
-        targetSection.classList.remove(&#39;hidden&#39;);
-    }
-    
-    // 设置对应导航项为活动状态
-    const activeNav = document.getElementById(&#39;nav-&#39; + sectionName);
-    if (activeNav) {
-        activeNav.classList.add(&#39;active&#39;);
-    }
-    
-    currentSection = sectionName;
-}
-
-// 初始化用户数据
-function initializeUserData() {
-    // 模拟从服务器加载用户数据
-    const userData = {
-        username: &#39;zhangsan&#39;,
-        realName: &#39;张三&#39;,
-        email: &#39;zhang.san@example.com&#39;,
-        phone: &#39;138****8888&#39;,
-        gender: &#39;男&#39;,
-        organization: &#39;清华大学计算机系&#39;,
-        fields: &#39;人工智能, 机器学习, 自然语言处理&#39;,
-        bio: &#39;专注于人工智能和机器学习领域的研究，在自然语言处理方向有丰富经验。&#39;
-    };
-    
-    // 填充表单数据
-    populateUserForm(userData);
-}
-
-// 填充用户表单数据
-function populateUserForm(userData) {
-    const form = document.querySelector(&#39;#profile-section form&#39;);
-    if (form) {
-        const inputs = form.querySelectorAll(&#39;input, select, textarea&#39;);
-        inputs.forEach(input => {
-            const field = input.closest(&#39;.form-control&#39;).querySelector(&#39;.label-text&#39;).textContent;
-            switch(field) {
-                case &#39;用户名&#39;:
-                    input.value = userData.username;
-                    break;
-                case &#39;真实姓名&#39;:
-                    input.value = userData.realName;
-                    break;
-                case &#39;邮箱地址&#39;:
-                    input.value = userData.email;
-                    break;
-                case &#39;手机号码&#39;:
-                    input.value = userData.phone;
-                    break;
-                case &#39;性别&#39;:
-                    input.value = userData.gender;
-                    break;
-                case &#39;所属机构&#39;:
-                    input.value = userData.organization;
-                    break;
-                case &#39;学科领域&#39;:
-                    input.value = userData.fields;
-                    break;
-                case &#39;个人简介&#39;:
-                    input.value = userData.bio;
-                    break;
-            }
-        });
-    }
-}
-
-// 搜索历史相关功能
-function searchAgain(query) {
-    window.APP_GLOBALS.search.performSearch(query, &#39;graph_list_page&#39;);
-    showNotification(`正在搜索"${query}"...`, &#39;info&#39;);
-}
-
-function deleteSearchItem(button) {
-    const item = button.closest(&#39;[data-repeatable="true"]&#39;);
-    const keyword = item.querySelector(&#39;p.font-medium&#39;).textContent;
-    
-    showConfirmDialog(
-        `确定要删除搜索记录"${keyword}"吗？`,
-        () => {
-            item.remove();
-            showNotification(&#39;搜索记录已删除&#39;, &#39;success&#39;);
-        }
-    );
-}
-
-function clearAllSearchHistory() {
-    showConfirmDialog(
-        &#39;确定要清空所有搜索历史吗？此操作不可撤销。&#39;,
-        () => {
-            const container = document.querySelector(&#39;#search-history-section .space-y-4&#39;);
-            container.innerHTML = &#39;<div class="text-center py-8 text-base-content/70">暂无搜索历史</div>&#39;;
-            showNotification(&#39;所有搜索历史已清空&#39;, &#39;success&#39;);
-        }
-    );
-}
-
-// 浏览历史相关功能
-function deleteBrowseItem(button) {
-    const item = button.closest(&#39;[data-repeatable="true"]&#39;);
-    const title = item.querySelector(&#39;p.font-medium&#39;).textContent;
-    
-    showConfirmDialog(
-        `确定要删除浏览记录"${title}"吗？`,
-        () => {
-            item.remove();
-            showNotification(&#39;浏览记录已删除&#39;, &#39;success&#39;);
-        }
-    );
-}
-
-function clearAllBrowseHistory() {
-    showConfirmDialog(
-        &#39;确定要清空所有浏览历史吗？此操作不可撤销。&#39;,
-        () => {
-            const container = document.querySelector(&#39;#browse-history-section .space-y-4&#39;);
-            container.innerHTML = &#39;<div class="text-center py-8 text-base-content/70">暂无浏览历史</div>&#39;;
-            showNotification(&#39;所有浏览历史已清空&#39;, &#39;success&#39;);
-        }
-    );
-}
-
-// 收藏相关功能
-function removeFavorite(button) {
-    const card = button.closest(&#39;[data-repeatable="true"]&#39;);
-    const title = card.querySelector(&#39;.card-title&#39;).textContent;
-    
-    showConfirmDialog(
-        `确定要取消收藏"${title}"吗？`,
-        () => {
-            card.remove();
-            showNotification(&#39;已取消收藏&#39;, &#39;success&#39;);
-        }
-    );
-}
-
-// 账户设置相关功能
-function changePassword() {
-    const currentPassword = document.querySelector(&#39;input[placeholder="请输入当前密码"]&#39;).value;
-    const newPassword = document.querySelector(&#39;input[placeholder="请输入新密码"]&#39;).value;
-    const confirmPassword = document.querySelector(&#39;input[placeholder="请再次输入新密码"]&#39;).value;
-    
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        showNotification(&#39;请填写完整的密码信息&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-        showNotification(&#39;两次输入的新密码不一致&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    if (newPassword.length < 8) {
-        showNotification(&#39;新密码长度至少为8位&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    showConfirmDialog(
-        &#39;确定要修改密码吗？&#39;,
-        () => {
-            // 模拟密码修改
-            showNotification(&#39;密码修改成功&#39;, &#39;success&#39;);
-            // 清空表单
-            document.querySelector(&#39;input[placeholder="请输入当前密码"]&#39;).value = &#39;&#39;;
-            document.querySelector(&#39;input[placeholder="请输入新密码"]&#39;).value = &#39;&#39;;
-            document.querySelector(&#39;input[placeholder="请再次输入新密码"]&#39;).value = &#39;&#39;;
-        }
-    );
-}
-
-function confirmAccountDeletion() {
-    showConfirmDialog(
-        &#39;警告：账户注销后将无法恢复，所有数据将被永久删除。确定要继续吗？&#39;,
-        () => {
-            showNotification(&#39;账户注销申请已提交，将在7个工作日内处理完成&#39;, &#39;warning&#39;);
-        }
-    );
-}
-
-// 退出登录
-function handleLogout() {
-    showConfirmDialog(
-        &#39;确定要退出登录吗？&#39;,
-        () => {
-            window.APP_GLOBALS.user.logout();
-        }
-    );
-}
-
-// 确认对话框相关功能
-function showConfirmDialog(message, action) {
-    const modal = document.getElementById(&#39;confirmModal&#39;);
-    const messageElement = document.getElementById(&#39;confirmMessage&#39;);
-    
-    messageElement.textContent = message;
-    confirmAction = action;
-    modal.showModal();
-}
-
-function closeConfirmModal() {
-    const modal = document.getElementById(&#39;confirmModal&#39;);
-    modal.close();
-    confirmAction = null;
-}
-
-function executeConfirmedAction() {
-    if (confirmAction) {
-        confirmAction();
-    }
-    closeConfirmModal();
-}
-
-// 通用通知函数
-function showNotification(message, type = &#39;info&#39;) {
-    const notification = document.createElement(&#39;div&#39;);
-    notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
-    
-    let icon = &#39;heroicons:information-circle&#39;;
-    switch(type) {
-        case &#39;success&#39;:
-            icon = &#39;heroicons:check-circle&#39;;
-            break;
-        case &#39;error&#39;:
-            icon = &#39;heroicons:x-circle&#39;;
-            break;
-        case &#39;warning&#39;:
-            icon = &#39;heroicons:exclamation-triangle&#39;;
-            break;
-    }
-    
-    notification.innerHTML = `
-        <div class="flex items-center gap-2">
-            <span class="iconify" data-icon="${icon}" data-width="20"></span>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 5000);
-}
-
-// 表单提交处理
-document.addEventListener(&#39;submit&#39;, function(e) {
-    if (e.target.closest(&#39;#profile-section&#39;)) {
-        e.preventDefault();
         
-        showConfirmDialog(
-            &#39;确定要保存个人资料修改吗？&#39;,
-            () => {
-                // 模拟保存操作
-                setTimeout(() => {
-                    showNotification(&#39;个人资料保存成功&#39;, &#39;success&#39;);
-                }, 500);
-            }
-        );
-    }
-});
+        <!-- 确认对话框 -->
+        <dialog id="confirmModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg">确认操作</h3>
+                <p id="confirmMessage" class="py-4">您确定要执行此操作吗？</p>
+                <div class="modal-action">
+                    <button class="btn" onclick="closeConfirmModal()">取消</button>
+                    <button id="confirmButton" class="btn btn-error" onclick="executeConfirmedAction()">确认</button>
+                </div>
+            </div>
+        </dialog>
+    </div>
 
-// 键盘快捷键支持
-document.addEventListener(&#39;keydown&#39;, function(e) {
-    if (e.ctrlKey || e.metaKey) {
-        switch(e.key) {
-            case &#39;1&#39;:
-                e.preventDefault();
-                showSection(&#39;profile&#39;);
-                break;
-            case &#39;2&#39;:
-                e.preventDefault();
-                showSection(&#39;search-history&#39;);
-                break;
-            case &#39;3&#39;:
-                e.preventDefault();
-                showSection(&#39;browse-history&#39;);
-                break;
-            case &#39;4&#39;:
-                e.preventDefault();
-                showSection(&#39;favorites&#39;);
-                break;
-            case &#39;5&#39;:
-                e.preventDefault();
-                showSection(&#39;settings&#39;);
-                break;
-}
-    }
-});
+    <th:block layout:fragment="js">
+        <script th:src="@{/js/profile.js}"></script>
+    </th:block>
+</body>
 
-// 收件箱相关功能
-function openMessage(messageId) {
-    showNotification(&#39;正在打开私信详情...&#39;, &#39;info&#39;);
-    // 这里可以实现打开私信详情的逻辑
-}
-
-function replyMessage(messageId) {
-    showNotification(&#39;正在准备回复...&#39;, &#39;info&#39;);
-    // 这里可以实现回复私信的逻辑
-}
-
-function deleteMessage(messageId) {
-    showConfirmDialog(
-        &#39;确定要删除这条私信吗？&#39;,
-        () => {
-            const messageElement = document.querySelector(`[onclick*="${messageId}"]`).closest(&#39;[data-repeatable="true"]&#39;);
-            messageElement.remove();
-            showNotification(&#39;私信已删除&#39;, &#39;success&#39;);
-            updateInboxCount();
-        }
-    );
-}
-
-function replyComment(commentId) {
-    showNotification(&#39;正在准备回复评论...&#39;, &#39;info&#39;);
-    // 这里可以实现回复评论的逻辑
-}
-
-function deleteComment(commentId) {
-    showConfirmDialog(
-        &#39;确定要删除这条评论通知吗？&#39;,
-        () => {
-            const commentElement = document.querySelector(`[onclick*="${commentId}"]`).closest(&#39;[data-repeatable="true"]&#39;);
-            commentElement.remove();
-            showNotification(&#39;评论通知已删除&#39;, &#39;success&#39;);
-            updateInboxCount();
-        }
-    );
-}
-
-// 更新收件箱计数
-function updateInboxCount() {
-    const messageCount = document.querySelectorAll(&#39;#messages-section [data-repeatable="true"]&#39;).length;
-    const commentCount = document.querySelectorAll(&#39;#comments-section [data-repeatable="true"]&#39;).length;
-    const totalCount = messageCount + commentCount;
-    
-    // 更新主收件箱计数
-    const inboxBadge = document.querySelector(&#39;summary .badge&#39;);
-    if (inboxBadge) {
-        inboxBadge.textContent = totalCount;
-        inboxBadge.style.display = totalCount > 0 ? &#39;inline-flex&#39; : &#39;none&#39;;
-    }
-    
-    // 更新私信计数
-    const messagesBadge = document.querySelector(&#39;#nav-messages .badge&#39;);
-    if (messagesBadge) {
-        messagesBadge.textContent = messageCount;
-        messagesBadge.style.display = messageCount > 0 ? &#39;inline-flex&#39; : &#39;none&#39;;
-    }
-    
-    // 更新评论计数
-    const commentsBadge = document.querySelector(&#39;#nav-comments .badge&#39;);
-    if (commentsBadge) {
-        commentsBadge.textContent = commentCount;
-        commentsBadge.style.display = commentCount > 0 ? &#39;inline-flex&#39; : &#39;none&#39;;
-    }
-}
-
-// 页面加载时初始化
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-    updateInboxCount();
-    loadUserProfile();
-    initProfileForm();
-});
-
-// 加载用户资料
-function loadUserProfile() {
-    fetch(&#39;/user/api/profile?t=&#39; + Date.now(), {
-        cache: &#39;no-store&#39;,
-        credentials: &#39;include&#39;
-    })
-        .then(res => {
-            if (res.status === 401) {
-                // 未登录，跳转到登录页
-                window.location.href = &#39;/login&#39;;
-                return null;
-            }
-            return res.json();
-        })
-        .then(user => {
-            if (!user) return;
-            
-            // 获取用户名首字符作为默认头像文字
-            const avatarText = (user.userName || &#39;用&#39;).substring(0, 2);
-            
-            // 更新侧边栏头像
-            const sidebarAvatarText = document.getElementById(&#39;sidebar-avatar-text&#39;);
-            const sidebarAvatarImg = document.getElementById(&#39;sidebar-avatar-img&#39;);
-            if (user.avatar) {
-                sidebarAvatarText.classList.add(&#39;hidden&#39;);
-                sidebarAvatarImg.src = user.avatar;
-                sidebarAvatarImg.classList.remove(&#39;hidden&#39;);
-            } else {
-                sidebarAvatarText.textContent = avatarText;
-                sidebarAvatarText.classList.remove(&#39;hidden&#39;);
-                sidebarAvatarImg.classList.add(&#39;hidden&#39;);
-            }
-            document.getElementById(&#39;sidebar-username&#39;).textContent = user.userName || &#39;--&#39;;
-            document.getElementById(&#39;sidebar-email&#39;).textContent = user.email || user.phone || &#39;--&#39;;
-            
-            // 更新表单头像
-            const formAvatarText = document.getElementById(&#39;form-avatar-text&#39;);
-            const formAvatarImg = document.getElementById(&#39;form-avatar-img&#39;);
-            if (user.avatar) {
-                formAvatarText.classList.add(&#39;hidden&#39;);
-                formAvatarImg.src = user.avatar;
-                formAvatarImg.classList.remove(&#39;hidden&#39;);
-            } else {
-                formAvatarText.textContent = avatarText;
-                formAvatarText.classList.remove(&#39;hidden&#39;);
-                formAvatarImg.classList.add(&#39;hidden&#39;);
-            }
-            
-            // 更新导航栏头像
-            const navAvatarText = document.getElementById(&#39;nav-avatar-text&#39;);
-            const navAvatarImg = document.getElementById(&#39;nav-avatar-img&#39;);
-            if (navAvatarText &amp;&amp; navAvatarImg) {
-                if (user.avatar) {
-                    navAvatarText.classList.add(&#39;hidden&#39;);
-                    navAvatarImg.src = user.avatar;
-                    navAvatarImg.classList.remove(&#39;hidden&#39;);
-                } else {
-                    navAvatarText.textContent = avatarText.substring(0, 1);
-                    navAvatarText.classList.remove(&#39;hidden&#39;);
-                    navAvatarImg.classList.add(&#39;hidden&#39;);
-                }
-            }
-            
-            document.getElementById(&#39;form-username&#39;).value = user.userName || &#39;&#39;;
-            
-            // 邮箱：已绑定则只读，未绑定可编辑
-            const emailInput = document.getElementById(&#39;form-email&#39;);
-            emailInput.value = user.email || &#39;&#39;;
-            if (user.email) {
-                emailInput.readOnly = true;
-                emailInput.placeholder = &#39;&#39;;
-            } else {
-                emailInput.readOnly = false;
-                emailInput.placeholder = &#39;请输入邮箱地址&#39;;
-            }
-            
-            // 电话：已绑定则只读，未绑定可编辑
-            const phoneInput = document.getElementById(&#39;form-phone&#39;);
-            phoneInput.value = user.phone || &#39;&#39;;
-            if (user.phone) {
-                phoneInput.readOnly = true;
-                phoneInput.placeholder = &#39;&#39;;
-            } else {
-                phoneInput.readOnly = false;
-                phoneInput.placeholder = &#39;请输入手机号码&#39;;
-            }
-            
-            document.getElementById(&#39;form-gender&#39;).value = user.gender || &#39;&#39;;
-            document.getElementById(&#39;form-birthday&#39;).value = user.birthday || &#39;&#39;;
-            document.getElementById(&#39;form-institution&#39;).value = user.institution || &#39;&#39;;
-            document.getElementById(&#39;form-bio&#39;).value = user.bio || &#39;&#39;;
-        })
-        .catch(err => {
-            console.error(&#39;加载用户资料失败:&#39;, err);
-            showNotification(&#39;加载用户资料失败&#39;, &#39;error&#39;);
-        });
-}
-
-// 初始化表单提交
-function initProfileForm() {
-    const form = document.getElementById(&#39;profile-form&#39;);
-    if (!form) return;
-    
-    form.addEventListener(&#39;submit&#39;, function(e) {
-        e.preventDefault();
-        
-        const profileData = {
-            userName: document.getElementById(&#39;form-username&#39;).value,
-            email: document.getElementById(&#39;form-email&#39;).value,
-            phone: document.getElementById(&#39;form-phone&#39;).value,
-            gender: document.getElementById(&#39;form-gender&#39;).value || null,
-            birthday: document.getElementById(&#39;form-birthday&#39;).value || null,
-            institution: document.getElementById(&#39;form-institution&#39;).value,
-            bio: document.getElementById(&#39;form-bio&#39;).value
-        };
-        
-        fetch(&#39;/user/api/profile&#39;, {
-            method: &#39;PUT&#39;,
-            headers: {
-                &#39;Content-Type&#39;: &#39;application/json&#39;
-            },
-            body: JSON.stringify(profileData)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                showNotification(data.error, &#39;error&#39;);
-            } else {
-                showNotification(&#39;资料更新成功&#39;, &#39;success&#39;);
-                loadUserProfile(); // 重新加载更新后的数据
-            }
-        })
-        .catch(err => {
-            console.error(&#39;更新资料失败:&#39;, err);
-            showNotification(&#39;更新资料失败&#39;, &#39;error&#39;);
-        });
-    });
-}
-
-// 头像上传处理
-function handleAvatarUpload(input) {
-    if (!input.files || !input.files[0]) return;
-    
-    const file = input.files[0];
-    
-    // 验证文件类型
-    if (!file.type.startsWith(&#39;image/&#39;)) {
-        showNotification(&#39;只能上传图片文件&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    // 验证文件大小（最大2MB）
-    if (file.size > 2 * 1024 * 1024) {
-        showNotification(&#39;图片大小不能超过2MB&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    showNotification(&#39;正在上传头像...&#39;, &#39;info&#39;);
-    
-    const formData = new FormData();
-    formData.append(&#39;file&#39;, file);
-    
-    fetch(&#39;/api/upload/avatar&#39;, {
-        method: &#39;POST&#39;,
-        body: formData,
-        credentials: &#39;include&#39;
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.error) {
-            showNotification(data.error, &#39;error&#39;);
-        } else {
-            showNotification(&#39;头像上传成功&#39;, &#39;success&#39;);
-            // 更新头像显示
-            loadUserProfile();
-        }
-    })
-    .catch(err => {
-        console.error(&#39;头像上传失败:&#39;, err);
-        showNotification(&#39;头像上传失败&#39;, &#39;error&#39;);
-    });
-    
-    // 清空 input 以便重复选择同一文件
-    input.value = &#39;&#39;;
-}
-
-// 收藏标签切换
-function switchFavoriteTab(type) {
-    const tabPosts = document.getElementById(&#39;tab-posts&#39;);
-    const tabGraphs = document.getElementById(&#39;tab-graphs&#39;);
-    const postContainer = document.getElementById(&#39;post-favorites-container&#39;);
-    const graphContainer = document.getElementById(&#39;graph-favorites-container&#39;);
-    
-    if (type === &#39;posts&#39;) {
-        tabPosts.classList.add(&#39;tab-active&#39;);
-        tabGraphs.classList.remove(&#39;tab-active&#39;);
-        postContainer.classList.remove(&#39;hidden&#39;);
-        graphContainer.classList.add(&#39;hidden&#39;);
-        loadPostFavorites();
-    } else {
-        tabPosts.classList.remove(&#39;tab-active&#39;);
-        tabGraphs.classList.add(&#39;tab-active&#39;);
-        postContainer.classList.add(&#39;hidden&#39;);
-        graphContainer.classList.remove(&#39;hidden&#39;);
-        loadGraphFavorites();
-    }
-}
-
-// 加载我的收藏（入口函数）
-function loadFavorites() {
-    loadPostFavorites();
-}
-
-// 加载帖子收藏
-function loadPostFavorites() {
-    const container = document.getElementById(&#39;post-favorites-container&#39;);
-    if (!container) return;
-    
-    fetch(&#39;/api/user/favorites&#39;, { credentials: &#39;include&#39; })
-        .then(res =&gt; res.json())
-        .then(data =&gt; {
-            if (!data.success || !data.favorites || data.favorites.length === 0) {
-                container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;暂无帖子收藏&lt;/div&gt;&#39;;
-                return;
-            }
-            
-            let html = &#39;&#39;;
-            data.favorites.forEach(post =&gt; {
-                const date = post.uploadTime ? new Date(post.uploadTime).toLocaleDateString() : &#39;--&#39;;
-                html += `
-                    &lt;div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="window.open(&#39;/community/post_detail.html?id=${post.postId}&#39;, &#39;_top&#39;)"&gt;
-                        &lt;div class="flex-1"&gt;
-                            &lt;h3 class="font-medium text-base-content"&gt;${post.postTitle || &#39;无标题&#39;}&lt;/h3&gt;
-                            &lt;p class="text-sm text-base-content/70 mt-1"&gt;${post.postAbstract || &#39;&#39;}&lt;/p&gt;
-                            &lt;div class="flex items-center gap-4 mt-2 text-xs text-base-content/50"&gt;
-                                &lt;span&gt;收藏时间：${date}&lt;/span&gt;
-                                &lt;span&gt;点赞：${post.likeCount || 0}&lt;/span&gt;
-                            &lt;/div&gt;
-                        &lt;/div&gt;
-                        &lt;button class="btn btn-ghost btn-sm text-error" onclick="event.stopPropagation(); removeFavoritePost(${post.postId})"&gt;
-                            &lt;span class="iconify" data-icon="heroicons:heart-slash" data-width="16"&gt;&lt;/span&gt;
-                        &lt;/button&gt;
-                    &lt;/div&gt;
-                `;
-            });
-            container.innerHTML = html;
-        })
-        .catch(err =&gt; {
-            console.error(&#39;加载帖子收藏失败:&#39;, err);
-            container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;加载失败，请刷新重试&lt;/div&gt;&#39;;
-        });
-}
-
-// 加载图谱收藏
-function loadGraphFavorites() {
-    const container = document.getElementById(&#39;graph-favorites-container&#39;);
-    if (!container) return;
-    
-    fetch(&#39;/api/graph/favorites&#39;, { credentials: &#39;include&#39; })
-        .then(res =&gt; res.json())
-        .then(data =&gt; {
-            if (!data.success || !data.favorites || data.favorites.length === 0) {
-                container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;暂无图谱收藏&lt;/div&gt;&#39;;
-                return;
-            }
-            
-            let html = &#39;&#39;;
-            data.favorites.forEach(graph =&gt; {
-                const date = graph.uploadDate ? new Date(graph.uploadDate).toLocaleDateString() : &#39;--&#39;;
-                const cover = graph.coverImage || &#39;https://placehold.co/80x80/eee/999?text=图谱&#39;;
-                html += `
-                    &lt;div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="window.open(&#39;/graph/graph_detail.html?id=${graph.graphId}&#39;, &#39;_top&#39;)"&gt;
-                        &lt;div class="flex items-center gap-4 flex-1"&gt;
-                            &lt;img src="${cover}" class="w-16 h-16 rounded-lg object-cover" alt="图谱封面"&gt;
-                            &lt;div class="flex-1"&gt;
-                                &lt;h3 class="font-medium text-base-content"&gt;${graph.name || &#39;无标题&#39;}&lt;/h3&gt;
-                                &lt;p class="text-sm text-base-content/70 mt-1 line-clamp-1"&gt;${graph.description || &#39;暂无描述&#39;}&lt;/p&gt;
-                                &lt;div class="flex items-center gap-4 mt-2 text-xs text-base-content/50"&gt;
-                                    &lt;span&gt;节点：${graph.nodeCount || 0}&lt;/span&gt;
-                                    &lt;span&gt;浏览：${graph.viewCount || 0}&lt;/span&gt;
-                                    &lt;span&gt;收藏：${graph.collectCount || 0}&lt;/span&gt;
-                                &lt;/div&gt;
-                            &lt;/div&gt;
-                        &lt;/div&gt;
-                        &lt;button class="btn btn-ghost btn-sm text-error" onclick="event.stopPropagation(); removeFavoriteGraph(${graph.graphId})"&gt;
-                            &lt;span class="iconify" data-icon="heroicons:heart-slash" data-width="16"&gt;&lt;/span&gt;
-                        &lt;/button&gt;
-                    &lt;/div&gt;
-                `;
-            });
-            container.innerHTML = html;
-        })
-        .catch(err =&gt; {
-            console.error(&#39;加载图谱收藏失败:&#39;, err);
-            container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;加载失败，请刷新重试&lt;/div&gt;&#39;;
-        });
-}
-
-// 取消收藏帖子
-function removeFavoritePost(postId) {
-    fetch(&#39;/api/posts/&#39; + postId + &#39;/favorite&#39;, {
-        method: &#39;POST&#39;,
-        credentials: &#39;include&#39;
-    })
-    .then(res =&gt; res.json())
-    .then(data =&gt; {
-        if (data.success) {
-            showNotification(&#39;已取消收藏&#39;, &#39;success&#39;);
-            loadPostFavorites();
-        } else {
-            showNotification(data.error || &#39;操作失败&#39;, &#39;error&#39;);
-        }
-    })
-    .catch(err =&gt; {
-        showNotification(&#39;操作失败&#39;, &#39;error&#39;);
-    });
-}
-
-// 取消收藏图谱
-function removeFavoriteGraph(graphId) {
-    fetch(&#39;/api/graph/&#39; + graphId + &#39;/favorite&#39;, {
-        method: &#39;POST&#39;,
-        credentials: &#39;include&#39;
-    })
-    .then(res =&gt; res.json())
-    .then(data =&gt; {
-        if (data.success) {
-            showNotification(&#39;已取消收藏&#39;, &#39;success&#39;);
-            loadGraphFavorites();
-        } else {
-            showNotification(data.error || &#39;操作失败&#39;, &#39;error&#39;);
-        }
-    })
-    .catch(err =&gt; {
-        showNotification(&#39;操作失败&#39;, &#39;error&#39;);
-    });
-}
-
-// 加载草稿箱
-function loadDrafts() {
-    const container = document.getElementById(&#39;drafts-container&#39;);
-    if (!container) return;
-    
-    fetch(&#39;/api/user/drafts&#39;, { credentials: &#39;include&#39; })
-        .then(res =&gt; res.json())
-        .then(data =&gt; {
-            if (!data.success || !data.drafts || data.drafts.length === 0) {
-                container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;暂无草稿&lt;/div&gt;&#39;;
-                return;
-            }
-            
-            let html = &#39;&#39;;
-            data.drafts.forEach(post =&gt; {
-                const date = post.uploadTime ? new Date(post.uploadTime).toLocaleDateString() : &#39;--&#39;;
-                html += `
-                    &lt;div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift"&gt;
-                        &lt;div class="flex-1"&gt;
-                            &lt;h3 class="font-medium text-base-content"&gt;${post.postTitle || &#39;无标题草稿&#39;}&lt;/h3&gt;
-                            &lt;p class="text-sm text-base-content/70 mt-1"&gt;${post.postAbstract || &#39;&#39;}&lt;/p&gt;
-                            &lt;div class="text-xs text-base-content/50 mt-2"&gt;保存时间：${date}&lt;/div&gt;
-                        &lt;/div&gt;
-                        &lt;div class="flex gap-2"&gt;
-                            &lt;button class="btn btn-primary btn-sm" onclick="window.open(&#39;/community/post_edit.html?id=${post.postId}&#39;, &#39;_top&#39;)"&gt;
-                                &lt;span class="iconify" data-icon="heroicons:pencil" data-width="16"&gt;&lt;/span&gt;
-                                继续编辑
-                            &lt;/button&gt;
-                            &lt;button class="btn btn-ghost btn-sm text-error" onclick="deleteDraft(${post.postId})"&gt;
-                                &lt;span class="iconify" data-icon="heroicons:trash" data-width="16"&gt;&lt;/span&gt;
-                            &lt;/button&gt;
-                        &lt;/div&gt;
-                    &lt;/div&gt;
-                `;
-            });
-            container.innerHTML = html;
-        })
-        .catch(err =&gt; {
-            console.error(&#39;加载草稿失败:&#39;, err);
-            container.innerHTML = &#39;&lt;div class="text-center py-8 text-base-content/70"&gt;加载失败，请刷新重试&lt;/div&gt;&#39;;
-        });
-}
-
-// 删除草稿
-function deleteDraft(postId) {
-    showConfirmDialog(&#39;确定要删除这篇草稿吗？&#39;, function() {
-        fetch(&#39;/api/posts/&#39; + postId, {
-            method: &#39;DELETE&#39;,
-            credentials: &#39;include&#39;
-        })
-        .then(res =&gt; res.json())
-        .then(data =&gt; {
-            if (data.success) {
-                showNotification(&#39;草稿已删除&#39;, &#39;success&#39;);
-                loadDrafts();
-            } else {
-                showNotification(data.error || &#39;删除失败&#39;, &#39;error&#39;);
-            }
-        })
-        .catch(err =&gt; {
-            showNotification(&#39;删除失败&#39;, &#39;error&#39;);
-        });
-    });
-}
-
-// 修改 showSection 函数，在切换时加载数据
-var originalShowSection = showSection;
-showSection = function(sectionName) {
-    originalShowSection(sectionName);
-    if (sectionName === &#39;favorites&#39;) {
-        loadFavorites();
-    } else if (sectionName === &#39;drafts&#39;) {
-        loadDrafts();
-    }
-};
-
-// 处理 URL hash 跳转
-(function handleHashNavigation() {
-    var hash = window.location.hash;
-    if (hash) {
-        var section = hash.replace(&#39;#&#39;, &#39;&#39;);
-        // 等待页面加载完成后再切换
-        setTimeout(function() {
-            showSection(section);
-        }, 100);
-    }
-})();
-
-// 监听 hash 变化
-window.addEventListener(&#39;hashchange&#39;, function() {
-    var hash = window.location.hash;
-    if (hash) {
-        var section = hash.replace(&#39;#&#39;, &#39;&#39;);
-        showSection(section);
-    }
-});
-</script>
-  
-
-<script>
-    setTimeout(() => {
-      Holder.run({
-        domain: "placehold.co"
-      })
-    }, 100)
-  </script></body></html>'></iframe>
-                    </div>
-                  </div>
-
-                </body>
-                </html>
-            
+</html>

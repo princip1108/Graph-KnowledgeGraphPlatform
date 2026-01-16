@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,8 +35,8 @@ public class GraphService {
     private final NodeRepository nodeRepository;
 
     public GraphService(KnowledgeGraphRepository graphRepository,
-                        UserRepository userRepository,
-                        NodeRepository nodeRepository) {
+            UserRepository userRepository,
+            NodeRepository nodeRepository) {
         this.graphRepository = graphRepository;
         this.userRepository = userRepository;
         this.nodeRepository = nodeRepository;
@@ -63,6 +64,7 @@ public class GraphService {
         graph.setName(dto.getName());
         graph.setDescription(dto.getDescription());
         graph.setCoverImage(dto.getCoverImage());
+        graph.setIsCustomCover(dto.getIsCustomCover() != null ? dto.getIsCustomCover() : false);
         graph.setUploadDate(LocalDate.now());
         graph.setLastModified(LocalDateTime.now());
 
@@ -84,12 +86,12 @@ public class GraphService {
         graph.setNodeCount(0);
         graph.setRelationCount(0);
         graph.setIsCacheValid(false);
-        
+
         // 缓存相关字段初始为 null（导入数据后再更新）
         graph.setCachedFileFormat(null);
         graph.setCachedFilePath(null);
         graph.setCachedGenerationDatetime(null);
-        
+
         // 设置图谱质量指标默认值
         graph.setDensity(java.math.BigDecimal.ZERO);
         graph.setRelationRichness(java.math.BigDecimal.ZERO);
@@ -135,7 +137,9 @@ public class GraphService {
     public Page<GraphListDto> getUserGraphs(Integer uploaderId, int page, int size, String sortBy) {
         Pageable pageable = createPageable(page, size, sortBy);
         Page<KnowledgeGraph> graphs = graphRepository.findByUploaderId(uploaderId, pageable);
-        return graphs.map(g -> convertToListDto(g, getUserName(g.getUploaderId())));
+        // 既然是获取特定用户的图谱，这里无需批量查询，直接查一次用户即可
+        String uploaderName = getUserName(uploaderId);
+        return graphs.map(g -> convertToListDto(g, uploaderName));
     }
 
     /**
@@ -146,7 +150,8 @@ public class GraphService {
         try {
             GraphStatus graphStatus = GraphStatus.valueOf(status.toUpperCase());
             Page<KnowledgeGraph> graphs = graphRepository.findByUploaderIdAndStatus(uploaderId, graphStatus, pageable);
-            return graphs.map(g -> convertToListDto(g, getUserName(g.getUploaderId())));
+            String uploaderName = getUserName(uploaderId);
+            return graphs.map(g -> convertToListDto(g, uploaderName));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("无效的状态: " + status);
         }
@@ -158,7 +163,7 @@ public class GraphService {
     public Page<GraphListDto> getPublicGraphs(int page, int size, String sortBy) {
         Pageable pageable = createPageable(page, size, sortBy);
         Page<KnowledgeGraph> graphs = graphRepository.findByStatus(GraphStatus.PUBLISHED, pageable);
-        return graphs.map(g -> convertToListDto(g, getUserName(g.getUploaderId())));
+        return mapToGraphListDtos(graphs);
     }
 
     /**
@@ -167,7 +172,7 @@ public class GraphService {
     public Page<GraphListDto> searchPublicGraphs(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "viewCount"));
         Page<KnowledgeGraph> graphs = graphRepository.searchPublicGraphs(keyword, pageable);
-        return graphs.map(g -> convertToListDto(g, getUserName(g.getUploaderId())));
+        return mapToGraphListDtos(graphs);
     }
 
     /**
@@ -176,8 +181,20 @@ public class GraphService {
     public List<GraphListDto> getPopularGraphs(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         List<KnowledgeGraph> graphs = graphRepository.findTopPopularGraphs(pageable);
+
+        // 批量获取用户信息
+        List<Integer> userIds = graphs.stream()
+                .map(KnowledgeGraph::getUploaderId)
+                .distinct()
+                .toList();
+
+        Map<Integer, String> userNames = new java.util.HashMap<>();
+        if (!userIds.isEmpty()) {
+            userRepository.findAllById(userIds).forEach(user -> userNames.put(user.getUserId(), user.getUserName()));
+        }
+
         return graphs.stream()
-                .map(g -> convertToListDto(g, getUserName(g.getUploaderId())))
+                .map(g -> convertToListDto(g, userNames.getOrDefault(g.getUploaderId(), "未知用户")))
                 .toList();
     }
 
@@ -200,7 +217,7 @@ public class GraphService {
         if (dto.getName() != null && !dto.getName().trim().isEmpty()) {
             // 检查新名称是否与其他图谱冲突
             if (!graph.getName().equals(dto.getName()) &&
-                graphRepository.existsByUploaderIdAndName(userId, dto.getName())) {
+                    graphRepository.existsByUploaderIdAndName(userId, dto.getName())) {
                 throw new IllegalArgumentException("您已有同名图谱: " + dto.getName());
             }
             graph.setName(dto.getName().trim());
@@ -229,9 +246,10 @@ public class GraphService {
 
     /**
      * 更新图谱封面
+     * @param isCustomCover true=用户上传的封面，false=自动生成的缩略图
      */
     @Transactional
-    public void updateGraphCover(Integer graphId, Integer userId, String coverUrl) {
+    public void updateGraphCover(Integer graphId, Integer userId, String coverUrl, boolean isCustomCover) {
         KnowledgeGraph graph = graphRepository.findById(graphId)
                 .orElseThrow(() -> new IllegalArgumentException("图谱不存在: " + graphId));
 
@@ -240,6 +258,7 @@ public class GraphService {
         }
 
         graph.setCoverImage(coverUrl);
+        graph.setIsCustomCover(isCustomCover);
         graph.setLastModified(LocalDateTime.now());
         graphRepository.save(graph);
     }
@@ -291,7 +310,7 @@ public class GraphService {
             graphRepository.save(graph);
         }
     }
-    
+
     /**
      * 更新图谱统计信息（直接设置节点数和关系数）
      */
@@ -343,9 +362,10 @@ public class GraphService {
 
     /**
      * 批量更新图谱状态（上线/下线）
+     * 
      * @param graphIds 图谱ID列表
-     * @param userId 操作用户ID
-     * @param status 目标状态 (PUBLISHED 上线 / DRAFT 下线)
+     * @param userId   操作用户ID
+     * @param status   目标状态 (PUBLISHED 上线 / DRAFT 下线)
      * @return 成功更新的数量
      */
     @Transactional
@@ -377,8 +397,9 @@ public class GraphService {
 
     /**
      * 批量删除图谱
+     * 
      * @param graphIds 图谱ID列表
-     * @param userId 操作用户ID
+     * @param userId   操作用户ID
      * @return 成功删除的数量
      */
     @Transactional
@@ -427,17 +448,40 @@ public class GraphService {
     // ==================== 私有辅助方法 ====================
 
     private String getUserName(Integer userId) {
-        if (userId == null) return "未知用户";
+        if (userId == null)
+            return "未知用户";
         return userRepository.findById(userId)
                 .map(User::getUserName)
                 .orElse("未知用户");
     }
 
     private String getUserAvatar(Integer userId) {
-        if (userId == null) return null;
+        if (userId == null)
+            return null;
         return userRepository.findById(userId)
                 .map(User::getAvatar)
                 .orElse(null);
+    }
+
+    /**
+     * 批量转换 Page<KnowledgeGraph>
+     */
+    private Page<GraphListDto> mapToGraphListDtos(Page<KnowledgeGraph> graphs) {
+        if (graphs.isEmpty()) {
+            return graphs.map(g -> convertToListDto(g, "未知用户"));
+        }
+
+        List<Integer> userIds = graphs.getContent().stream()
+                .map(KnowledgeGraph::getUploaderId)
+                .distinct()
+                .toList();
+
+        Map<Integer, String> userNames = new java.util.HashMap<>();
+        if (!userIds.isEmpty()) {
+            userRepository.findAllById(userIds).forEach(user -> userNames.put(user.getUserId(), user.getUserName()));
+        }
+
+        return graphs.map(g -> convertToListDto(g, userNames.getOrDefault(g.getUploaderId(), "未知用户")));
     }
 
     private String generateShareLink() {
@@ -472,6 +516,7 @@ public class GraphService {
                 .uploadDate(graph.getUploadDate())
                 .lastModified(graph.getLastModified())
                 .coverImage(graph.getCoverImage())
+                .isCustomCover(graph.getIsCustomCover())
                 .shareLink(graph.getShareLink())
                 .viewCount(graph.getViewCount())
                 .downloadCount(graph.getDownloadCount())
@@ -495,6 +540,7 @@ public class GraphService {
                 .description(graph.getDescription())
                 .status(graph.getStatus() != null ? graph.getStatus().name() : null)
                 .coverImage(graph.getCoverImage())
+                .isCustomCover(graph.getIsCustomCover())
                 .uploadDate(graph.getUploadDate())
                 .uploaderId(graph.getUploaderId())
                 .uploaderName(uploaderName)

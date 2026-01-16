@@ -1,0 +1,154 @@
+/**
+ * About Page Specific Styles
+ * 关于我们页面特定样式
+ */
+
+/* Hero overlay gradient */
+.hero-overlay {
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(30, 58, 138, 0.8) 100%);
+}
+
+/* Team card styling */
+.team-card {
+    transition: all 0.2s ease-in-out;
+}
+
+.team-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal animations */
+.modal[open] {
+    animation: modal-fade-in 0.3s ease-out;
+}
+
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Section spacing consistency */
+section {
+    scroll-margin-top: 80px;
+}
+
+/* Section title underline */
+.section-title {
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: 2px;
+}
+
+/* Timeline styling */
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 32px;
+    top: 80px;
+    width: 2px;
+    height: calc(100% + 32px);
+    background: var(--color-base-300);
+    z-index: 0;
+}
+
+.timeline-item:last-child::before {
+    display: none;
+}
+
+/* Contact section styling */
+.contact-item {
+    transition: background-color 0.2s ease-in-out;
+    padding: 16px;
+    border-radius: var(--radius-box);
+}
+
+.contact-item:hover {
+    background-color: var(--color-base-100);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1.125rem;
+    }
+
+    .timeline-item::before {
+        display: none;
+    }
+}
+
+/* Academic style enhancements */
+.academic-section {
+    border-bottom: 1px solid var(--color-base-300);
+}
+
+.academic-section:last-child {
+    border-bottom: none;
+}
+
+/* Enhanced card styling */
+.card {
+    border: 1px solid var(--color-base-300);
+}
+
+.card:hover {
+    border-color: var(--color-primary);
+}
+
+/* Button styling consistency */
+.btn-primary {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+/* Hero title size */
+#ijqd5 {
+    font-size: 70px;
+}
+
+#i848k {
+    font-size: 28px;
+}
+
+@media (max-width: 640px) {
+    .header-height {
+        height: 56px;
+    }
+    
+    #ijqd5 {
+        font-size: 50px;
+    }
+    
+    #i848k {
+        font-size: 20px;
+    }
+}

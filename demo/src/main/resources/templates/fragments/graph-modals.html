@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+    Graph Detail Page Modal Dialogs Fragment
+    图谱详情页 Modal 对话框片段
+    使用方式: <th:block th:replace="~{fragments/graph-modals :: modals}"></th:block>
+-->
+<th:block th:fragment="modals">
+
+    <!-- Share Modal -->
+    <dialog id="shareModal" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-6">分享图谱</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="label"><span class="label-text">分享链接</span></label>
+                    <div class="join w-full">
+                        <input type="text" id="shareLink" readonly value="" class="input input-bordered join-item flex-1">
+                        <button id="copyShareBtn" class="btn btn-primary join-item" onclick="copyShareLink()">
+                            <span class="iconify" data-icon="heroicons:clipboard-document" data-width="16"></span>
+                            复制
+                        </button>
+                    </div>
+                </div>
+                <div class="text-sm text-base-content/70">
+                    通过此链接，其他用户可以直接访问这个知识图谱
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Download Modal -->
+    <dialog id="downloadModal" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-6">下载图谱</h3>
+            <div class="space-y-3">
+                <p class="text-sm text-base-content/70">选择下载格式：</p>
+                <div class="flex flex-col gap-2">
+                    <button class="btn btn-outline justify-start gap-3" onclick="downloadFormat('json')">
+                        <span class="iconify" data-icon="heroicons:document-text" data-width="20"></span>
+                        <span>JSON 格式</span>
+                        <span class="text-xs text-base-content/50 ml-auto">可再次导入</span>
+                    </button>
+                    <button class="btn btn-outline justify-start gap-3" onclick="downloadFormat('csv')">
+                        <span class="iconify" data-icon="heroicons:table-cells" data-width="20"></span>
+                        <span>CSV 格式</span>
+                        <span class="text-xs text-base-content/50 ml-auto">Excel 兼容</span>
+                    </button>
+                    <button class="btn btn-outline justify-start gap-3" onclick="downloadFormat('png')">
+                        <span class="iconify" data-icon="heroicons:photo" data-width="20"></span>
+                        <span>PNG 图片</span>
+                        <span class="text-xs text-base-content/50 ml-auto">可视化预览</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Import Node Modal -->
+    <dialog id="batchImportModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:arrow-up-tray" data-width="20"></span>
+                导入节点
+            </h3>
+            <div class="space-y-4">
+                <!-- Tab Selection -->
+                <div class="tabs tabs-boxed">
+                    <a class="tab tab-active" id="singleImportTab" onclick="switchImportTab('single')">单个添加</a>
+                    <a class="tab" id="batchImportTab" onclick="switchImportTab('batch')">批量导入</a>
+                </div>
+                
+                <!-- Single Import Form -->
+                <div id="singleImportForm" class="space-y-3">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">节点名称 *</span></label>
+                        <input type="text" id="singleNodeName" class="input input-bordered" placeholder="输入节点名称">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">节点类型</span></label>
+                        <input type="text" id="singleNodeType" class="input input-bordered" placeholder="输入节点类型（如：概念、算法等）">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">节点简介（可选）</span></label>
+                        <textarea id="singleNodeDescription" class="textarea textarea-bordered h-20" placeholder="输入节点的简介描述..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Batch Import Form -->
+                <div id="batchImportForm" class="space-y-3 hidden">
+                    <div class="alert alert-info">
+                        <span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>
+                        <span>每行一个节点，格式: 节点名称,类型,简介</span>
+                    </div>
+                    <textarea id="batchImportInput" class="textarea textarea-bordered w-full h-40" placeholder="节点1,概念,这是节点1的简介&#10;节点2,算法,这是节点2的简介&#10;节点3,工具,这是节点3的简介"></textarea>
+                </div>
+                
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('batchImportModal').close()">取消</button>
+                    <button class="btn btn-primary" onclick="executeImportNodes()">
+                        <span class="iconify" data-icon="heroicons:plus" data-width="16"></span>
+                        添加
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Delete Node Modal -->
+    <dialog id="batchDeleteModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:trash" data-width="20"></span>
+                删除节点
+            </h3>
+            <div class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">按类型筛选</span></label>
+                    <select id="deleteTypeFilter" class="select select-bordered" onchange="filterDeleteNodes()">
+                        <option value="">全部类型</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">搜索节点</span></label>
+                    <input type="text" id="deleteSearchInput" class="input input-bordered" placeholder="输入关键词筛选..." oninput="filterDeleteNodes()">
+                </div>
+                <div class="border rounded-lg p-3 max-h-60 overflow-y-auto">
+                    <div id="deleteNodeList" class="space-y-2">
+                        <div class="text-sm text-base-content/50 text-center">加载节点列表...</div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-2">
+                        <button class="btn btn-ghost btn-sm" onclick="selectAllDeleteNodes()">全选</button>
+                        <button class="btn btn-ghost btn-sm" onclick="deselectAllDeleteNodes()">取消全选</button>
+                    </div>
+                    <span id="selectedDeleteCount" class="text-sm text-base-content/70">已选择 0 个节点</span>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('batchDeleteModal').close()">取消</button>
+                    <button class="btn btn-error" onclick="executeBatchDelete()">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                        删除选中
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Neighbor Query Modal -->
+    <dialog id="neighborQueryModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:share" data-width="20"></span>
+                邻居节点查询
+            </h3>
+            <div class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">选择目标节点</span></label>
+                    <input type="text" id="neighborTargetNodeInput" list="neighborTargetNodeList" class="input input-bordered w-full" placeholder="输入或选择节点...">
+                    <datalist id="neighborTargetNodeList"></datalist>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">查询方向</span></label>
+                    <select id="neighborDirection" class="select select-bordered">
+                        <option value="all">所有邻居</option>
+                        <option value="out">出边邻居（该节点指向的）</option>
+                        <option value="in">入边邻居（指向该节点的）</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('neighborQueryModal').close()">取消</button>
+                    <button class="btn btn-primary" onclick="executeNeighborQuery()">
+                        <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                        查询
+                    </button>
+                </div>
+                <div id="neighborResults" class="border rounded-lg p-3 max-h-60 overflow-y-auto hidden">
+                    <div class="text-sm font-medium mb-2">邻居节点列表</div>
+                    <div id="neighborResultList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Add Relation Modal -->
+    <dialog id="addRelationModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:link" data-width="20"></span>
+                添加关系
+            </h3>
+            <!-- Tab切换 -->
+            <div class="tabs tabs-boxed mb-4">
+                <a id="singleRelationTab" class="tab tab-active" onclick="switchRelationTab('single')">单条添加</a>
+                <a id="batchRelationTab" class="tab" onclick="switchRelationTab('batch')">批量添加</a>
+            </div>
+            <!-- 单条添加表单 -->
+            <div id="singleRelationForm" class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">源节点 *</span></label>
+                    <input type="text" id="newRelationSourceInput" list="newRelationSourceList" class="input input-bordered w-full" placeholder="输入或选择源节点..." required>
+                    <datalist id="newRelationSourceList"></datalist>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">目标节点 *</span></label>
+                    <input type="text" id="newRelationTargetInput" list="newRelationTargetList" class="input input-bordered w-full" placeholder="输入或选择目标节点..." required>
+                    <datalist id="newRelationTargetList"></datalist>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">关系类型</span></label>
+                    <input type="text" id="newRelationType" class="input input-bordered" placeholder="输入关系类型（如：包含、依赖等）" value="关联">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('addRelationModal').close()">取消</button>
+                    <button class="btn btn-primary" onclick="executeAddRelation()">
+                        <span class="iconify" data-icon="heroicons:link" data-width="16"></span>
+                        添加
+                    </button>
+                </div>
+            </div>
+            <!-- 批量添加表单 -->
+            <div id="batchRelationForm" class="space-y-4 hidden">
+                <div class="alert alert-info text-sm">
+                    <span class="iconify" data-icon="heroicons:information-circle" data-width="16"></span>
+                    <span>每行一条关系，格式：源节点名称,目标节点名称,关系类型</span>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">批量关系数据</span></label>
+                    <textarea id="batchRelationInput" class="textarea textarea-bordered h-40 font-mono text-sm" placeholder="示例：&#10;张三,李四,朋友&#10;北京,中国,属于&#10;人工智能,机器学习,包含"></textarea>
+                </div>
+                <div id="batchRelationPreview" class="border rounded-lg p-3 max-h-40 overflow-y-auto hidden">
+                    <div class="text-xs text-base-content/60 mb-2">预览（将添加以下关系）：</div>
+                    <div id="batchRelationPreviewList" class="space-y-1"></div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <button class="btn btn-ghost btn-sm" onclick="previewBatchRelations()">
+                        <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>
+                        预览
+                    </button>
+                    <div class="flex gap-2">
+                        <button class="btn btn-ghost" onclick="document.getElementById('addRelationModal').close()">取消</button>
+                        <button class="btn btn-primary" onclick="executeBatchAddRelations()">
+                            <span class="iconify" data-icon="heroicons:plus-circle" data-width="16"></span>
+                            批量添加
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Delete Relation Modal -->
+    <dialog id="deleteRelationModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:scissors" data-width="20"></span>
+                删除关系
+            </h3>
+            <div class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">按关系类型筛选</span></label>
+                    <select id="deleteRelationTypeFilter" class="select select-bordered" onchange="filterDeleteRelations()">
+                        <option value="">全部类型</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">搜索关系</span></label>
+                    <input type="text" id="deleteRelationSearchInput" class="input input-bordered" placeholder="输入节点名称筛选..." oninput="filterDeleteRelations()">
+                </div>
+                <div class="border rounded-lg p-3 max-h-60 overflow-y-auto">
+                    <div id="deleteRelationList" class="space-y-2">
+                        <div class="text-sm text-base-content/50 text-center">加载关系列表...</div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-2">
+                        <button class="btn btn-ghost btn-sm" onclick="selectAllDeleteRelations()">全选</button>
+                        <button class="btn btn-ghost btn-sm" onclick="deselectAllDeleteRelations()">取消全选</button>
+                    </div>
+                    <span id="selectedDeleteRelationCount" class="text-sm text-base-content/70">已选择 0 个关系</span>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('deleteRelationModal').close()">取消</button>
+                    <button class="btn btn-error" onclick="executeBatchDeleteRelations()">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                        删除选中
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Edit Node Modal -->
+    <dialog id="editNodeModal" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:pencil-square" data-width="20"></span>
+                编辑节点
+            </h3>
+            <div class="space-y-4">
+                <input type="hidden" id="editNodeId">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">节点名称 *</span></label>
+                    <input type="text" id="editNodeName" class="input input-bordered" placeholder="输入节点名称">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">节点类型</span></label>
+                    <input type="text" id="editNodeType" class="input input-bordered" placeholder="输入节点类型">
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">节点简介</span></label>
+                    <textarea id="editNodeDescription" class="textarea textarea-bordered h-24" placeholder="输入节点的简介描述..."></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('editNodeModal').close()">取消</button>
+                    <button class="btn btn-primary" onclick="executeEditNode()">
+                        <span class="iconify" data-icon="heroicons:check" data-width="16"></span>
+                        保存
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Path Query Modal -->
+    <dialog id="pathQueryModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:arrow-long-right" data-width="20"></span>
+                路径查询
+            </h3>
+            <div class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">起始节点</span></label>
+                    <input type="text" id="pathStartNodeInput" list="pathStartNodeList" class="input input-bordered w-full" placeholder="输入或选择起始节点...">
+                    <datalist id="pathStartNodeList"></datalist>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">目标节点</span></label>
+                    <input type="text" id="pathEndNodeInput" list="pathEndNodeList" class="input input-bordered w-full" placeholder="输入或选择目标节点...">
+                    <datalist id="pathEndNodeList"></datalist>
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">查询类型</span></label>
+                    <select id="pathQueryType" class="select select-bordered">
+                        <option value="shortest">最短路径</option>
+                        <option value="all">所有路径（最多5条）</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('pathQueryModal').close()">取消</button>
+                    <button class="btn btn-primary" onclick="executePathQuery()">
+                        <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                        查询
+                    </button>
+                </div>
+                <div id="pathResults" class="border rounded-lg p-3 max-h-60 overflow-y-auto hidden">
+                    <div class="text-sm font-medium mb-2">路径结果</div>
+                    <div id="pathResultList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Subgraph Query Modal -->
+    <dialog id="subgraphModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">
+                <span class="iconify inline-block mr-2" data-icon="heroicons:squares-2x2" data-width="20"></span>
+                子图分析
+            </h3>
+            <div class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">分析类型</span></label>
+                    <select id="subgraphQueryType" class="select select-bordered">
+                        <option value="components">连通分量</option>
+                        <option value="core">核心节点</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="btn btn-ghost" onclick="document.getElementById('subgraphModal').close()">取消</button>
+                    <button class="btn btn-primary" onclick="executeSubgraphQuery()">
+                        <span class="iconify" data-icon="heroicons:chart-bar" data-width="16"></span>
+                        分析
+                    </button>
+                </div>
+                <div id="subgraphResults" class="border rounded-lg p-3 max-h-60 overflow-y-auto hidden">
+                    <div class="text-sm font-medium mb-2">分析结果</div>
+                    <div id="subgraphResultList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+</th:block>
+</html>

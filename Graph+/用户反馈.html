@@ -1,0 +1,987 @@
+
+                <!DOCTYPE html>
+                <html lang="zh">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>用户反馈</title>
+                  <style>
+                    *,
+                    *::before,
+                    *::after {
+                      box-sizing: border-box;
+                      margin: 0;
+                    }
+                    .iframe-outer {
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      bottom: 0;
+                      right: 0;
+                      display: flex;
+                      justify-content: center;
+                      background-color: #E0E0E0;
+                    }
+                    .iframe-wrapper {
+                      width: 100%;
+                      height: 100%;
+                      margin: 0 auto;
+                      transform-origin: center top;
+                      flex-shrink: 0;
+                    }
+                    #dynamicIframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  </style>
+                  <script>
+                const width = 1920
+                const height = 1080
+                const resolutionRatio = width && height ? width / height : 1
+                const pageNameMap = {
+                  'home_page': '首页',
+    'login_register_page': '登录注册',
+    'registration_success_page': '注册成功',
+    'password_reset_page': '找回密码',
+    'graph_list_page': '图谱列表页',
+    'graph_detail_page': '图谱详情页',
+    'user_profile_page': '个人中心',
+    'documentation_page': '文档',
+    'about_page': '关于我们',
+    'feedback_page': '用户反馈',
+    'page_998124': '管理',
+    'page_998125': '论坛'
+                }
+                function setIframeSize(w, h) {
+                  const currentContainerRadio = w / h
+                  let widthValue = w
+                  let heightValue = h
+                  let zoom = 1
+                  if (currentContainerRadio > resolutionRatio) {
+                    widthValue = h * resolutionRatio
+                    heightValue = h
+                  } else {
+                    widthValue = w
+                    heightValue = w / resolutionRatio
+                  }
+                  zoom = width ? widthValue / width : 1
+                  return {
+                    width: widthValue / zoom + 'px',
+                    height: heightValue / zoom + 'px',
+                    zoom,
+                  }
+                }
+                function adjustIframeSize() {
+                  const iframeWrapper = document.querySelector(".iframe-wrapper")
+                  if (!iframeWrapper) return
+                  iframeWrapper.style.width = '100%'
+                  iframeWrapper.style.height = window.innerHeight + 'px'
+                  iframeWrapper.style.transform = ''
+                }
+                function sanitizeFilename(name) {
+                  return name.replace(/[\/:*?"<>|]/g, '_')
+                }
+                function handlePostMessage(event) {
+                  if (!event.data) {
+                    return
+                  }
+                  const { type, targetPageId } = event.data
+                  const targetPageName = pageNameMap[targetPageId]
+                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
+                    window.location.href = targetPageName + '.html'
+                  }
+                }
+                window.addEventListener('message', handlePostMessage)
+                window.onload = adjustIframeSize
+                window.onresize = adjustIframeSize
+                window.onunload = () => {
+                  window.removeEventListener('message', handlePostMessage)
+                }
+              </script>
+                </head>
+                <body>
+                  <div class="iframe-outer">
+                    <div class="iframe-wrapper">
+                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户反馈 - Graph+知识图谱平台</title>
+    <link href="./assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
+    <script src="./assets/static/libs/tailwind-browser@4.js"></script>
+    <link href="./assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
+    <script src="./assets/3/3.1.1/iconify.min.js"></script>
+    <style>
+/* daisyUI Theme Variables Customization
+* Based on the selected daisyUI theme and UI guidance requirements,
+* customize only the CSS variables that need to be different from the theme defaults.
+*/
+:root {
+/* Corporate theme customization for knowledge graph platform */
+--color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
+--color-primary-content: rgba(255, 255, 255, 1);
+--color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
+--color-secondary-content: rgba(255, 255, 255, 1);
+--color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
+--color-accent-content: rgba(255, 255, 255, 1);
+--color-base-100: rgba(255, 255, 255, 1);
+--color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
+--color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
+--color-base-content: rgba(55, 65, 81, 1); /* #374151 */
+--color-success: rgba(16, 185, 129, 1);
+--color-warning: rgba(245, 158, 11, 1);
+--color-error: rgba(239, 68, 68, 1);
+--color-info: rgba(59, 130, 246, 1);
+--radius-box: 0.375rem; /* 6px for micro-rounded corners */
+--radius-field: 0.375rem;
+--border: 1px;
+}
+
+/* Global component styles */
+.transition-width {
+transition: width 0.3s ease-in-out;
+}
+
+.nav-hover {
+transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.shadow-soft {
+box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header height consistency */
+.header-height {
+height: 64px;
+}
+
+/* Focus styles for accessibility */
+.focus-primary:focus {
+outline: 2px solid var(--color-primary);
+outline-offset: 2px;
+}
+
+/* Academic style enhancements */
+.academic-border {
+border: var(--border) solid var(--color-base-300);
+}
+
+.hover-lift {
+transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional grid spacing */
+.academic-grid {
+gap: 1.5rem;
+}
+
+/* Clean divider lines */
+.academic-divider {
+border-color: var(--color-base-300);
+border-width: var(--border);
+}
+</style> <style>
+/* 文件上传区域交互效果 */
+#fileUploadArea.drag-over {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary, rgba(30, 58, 138, 0.05));
+}
+
+/* 文件列表项样式 */
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    padding: 0.75rem;
+    background-color: var(--color-base-200);
+    border-radius: var(--radius-box);
+    border: var(--border) solid var(--color-base-300);
+}
+
+.file-item .file-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.file-item .file-remove {
+    color: var(--color-error);
+    cursor: pointer;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.file-item .file-remove:hover {
+    opacity: 0.7;
+}
+
+/* 表单输入框焦点效果增强 */
+.input:focus, .textarea:focus, .select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
+    outline: none;
+}
+
+/* 提交按钮加载状态 */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: &#39;&#39;;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    color: white;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* 成功提示动画 */
+.success-message {
+    background-color: var(--color-success, rgba(16, 185, 129, 0.1));
+    border: var(--border) solid var(--color-success);
+    color: var(--color-success);
+    padding: 1rem;
+    border-radius: var(--radius-box);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-1rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 表单验证错误样式 */
+.input-error, .textarea-error, .select-error {
+    border-color: var(--color-error) !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1) !important;
+}
+
+.error-message {
+    color: var(--color-error);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+@media (max-width: 640px) {
+    .header-height { height: 56px; }
+}
+</style>
+  <script src="./assets/static/libs/25_6/holder.js"></script></head>
+  <body class="min-h-screen bg-base-100 flex flex-col">
+    <div data-section-id="common_header" data-section-type="common_header">
+  <div id="i27g" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 i27g spark-custom-i27g i27g">
+    <!-- Left section: Logo -->
+    <div class="navbar-start">
+      <div class="flex items-center cursor-pointer" onclick="navigateTo(&#39;home_page&#39;)">
+        <img src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/4da31d39-450b-4557-950c-260a4e6eca63.png" alt="Graph+知识图谱平台 Logo" class="w-10 h-10"><span class="ml-3 text-xl font-semibold text-primary hidden lg:block">Graph+知识图谱平台</span>
+      </div>
+      <!-- Mobile menu -->
+      <div class="dropdown lg:hidden ml-2">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
+        </div>
+        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Center section: Main navigation -->
+    <div class="navbar-center hidden xl:flex">
+      <ul class="menu menu-horizontal px-1 gap-1">
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Right section: User controls -->
+    <div class="navbar-end">
+      <!-- Login/Register buttons for logged-out users -->
+      <div data-user-control="logged-out" class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm nav-hover focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+          登录</button><button class="btn btn-primary btn-sm focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+          注册
+        </button>
+      </div>
+      <!-- User profile dropdown for logged-in users -->
+      <div data-user-control="logged-in" id="iig4n" class="dropdown dropdown-end" style="display: none;">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
+          <div class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content">
+            <span class="font-semibold text-lg">用</span>
+          </div>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
+          <li class="menu-title"><span>用户中心</span></li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
+          </li>
+          <div class="divider my-1"></div>
+          <li>
+            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 主内容区域 -->
+    <main class="flex-1 flex flex-col ixtxa spark-custom-ixtxa" id="ixtxa">
+      <!-- 隐私政策简介区 -->
+      <section class="bg-base-100 py-12">
+        <div class="container mx-auto px-4 max-w-4xl text-center">
+          <h1 class="text-4xl font-bold text-base-content mb-4">用户反馈</h1>
+          <h2 class="text-xl text-base-content/70 mb-8">我们重视您的意见</h2>
+          <div class="bg-base-200 rounded-lg p-6 academic-border">
+            <p class="text-base-content/80 mb-4">
+              在您提交反馈之前，请阅读我们的隐私政策。我们承诺保护您的个人信息，您提供的反馈将仅用于改进我们的产品和服务。
+            </p>
+            <a href="#" class="link link-primary font-medium" onclick="navigateTo(&#39;privacy_policy&#39;)"><span class="iconify mr-1" data-icon="heroicons:document-text" data-width="16"></span>
+              查看完整隐私政策
+            </a>
+          </div>
+        </div>
+      </section>
+      <!-- 反馈表单区 -->
+      <section class="bg-base-200 py-16">
+        <div class="container mx-auto px-4 max-w-2xl">
+          <div class="card bg-base-100 shadow-xl academic-border">
+            <div class="card-body p-8">
+              <h3 class="card-title text-2xl mb-6 flex items-center gap-2">
+                <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right" data-width="24"></span>
+                提供您的反馈
+              </h3>
+              <form id="feedbackForm" class="space-y-6">
+                <!-- 反馈类型选择 -->
+                <div class="form-control">
+                  <label class="label"><span class="label-text font-medium">反馈类型</span></label><select required="" class="select select-bordered focus-primary">
+                    <option disabled="" selected="">请选择反馈类型</option>
+                    <option value="bug">问题报告</option>
+                    <option value="feature">功能建议</option>
+                    <option value="general">一般反馈</option>
+                  </select>
+                </div>
+                <!-- 主题输入框 -->
+                <div class="form-control">
+                  <label class="label"><span class="label-text font-medium">主题</span></label><input type="text" placeholder="请简要描述您的反馈主题" required="" class="input input-bordered focus-primary"><label class="label"><span class="label-text-alt text-base-content/60">请用简洁的语言概括您的反馈内容</span></label>
+                </div>
+                <!-- 描述文本区域 -->
+                <div class="form-control">
+                  <label class="label"><span class="label-text font-medium">详细描述</span></label><textarea placeholder="请详细描述您遇到的问题或建议..." required="" class="textarea textarea-bordered h-32 focus-primary"></textarea><label class="label"><span class="label-text-alt text-base-content/60">请提供尽可能详细的信息，以便我们更好地理解和处理您的反馈</span></label>
+                </div>
+                <!-- 联系邮箱输入框 -->
+                <div class="form-control">
+                  <label class="label"><span class="label-text font-medium">联系邮箱</span></label><input type="email" placeholder="your.email@example.com" required="" class="input input-bordered focus-primary"><label class="label"><span class="label-text-alt text-base-content/60">我们将通过此邮箱与您联系，请确保邮箱地址正确</span></label>
+                </div>
+                <!-- 文件上传区域 -->
+                <div class="form-control">
+                  <label class="label"><span class="label-text font-medium">附件上传（可选）</span></label>
+                  <div id="fileUploadArea" class="border-2 border-dashed border-base-300 rounded-lg p-8 text-center transition-colors hover:border-primary/50 cursor-pointer">
+                    <div class="flex flex-col items-center gap-3">
+                      <span class="iconify text-base-content/40" data-icon="heroicons:cloud-arrow-up" data-width="48"></span>
+                      <p class="text-base-content/70">
+                        点击选择文件或拖拽文件到此处
+                      </p>
+                      <p class="text-sm text-base-content/50">
+                        支持图片、文档等格式，单个文件不超过10MB
+                      </p>
+                    </div>
+                    <input type="file" id="fileInput" multiple="" accept="image/*,.pdf,.doc,.docx,.txt" class="hidden">
+                  </div>
+                  <div id="fileList" class="mt-3 space-y-2"></div>
+                </div>
+                <!-- 提交按钮 -->
+                <div class="form-control mt-8">
+                  <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
+                    <span class="iconify" data-icon="heroicons:paper-airplane" data-width="20"></span>
+                    提交反馈
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- 联系信息区 -->
+      <section class="bg-base-100 py-16">
+        <div class="container mx-auto px-4 max-w-4xl">
+          <h3 class="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-2">
+            <span class="iconify text-primary" data-icon="heroicons:phone" data-width="24"></span>
+            其他联系方式
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- 客服热线 -->
+            <div class="card bg-base-200 shadow-soft academic-border hover-lift">
+              <div class="card-body text-center p-6">
+                <span class="iconify text-primary mb-3" data-icon="heroicons:phone" data-width="32"></span>
+                <h4 class="font-semibold mb-2">客服热线</h4>
+                <p class="text-lg font-mono">400-123-4567</p>
+                <p class="text-sm text-base-content/60 mt-2">
+                  工作日 9:00-18:00
+                </p>
+              </div>
+            </div>
+            <!-- 官方邮箱 -->
+            <div class="card bg-base-200 shadow-soft academic-border hover-lift">
+              <div class="card-body text-center p-6">
+                <span class="iconify text-primary mb-3" data-icon="heroicons:envelope" data-width="32"></span>
+                <h4 class="font-semibold mb-2">官方邮箱</h4>
+                <p class="text-lg">support@kgplatform.com</p>
+                <p class="text-sm text-base-content/60 mt-2">24小时内回复</p>
+              </div>
+            </div>
+            <!-- 办公时间 -->
+            <div class="card bg-base-200 shadow-soft academic-border hover-lift">
+              <div class="card-body text-center p-6">
+                <span class="iconify text-primary mb-3" data-icon="heroicons:clock" data-width="32"></span>
+                <h4 class="font-semibold mb-2">办公时间</h4>
+                <p class="text-lg">周一至周五</p>
+                <p class="text-sm text-base-content/60 mt-2">
+                  9:00 - 18:00 (GMT+8)
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- 常见问题提示 -->
+          <div class="mt-12 text-center">
+            <div class="bg-info/10 rounded-lg p-6 academic-border">
+              <span class="iconify text-info mb-3" data-icon="heroicons:question-mark-circle" data-width="32"></span>
+              <h4 class="font-semibold mb-2 text-info">遇到常见问题？</h4>
+              <p class="text-base-content/70 mb-4">
+                在提交反馈前，您可以先查看我们的帮助文档，可能已有解决方案。
+              </p>
+              <button class="btn btn-outline btn-info" onclick="navigateTo(&#39;documentation_page&#39;)">
+                <span class="iconify" data-icon="heroicons:book-open" data-width="20"></span>
+                查看帮助文档
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- 全局底部 --><div data-section-id="common_footer" data-section-type="common_footer">
+<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
+<div class="grid grid-flow-col gap-4">
+<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
+<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
+<a class="link link-hover focus-primary">隐私政策</a>
+<a class="link link-hover focus-primary">服务条款</a>
+</div>
+<div class="grid grid-flow-col gap-4">
+<a class="link link-hover focus-primary" aria-label="官方微信">
+<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
+</a>
+<a class="link link-hover focus-primary" aria-label="企业QQ">
+<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
+</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
+<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+</a>
+</div>
+<div class="text-center">
+<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
+<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
+</div>
+</footer>
+</div><script>
+(function() {
+&#39;use strict&#39;;
+
+// Initialize global namespace
+window.APP_GLOBALS = window.APP_GLOBALS || {};
+
+// Global navigation utility
+window.navigateTo = function(targetPageId) {
+const isInIframe = window.self !== window.top;
+const targetFileName = `${targetPageId}.html`;
+
+if (isInIframe) {
+window.parent.postMessage({
+type: &#39;iframeNavigation&#39;,
+targetPageId: targetPageId
+}, &#39;*&#39;);
+} else {
+window.location.href = targetFileName;
+}
+};
+
+// User authentication state management
+window.APP_GLOBALS.user = {
+isLoggedIn: false,
+userInfo: null,
+
+login: function(userInfo) {
+this.isLoggedIn = true;
+this.userInfo = userInfo;
+localStorage.setItem(&#39;userState&#39;, JSON.stringify({
+isLoggedIn: true,
+userInfo: userInfo
+}));
+this.updateUserInterface();
+},
+
+logout: function() {
+this.isLoggedIn = false;
+this.userInfo = null;
+localStorage.removeItem(&#39;userState&#39;);
+this.updateUserInterface();
+navigateTo(&#39;home_page&#39;);
+},
+
+updateUserInterface: function() {
+const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
+userControls.forEach(control => {
+const controlType = control.getAttribute(&#39;data-user-control&#39;);
+if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else {
+control.style.display = &#39;&#39;;
+}
+});
+},
+
+init: function() {
+const savedState = localStorage.getItem(&#39;userState&#39;);
+if (savedState) {
+const state = JSON.parse(savedState);
+this.isLoggedIn = state.isLoggedIn;
+this.userInfo = state.userInfo;
+}
+this.updateUserInterface();
+}
+};
+
+// Search functionality
+window.APP_GLOBALS.search = {
+history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
+recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
+
+addToHistory: function(query) {
+if (query &amp;&amp; !this.history.includes(query)) {
+this.history.unshift(query);
+this.history = this.history.slice(0, 10); // Keep only last 10 searches
+localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
+}
+},
+
+getSearchSuggestions: function() {
+return this.history.length > 0 ? this.history : this.recommendations;
+},
+
+performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
+this.addToHistory(query);
+// Navigate to search results or graph detail based on context
+navigateTo(targetPage);
+}
+};
+
+// Notification utilities
+window.showNotification = function(message, type = &#39;info&#39;) {
+const notification = document.createElement(&#39;div&#39;);
+notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+notification.innerHTML = `
+<div class="flex items-center gap-2">
+<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
+<span>${message}</span>
+</div>
+`;
+document.body.appendChild(notification);
+
+setTimeout(() => {
+notification.remove();
+}, 5000);
+};
+
+// Favorites management
+window.APP_GLOBALS.favorites = {
+items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+
+add: function(graphId, graphData) {
+if (!this.items.find(item => item.id === graphId)) {
+this.items.push({
+id: graphId,
+data: graphData,
+addedAt: new Date().toISOString()
+});
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+}
+},
+
+remove: function(graphId) {
+this.items = this.items.filter(item => item.id !== graphId);
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+},
+
+isFavorited: function(graphId) {
+return this.items.some(item => item.id === graphId);
+},
+
+toggle: function(graphId, graphData) {
+if (this.isFavorited(graphId)) {
+this.remove(graphId);
+} else {
+this.add(graphId, graphData);
+}
+}
+};
+
+// Initialize components when DOM is loaded
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+window.APP_GLOBALS.user.init();
+});
+
+})();
+</script><script>
+(function() {
+    &#39;use strict&#39;;
+
+    let selectedFiles = [];
+
+    // DOM加载完成后执行初始化
+    document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+        initFileUpload();
+        initFormValidation();
+        initFormSubmission();
+    });
+
+    // 初始化文件上传功能
+    function initFileUpload() {
+        const fileUploadArea = document.getElementById(&#39;fileUploadArea&#39;);
+        const fileInput = document.getElementById(&#39;fileInput&#39;);
+        const fileList = document.getElementById(&#39;fileList&#39;);
+
+        if (!fileUploadArea || !fileInput || !fileList) return;
+
+        // 点击上传区域触发文件选择
+        fileUploadArea.addEventListener(&#39;click&#39;, function() {
+            fileInput.click();
+        });
+
+        // 文件选择处理
+        fileInput.addEventListener(&#39;change&#39;, function(e) {
+            handleFiles(e.target.files);
+        });
+
+        // 拖拽上传处理
+        fileUploadArea.addEventListener(&#39;dragover&#39;, function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add(&#39;drag-over&#39;);
+        });
+
+        fileUploadArea.addEventListener(&#39;dragleave&#39;, function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove(&#39;drag-over&#39;);
+        });
+
+        fileUploadArea.addEventListener(&#39;drop&#39;, function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove(&#39;drag-over&#39;);
+            handleFiles(e.dataTransfer.files);
+        });
+    }
+
+    // 处理选择的文件
+    function handleFiles(files) {
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        const allowedTypes = [&#39;image/&#39;, &#39;application/pdf&#39;, &#39;application/msword&#39;, &#39;application/vnd.openxmlformats-officedocument.wordprocessingml.document&#39;, &#39;text/plain&#39;];
+
+        Array.from(files).forEach(file => {
+            // 检查文件大小
+            if (file.size > maxSize) {
+                showNotification(`文件 "${file.name}" 超过10MB限制`, &#39;error&#39;);
+                return;
+            }
+
+            // 检查文件类型
+            const isAllowed = allowedTypes.some(type => file.type.startsWith(type) || file.type === type);
+            if (!isAllowed) {
+                showNotification(`文件 "${file.name}" 格式不支持`, &#39;error&#39;);
+                return;
+            }
+
+            // 检查是否已存在
+            if (selectedFiles.some(f => f.name === file.name &amp;&amp; f.size === file.size)) {
+                showNotification(`文件 "${file.name}" 已存在`, &#39;warning&#39;);
+                return;
+            }
+
+            selectedFiles.push(file);
+            addFileToList(file);
+        });
+    }
+
+    // 添加文件到列表显示
+    function addFileToList(file) {
+        const fileList = document.getElementById(&#39;fileList&#39;);
+        const fileItem = document.createElement(&#39;div&#39;);
+        fileItem.className = &#39;file-item&#39;;
+        
+        const fileSize = (file.size / 1024).toFixed(1) + &#39; KB&#39;;
+        if (file.size >= 1024 * 1024) {
+            fileSize = (file.size / (1024 * 1024)).toFixed(1) + &#39; MB&#39;;
+        }
+
+        fileItem.innerHTML = `
+            <div class="file-info">
+                <span class="iconify" data-icon="heroicons:document" data-width="20"></span>
+                <div>
+                    <div class="font-medium">${file.name}</div>
+                    <div class="text-sm text-base-content/60">${fileSize}</div>
+                </div>
+            </div>
+            <span class="iconify file-remove" data-icon="heroicons:x-mark" data-width="20" title="移除文件"></span>
+        `;
+
+        // 移除文件功能
+        fileItem.querySelector(&#39;.file-remove&#39;).addEventListener(&#39;click&#39;, function() {
+            selectedFiles = selectedFiles.filter(f => f !== file);
+            fileItem.remove();
+        });
+
+        fileList.appendChild(fileItem);
+    }
+
+    // 初始化表单验证
+    function initFormValidation() {
+        const form = document.getElementById(&#39;feedbackForm&#39;);
+        const inputs = form.querySelectorAll(&#39;input[required], textarea[required], select[required]&#39;);
+
+        inputs.forEach(input => {
+            input.addEventListener(&#39;blur&#39;, function() {
+                validateField(this);
+            });
+
+            input.addEventListener(&#39;input&#39;, function() {
+                clearFieldError(this);
+            });
+        });
+    }
+
+    // 验证单个字段
+    function validateField(field) {
+        const value = field.value.trim();
+        let isValid = true;
+        let errorMessage = &#39;&#39;;
+
+        // 清除之前的错误状态
+        clearFieldError(field);
+
+        if (field.hasAttribute(&#39;required&#39;) &amp;&amp; !value) {
+            isValid = false;
+            errorMessage = &#39;此字段为必填项&#39;;
+        } else if (field.type === &#39;email&#39; &amp;&amp; value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                isValid = false;
+                errorMessage = &#39;请输入有效的邮箱地址&#39;;
+            }
+        }
+
+        if (!isValid) {
+            showFieldError(field, errorMessage);
+        }
+
+        return isValid;
+    }
+
+    // 显示字段错误
+    function showFieldError(field, message) {
+        field.classList.add(field.tagName.toLowerCase() + &#39;-error&#39;);
+        
+        const errorDiv = document.createElement(&#39;div&#39;);
+        errorDiv.className = &#39;error-message&#39;;
+        errorDiv.innerHTML = `
+            <span class="iconify" data-icon="heroicons:exclamation-circle" data-width="16"></span>
+            ${message}
+        `;
+
+        const label = field.closest(&#39;.form-control&#39;).querySelector(&#39;.label:last-child&#39;);
+        if (label) {
+            label.appendChild(errorDiv);
+        }
+    }
+
+    // 清除字段错误
+    function clearFieldError(field) {
+        field.classList.remove(field.tagName.toLowerCase() + &#39;-error&#39;);
+        const errorMessage = field.closest(&#39;.form-control&#39;).querySelector(&#39;.error-message&#39;);
+        if (errorMessage) {
+            errorMessage.remove();
+        }
+    }
+
+    // 初始化表单提交
+    function initFormSubmission() {
+        const form = document.getElementById(&#39;feedbackForm&#39;);
+        const submitBtn = document.getElementById(&#39;submitBtn&#39;);
+
+        form.addEventListener(&#39;submit&#39;, function(e) {
+            e.preventDefault();
+
+            // 验证所有必填字段
+            const requiredFields = form.querySelectorAll(&#39;input[required], textarea[required], select[required]&#39;);
+            let isFormValid = true;
+
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isFormValid = false;
+                }
+            });
+
+            if (!isFormValid) {
+                showNotification(&#39;请填写所有必填字段&#39;, &#39;error&#39;);
+                return;
+            }
+
+            // 显示提交中状态
+            submitBtn.classList.add(&#39;btn-loading&#39;);
+            submitBtn.disabled = true;
+
+            // 模拟提交过程
+            setTimeout(() => {
+                // 重置按钮状态
+                submitBtn.classList.remove(&#39;btn-loading&#39;);
+                submitBtn.disabled = false;
+
+                // 显示成功消息
+                showSuccessMessage();
+
+                // 重置表单
+                form.reset();
+                selectedFiles = [];
+                document.getElementById(&#39;fileList&#39;).innerHTML = &#39;&#39;;
+
+                // 滚动到顶部
+                window.scrollTo({ top: 0, behavior: &#39;smooth&#39; });
+            }, 2000);
+        });
+    }
+
+    // 显示成功消息
+    function showSuccessMessage() {
+        const successDiv = document.createElement(&#39;div&#39;);
+        successDiv.className = &#39;success-message mb-6&#39;;
+        successDiv.innerHTML = `
+            <span class="iconify" data-icon="heroicons:check-circle" data-width="24"></span>
+            <div>
+                <div class="font-semibold">反馈提交成功！</div>
+                <div class="text-sm">感谢您的反馈，我们会在24小时内通过邮箱与您联系。</div>
+            </div>
+        `;
+
+        const cardBody = document.querySelector(&#39;.card-body&#39;);
+        cardBody.insertBefore(successDiv, cardBody.firstChild);
+
+        // 5秒后自动移除成功消息
+        setTimeout(() => {
+            successDiv.remove();
+        }, 5000);
+    }
+
+    // 全局通知函数（如果不存在）
+    if (typeof window.showNotification !== &#39;function&#39;) {
+        window.showNotification = function(message, type = &#39;info&#39;) {
+            const notification = document.createElement(&#39;div&#39;);
+            notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        };
+    }
+
+})();
+</script>
+  
+
+<script>
+    setTimeout(() => {
+      Holder.run({
+        domain: "placehold.co"
+      })
+    }, 100)
+  </script></body></html>'></iframe>
+                    </div>
+                  </div>
+
+                </body>
+                </html>
+            

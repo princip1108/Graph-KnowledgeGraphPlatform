@@ -1,944 +1,251 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="corporate">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>帖子详情 - Graph+知识图谱平台</title>
-    <link href="/assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
-    <script src="/assets/static/libs/tailwind-browser@4.js"></script>
-    <link href="/assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
-    <script src="/assets/3/3.1.1/iconify.min.js"></script>
+    <title>帖子详情 - GraphWisdom智汇星图</title>
+    <!-- Page Specific Libs -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <style>
-:root {
-    --color-primary: rgba(30, 58, 138, 1);
-    --color-base-200: rgba(247, 249, 250, 1);
-    --color-base-300: rgba(229, 231, 235, 1);
-}
-.markdown-body { font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif; line-height: 1.8; color: #24292e; }
-.markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; scroll-margin-top: 80px; }
-.markdown-body h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid #eaecef; }
-.markdown-body h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid #eaecef; }
-.markdown-body h3 { font-size: 1.25em; }
-.markdown-body p { margin-top: 0; margin-bottom: 16px; }
-.markdown-body code { padding: 0.2em 0.4em; font-size: 85%; background-color: rgba(27,31,35,0.05); border-radius: 3px; }
-.markdown-body pre { position: relative; padding: 16px; overflow: auto; line-height: 1.45; background-color: #f6f8fa; border-radius: 6px; }
-.markdown-body pre code { background-color: transparent; padding: 0; }
-.markdown-body blockquote { padding: 0 1em; color: #6a737d; border-left: 0.25em solid #dfe2e5; margin: 0 0 16px 0; }
-.markdown-body ul, .markdown-body ol { padding-left: 2em; margin-bottom: 16px; }
-.markdown-body img { max-width: 100%; }
-.markdown-body table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
-.markdown-body table th, .markdown-body table td { border: 1px solid #dfe2e5; padding: 8px 13px; }
-.markdown-body table th { background-color: #f6f8fa; font-weight: 600; }
-.markdown-body table tr:nth-child(2n) { background-color: #f6f8fa; }
-.toc-link { display: block; padding: 6px 12px; color: var(--color-base-content); opacity: 0.7; text-decoration: none; transition: all 0.2s; font-size: 0.875rem; border-left: 2px solid transparent; }
-.toc-link:hover, .toc-link.active { opacity: 1; color: var(--color-primary); border-left-color: var(--color-primary); background: rgba(30, 58, 138, 0.05); }
-.toc-link.level-2 { padding-left: 24px; font-size: 0.8125rem; }
-.toc-link.level-3 { padding-left: 36px; font-size: 0.75rem; }
-.header-shadow { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-#leftSidebar { width: 260px; }
-#rightSidebar { width: 280px; }
-.code-copy-btn { position: absolute; top: 8px; right: 8px; padding: 4px 8px; font-size: 12px; background: rgba(255,255,255,0.9); border: 1px solid #ddd; border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
-.markdown-body pre:hover .code-copy-btn { opacity: 1; }
-.code-copy-btn:hover { background: #fff; }
-.reply-item { border-left: 3px solid var(--color-base-300); }
-.reply-item.level-2 { margin-left: 48px; background: rgba(0,0,0,0.02); }
-    </style>
+
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/post-detail.css}">
+    </th:block>
 </head>
+
 <body class="bg-base-200 min-h-screen flex flex-col">
-    <!-- Header - 完全复用 graph_detail.html -->
-    <div data-section-id="common_header" data-section-type="common_header">
-  <div class="navbar bg-base-100 shadow-soft border-b border-base-300 h-16 px-4">
-    <!-- Left section: Logo -->
-    <div class="navbar-start">
-      <div class="flex items-center gap-4">
-        <button class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;home_page&#39;)">
-          <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
-          Graph+知识图谱平台
-        </button>
-      </div>
-      <!-- Mobile menu (visible on small screens) -->
-      <div class="dropdown lg:hidden">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
-          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
-        </div>
-        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
-        </ul>
-      </div>
-    </div>
-    <!-- Center section: Main navigation -->
-    <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 gap-2">
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
-        </li>
-      </ul>
-    </div>
-    <!-- Right section: User controls -->
-    <div class="navbar-end">
-      <!-- Login/Register buttons for logged-out users -->
-      <div data-user-control="logged-out" class="flex items-center gap-2" style="display: none;">
-        <button class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;login_register_page&#39;)">
-          登录</button><button class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100" onclick="navigateTo(&#39;login_register_page&#39;)">
-          注册
-        </button>
-      </div>
-      <!-- User profile dropdown for logged-in users -->
-      <div data-user-control="logged-in" class="dropdown dropdown-end" style="display: none;">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
-          <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
-            <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
-            <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
-          </div>
-        </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
-          <li class="menu-title"><span>用户中心</span></li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
-          </li>
-          <div class="divider my-1"></div>
-          <li>
-            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
 
-    <!-- Three Column Layout -->
-    <div class="flex-1 flex relative" style="height: calc(100vh - 64px);">
-        <!-- Left Sidebar: TOC -->
-        <div id="leftSidebar" class="bg-base-100 border-r border-base-300 flex flex-col relative">
-            <div class="p-4 border-b border-base-300">
-                <h3 class="font-bold text-base-content/70 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <span class="iconify" data-icon="heroicons:list-bullet" data-width="16"></span>
-                    文章目录
-                </h3>
-            </div>
-            <div id="toc" class="flex-1 overflow-y-auto p-2">
-                <p class="text-base-content/40 italic text-sm p-3">加载中...</p>
-            </div>
-        </div>
+    <div layout:fragment="content" class="flex-1 flex flex-col h-full">
 
-        <!-- Main Content -->
-        <div class="flex-1 overflow-y-auto bg-base-200" id="mainContent">
-            <div class="max-w-4xl mx-auto px-6 py-8">
-                <!-- Loading -->
-                <div id="postLoading" class="text-center py-20">
-                    <span class="loading loading-spinner loading-lg text-primary"></span>
-                    <p class="mt-4 text-base-content/60">加载中...</p>
+        <!-- Three Column Layout -->
+        <div class="flex-1 flex relative" style="height: calc(100vh - 64px);">
+            <!-- Left Sidebar: TOC -->
+            <div id="leftSidebar" class="bg-base-100 border-r border-base-300 flex flex-col relative">
+                <div class="p-4 border-b border-base-300">
+                    <h3 class="font-bold text-base-content/70 text-sm uppercase tracking-wider flex items-center gap-2">
+                        <span class="iconify" data-icon="heroicons:list-bullet" data-width="16"></span>
+                        文章目录
+                    </h3>
                 </div>
+                <div id="toc" class="flex-1 overflow-y-auto p-2">
+                    <p class="text-base-content/40 italic text-sm p-3">加载中...</p>
+                </div>
+            </div>
 
-                <div id="postContent" class="hidden space-y-6">
-                    <!-- Post Card -->
-                    <div class="card bg-base-100 shadow-sm border border-base-300">
-                        <div class="card-body p-8">
-                            <!-- Tags & Meta -->
-                            <div class="flex items-center gap-2 mb-4 flex-wrap">
-                                <div class="badge badge-primary" id="postCategory">讨论</div>
-                                <div id="postTags" class="flex gap-2 flex-wrap"></div>
-                                <div class="flex-1"></div>
-                                <span class="text-sm text-base-content/50" id="postViewCount">0 阅读</span>
-                            </div>
-                            
-                            <!-- Title -->
-                            <h1 id="postTitle" class="text-3xl font-extrabold text-base-content mb-6 leading-tight"></h1>
-                            
-                            <!-- Author & Actions -->
-                            <div class="flex items-center justify-between mb-6 pb-6 border-b border-base-200">
-                                <div class="flex items-center gap-3">
-                                    <a id="authorLink" href="#" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                                        <div id="authorAvatar" class="w-10 h-10 rounded-full bg-neutral text-neutral-content flex items-center justify-center text-lg font-bold"></div>
-                                        <div>
-                                            <div class="font-semibold" id="authorName"></div>
-                                            <div class="text-xs text-base-content/60" id="postTime"></div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <!-- Permission Buttons -->
-                                <div class="flex gap-2">
-                                    <!-- User Actions -->
-                                    <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="收藏" id="favoriteBtn" onclick="toggleFavorite()">
-                                        <span class="iconify" data-icon="heroicons:bookmark" data-width="18" id="favoriteIcon"></span>
-                                    </button>
-                                    <!-- Author Actions -->
-                                    <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="编辑" id="editBtn" style="display:none" onclick="editPost()">
-                                        <span class="iconify" data-icon="heroicons:pencil" data-width="18"></span>
-                                    </button>
-                                    <button class="btn btn-ghost btn-sm btn-circle tooltip text-error" data-tip="删除" id="deleteBtn" style="display:none" onclick="deletePost()">
-                                        <span class="iconify" data-icon="heroicons:trash" data-width="18"></span>
-                                    </button>
-                                    <!-- Admin Actions -->
-                                    <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="置顶" id="pinBtn" style="display:none" onclick="togglePin()">
-                                        <span class="iconify" data-icon="heroicons:arrow-up-circle" data-width="18" id="pinIcon"></span>
-                                    </button>
-                                    <button class="btn btn-ghost btn-sm btn-circle tooltip text-warning" data-tip="下架" id="unpublishBtn" style="display:none" onclick="unpublishPost()">
-                                        <span class="iconify" data-icon="heroicons:eye-slash" data-width="18"></span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Post Body -->
-                            <div id="postBody" class="markdown-body min-h-[200px]"></div>
-
-                            <!-- Post Footer -->
-                            <div class="flex items-center justify-between mt-8 pt-6 border-t border-base-200">
-                                <div class="flex gap-3">
-                                    <button class="btn btn-outline gap-2" id="likeBtn" onclick="toggleLike()">
-                                        <span class="iconify" data-icon="heroicons:heart" data-width="20"></span>
-                                        <span id="likeCount">0</span>
-                                    </button>
-                                    <button class="btn btn-ghost gap-2" onclick="scrollToComments()">
-                                        <span class="iconify" data-icon="heroicons:chat-bubble-left" data-width="20"></span>
-                                        <span id="commentCount">0</span>
-                                    </button>
-                                    <button class="btn btn-ghost gap-2" onclick="sharePost()">
-                                        <span class="iconify" data-icon="heroicons:share" data-width="20"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Main Content -->
+            <div class="flex-1 overflow-y-auto bg-base-200" id="mainContent">
+                <div class="max-w-4xl mx-auto px-6 py-8">
+                    <!-- Loading -->
+                    <div id="postLoading" class="text-center py-20">
+                        <span class="loading loading-spinner loading-lg text-primary"></span>
+                        <p class="mt-4 text-base-content/60">加载中...</p>
                     </div>
 
-                    <!-- Comments Section -->
-                    <div class="card bg-base-100 shadow-sm border border-base-300" id="commentsSection">
-                        <div class="card-body p-6">
-                            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                                <span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
-                                评论区 <span class="text-base-content/50 font-normal text-sm">(<span id="totalComments">0</span>)</span>
-                            </h3>
-                            
-                            <!-- Comment Input -->
-                            <div class="flex gap-4 mb-6" id="commentInputArea">
-                                <div class="w-10 h-10 rounded-full bg-base-200 flex-shrink-0 flex items-center justify-center font-bold" id="currentUserAvatar">我</div>
-                                <div class="flex-1">
-                                    <textarea id="commentText" class="textarea textarea-bordered w-full" placeholder="写下你的想法..." rows="3"></textarea>
-                                    <div class="flex justify-between items-center mt-2">
-                                        <div id="replyingTo" class="text-sm text-base-content/60 hidden">
-                                            回复 <span id="replyingToName"></span>
-                                            <button class="btn btn-ghost btn-xs" onclick="cancelReply()">取消</button>
-                                        </div>
-                                        <div class="flex-1"></div>
-                                        <button class="btn btn-primary btn-sm" onclick="submitComment()">发表评论</button>
+                    <div id="postContent" class="hidden space-y-6">
+                        <!-- Post Card -->
+                        <div class="card bg-base-100 shadow-sm border border-base-300">
+                            <div class="card-body p-8">
+                                <!-- Tags & Meta -->
+                                <div class="flex items-center gap-2 mb-4 flex-wrap">
+                                    <div class="badge badge-primary" id="postCategory">讨论</div>
+                                    <div id="postTags" class="flex gap-2 flex-wrap"></div>
+                                    <div class="flex-1"></div>
+                                    <span class="text-sm text-base-content/50" id="postViewCount">0 阅读</span>
+                                </div>
+
+                                <!-- Title -->
+                                <h1 id="postTitle" class="text-3xl font-extrabold text-base-content mb-6 leading-tight">
+                                </h1>
+
+                                <!-- Author & Actions -->
+                                <div class="flex items-center justify-between mb-6 pb-6 border-b border-base-200">
+                                    <div class="flex items-center gap-3">
+                                        <a id="authorLink" href="#"
+                                            class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                                            <div id="authorAvatar"
+                                                class="w-10 h-10 rounded-full bg-neutral text-neutral-content flex items-center justify-center text-lg font-bold">
+                                            </div>
+                                            <div>
+                                                <div class="font-semibold" id="authorName"></div>
+                                                <div class="text-xs text-base-content/60" id="postTime"></div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <!-- Permission Buttons -->
+                                    <div class="flex gap-2">
+                                        <!-- User Actions -->
+                                        <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="收藏"
+                                            id="favoriteBtn" onclick="toggleFavorite()">
+                                            <span class="iconify" data-icon="heroicons:bookmark" data-width="18"
+                                                id="favoriteIcon"></span>
+                                        </button>
+                                        <!-- Author Actions -->
+                                        <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="编辑"
+                                            id="editBtn" style="display:none" onclick="editPost()">
+                                            <span class="iconify" data-icon="heroicons:pencil" data-width="18"></span>
+                                        </button>
+                                        <button class="btn btn-ghost btn-sm btn-circle tooltip text-error" data-tip="删除"
+                                            id="deleteBtn" style="display:none" onclick="deletePost()">
+                                            <span class="iconify" data-icon="heroicons:trash" data-width="18"></span>
+                                        </button>
+                                        <!-- Admin Actions -->
+                                        <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="置顶"
+                                            id="pinBtn" style="display:none" onclick="togglePin()">
+                                            <span class="iconify" data-icon="heroicons:arrow-up-circle" data-width="18"
+                                                id="pinIcon"></span>
+                                        </button>
+                                        <button class="btn btn-ghost btn-sm btn-circle tooltip text-warning"
+                                            data-tip="下架" id="unpublishBtn" style="display:none"
+                                            onclick="unpublishPost()">
+                                            <span class="iconify" data-icon="heroicons:eye-slash"
+                                                data-width="18"></span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Post Body -->
+                                <div id="postBody" class="markdown-body min-h-[200px]"></div>
+
+                                <!-- Post Footer -->
+                                <div class="flex items-center justify-between mt-8 pt-6 border-t border-base-200">
+                                    <div class="flex gap-3">
+                                        <button class="btn btn-outline gap-2" id="likeBtn" onclick="toggleLike()">
+                                            <span class="iconify" data-icon="heroicons:heart" data-width="20"></span>
+                                            <span id="likeCount">0</span>
+                                        </button>
+                                        <button class="btn btn-ghost gap-2" onclick="scrollToComments()">
+                                            <span class="iconify" data-icon="heroicons:chat-bubble-left"
+                                                data-width="20"></span>
+                                            <span id="commentCount">0</span>
+                                        </button>
+                                        <button class="btn btn-ghost gap-2" onclick="sharePost()">
+                                            <span class="iconify" data-icon="heroicons:share" data-width="20"></span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <div id="loginPrompt" class="hidden alert alert-info mb-6">
-                                <span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>
-                                <span>请<a href="/user/login_register.html" class="link link-primary">登录</a>后发表评论</span>
-                            </div>
+                        </div>
 
-                            <!-- Comments List -->
-                            <div id="commentsList" class="space-y-4"></div>
+                        <!-- Comments Section -->
+                        <div class="card bg-base-100 shadow-sm border border-base-300" id="commentsSection">
+                            <div class="card-body p-6">
+                                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <span class="iconify" data-icon="heroicons:chat-bubble-left-right"
+                                        data-width="20"></span>
+                                    评论区 <span class="text-base-content/50 font-normal text-sm">(<span
+                                            id="totalComments">0</span>)</span>
+                                </h3>
+
+                                <!-- Comment Input -->
+                                <div class="flex gap-4 mb-6" id="commentInputArea">
+                                    <div class="w-10 h-10 rounded-full bg-base-200 flex-shrink-0 flex items-center justify-center font-bold"
+                                        id="currentUserAvatar">我</div>
+                                    <div class="flex-1">
+                                        <textarea id="commentText" class="textarea textarea-bordered w-full"
+                                            placeholder="写下你的想法..." rows="3"></textarea>
+                                        <div class="flex justify-between items-center mt-2">
+                                            <div id="replyingTo" class="text-sm text-base-content/60 hidden">
+                                                回复 <span id="replyingToName"></span>
+                                                <button class="btn btn-ghost btn-xs" onclick="cancelReply()">取消</button>
+                                            </div>
+                                            <div class="flex-1"></div>
+                                            <button class="btn btn-primary btn-sm"
+                                                onclick="submitComment()">发表评论</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="loginPrompt" class="hidden alert alert-info mb-6">
+                                    <span class="iconify" data-icon="heroicons:information-circle"
+                                        data-width="20"></span>
+                                    <span>请<a th:href="@{/user/login_register.html}"
+                                            class="link link-primary">登录</a>后发表评论</span>
+                                </div>
+
+                                <!-- Comments List -->
+                                <div id="commentsList" class="space-y-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Author & Related -->
+            <div id="rightSidebar" class="bg-base-100 border-l border-base-300 flex flex-col">
+                <div class="p-4 overflow-y-auto flex-1 space-y-4">
+                    <!-- Author Card -->
+                    <div class="card bg-base-200/50 border border-base-300">
+                        <div class="card-body p-4">
+                            <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">作者信息</h4>
+                            <a id="sidebarAuthorLink" href="#"
+                                class="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity">
+                                <div id="sidebarAuthorAvatar"
+                                    class="w-12 h-12 rounded-full bg-neutral text-neutral-content flex items-center justify-center text-xl font-bold">
+                                </div>
+                                <div>
+                                    <div class="font-bold" id="sidebarAuthorName"></div>
+                                    <div class="text-xs text-base-content/60" id="sidebarAuthorBio">图谱爱好者</div>
+                                </div>
+                            </a>
+                            <button class="btn btn-outline btn-sm w-full" id="followBtn" onclick="toggleFollow()">
+                                <span class="iconify" data-icon="heroicons:user-plus" data-width="16"></span>
+                                关注作者
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Related Graph -->
+                    <div class="card bg-base-200/50 border border-base-300" id="relatedGraphCard" style="display:none;">
+                        <div class="card-body p-4">
+                            <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">关联图谱</h4>
+                            <a id="relatedGraphLink" href="#"
+                                class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                                <div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
+                                    <span class="iconify text-primary" data-icon="heroicons:cube-transparent"
+                                        data-width="20"></span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium truncate" id="relatedGraphName">图谱名称</div>
+                                    <div class="text-xs text-base-content/50">点击查看详情</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Post Stats -->
+                    <div class="card bg-base-200/50 border border-base-300">
+                        <div class="card-body p-4">
+                            <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">帖子统计</h4>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div>
+                                    <div class="text-lg font-bold text-primary" id="statLikes">0</div>
+                                    <div class="text-xs text-base-content/50">点赞</div>
+                                </div>
+                                <div>
+                                    <div class="text-lg font-bold text-primary" id="statComments">0</div>
+                                    <div class="text-xs text-base-content/50">评论</div>
+                                </div>
+                                <div>
+                                    <div class="text-lg font-bold text-primary" id="statViews">0</div>
+                                    <div class="text-xs text-base-content/50">阅读</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Sidebar: Author & Related -->
-        <div id="rightSidebar" class="bg-base-100 border-l border-base-300 flex flex-col">
-            <div class="p-4 overflow-y-auto flex-1 space-y-4">
-                <!-- Author Card -->
-                <div class="card bg-base-200/50 border border-base-300">
-                    <div class="card-body p-4">
-                        <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">作者信息</h4>
-                        <a id="sidebarAuthorLink" href="#" class="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity">
-                            <div id="sidebarAuthorAvatar" class="w-12 h-12 rounded-full bg-neutral text-neutral-content flex items-center justify-center text-xl font-bold"></div>
-                            <div>
-                                <div class="font-bold" id="sidebarAuthorName"></div>
-                                <div class="text-xs text-base-content/60" id="sidebarAuthorBio">图谱爱好者</div>
-                            </div>
-                        </a>
-                        <button class="btn btn-outline btn-sm w-full" id="followBtn" onclick="toggleFollow()">
-                            <span class="iconify" data-icon="heroicons:user-plus" data-width="16"></span>
-                            关注作者
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Related Graph -->
-                <div class="card bg-base-200/50 border border-base-300" id="relatedGraphCard" style="display:none;">
-                    <div class="card-body p-4">
-                        <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">关联图谱</h4>
-                        <a id="relatedGraphLink" href="#" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                            <div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
-                                <span class="iconify text-primary" data-icon="heroicons:cube-transparent" data-width="20"></span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="font-medium truncate" id="relatedGraphName">图谱名称</div>
-                                <div class="text-xs text-base-content/50">点击查看详情</div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Post Stats -->
-                <div class="card bg-base-200/50 border border-base-300">
-                    <div class="card-body p-4">
-                        <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">帖子统计</h4>
-                        <div class="grid grid-cols-3 gap-2 text-center">
-                            <div>
-                                <div class="text-lg font-bold text-primary" id="statLikes">0</div>
-                                <div class="text-xs text-base-content/50">点赞</div>
-                            </div>
-                            <div>
-                                <div class="text-lg font-bold text-primary" id="statComments">0</div>
-                                <div class="text-xs text-base-content/50">评论</div>
-                            </div>
-                            <div>
-                                <div class="text-lg font-bold text-primary" id="statViews">0</div>
-                                <div class="text-xs text-base-content/50">阅读</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Toast -->
+        <div id="toast" class="toast toast-top toast-end z-50 hidden">
+            <div class="alert"><span id="toastMessage"></span></div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast toast-top toast-end z-50 hidden">
-        <div class="alert"><span id="toastMessage"></span></div>
-    </div>
-
-    <script>
-        let postId = new URLSearchParams(window.location.search).get('id');
-        let currentPost = null;
-        let currentUser = null;
-        let authorId = null;
-        let replyToCommentId = null;
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            marked.setOptions({
-                gfm: true,
-                breaks: true,
-                highlight: function(code, lang) {
-                    if (hljs.getLanguage(lang)) {
-                        return hljs.highlight(code, { language: lang }).value;
-                    }
-                    return hljs.highlightAuto(code).value;
-                },
-                langPrefix: 'hljs language-'
-            });
-
-            await checkLogin();
-            if (postId) {
-                loadPost();
-            } else {
-                loadMockData();
-            }
-            initScrollSpy();
-        });
-
-        // ========== Auth ==========
-        async function checkLogin() {
-            try {
-                const res = await fetch('/user/api/check-auth', {credentials: 'include'});
-                const data = await res.json();
-                if (data.authenticated && data.user) {
-                    currentUser = data.user;
-                    document.querySelector('[data-user-control="logged-in"]').style.display = 'block';
-                    document.querySelector('[data-user-control="logged-out"]').style.display = 'none';
-                    const initial = currentUser.userName ? currentUser.userName.charAt(0) : '我';
-                    document.getElementById('nav-avatar-text').textContent = initial;
-                    document.getElementById('currentUserAvatar').textContent = initial;
-                } else {
-                    document.getElementById('commentInputArea').classList.add('hidden');
-                    document.getElementById('loginPrompt').classList.remove('hidden');
-                }
-            } catch(e) {}
-        }
-
-        async function logout() {
-            try {
-                await fetch('/user/api/logout', {method: 'POST', credentials: 'include'});
-                window.location.href = '/user/login_register.html';
-            } catch(e) {
-                window.location.href = '/user/login_register.html';
-            }
-        }
-
-        // ========== Load Post ==========
-        async function loadPost() {
-            try {
-                const res = await fetch('/api/posts/' + postId, {credentials: 'include'});
-                const data = await res.json();
-                if (data.success) {
-                    renderPost(data);
-                    loadComments();
-                    checkFavoriteStatus();
-                    checkFollowStatus(data.post.authorId);
-                } else {
-                    showToast('加载失败: ' + data.error, 'error');
-                    document.getElementById('postLoading').classList.add('hidden');
-                    document.getElementById('postContent').innerHTML = '<div class="text-center py-20"><p class="text-base-content/60 mb-4">' + (data.error || '帖子加载失败') + '</p><a href="/community/forum_list.html" class="btn btn-primary">返回论坛</a></div>';
-                    document.getElementById('postContent').classList.remove('hidden');
-                }
-            } catch(e) {
-                loadMockData();
-            }
-        }
-
-        function loadMockData() {
-            const mockData = {
-                post: { postId: 0, postTitle: "知识图谱构建指南", authorId: 999, uploadTime: new Date().toISOString(), likeCount: 42, viewCount: 128, graphId: null,
-                    postText: "# 知识图谱简介\n\n知识图谱是一种基于图的数据结构。\n\n## 核心技术\n\n1. **实体识别**\n2. **关系抽取**\n\n### 代码示例\n\n```python\nimport networkx as nx\nG = nx.Graph()\nG.add_node('AI')\nprint(G.nodes())\n```\n\n## 总结\n\n构建知识图谱需要多方面技术支撑。"
-                },
-                authorName: "图谱专家", tags: [{tagName: "知识图谱"}, {tagName: "AI"}], commentCount: 3, liked: false
-            };
-            renderPost(mockData);
-        }
-
-        // ========== Render Post ==========
-        function renderPost(data) {
-            currentPost = data.post;
-            authorId = data.post.authorId;
-            
-            var postTitleEl = document.getElementById('postTitle');
-            if (postTitleEl) postTitleEl.textContent = data.post.postTitle;
-            var headerTitleEl = document.getElementById('headerTitle');
-            if (headerTitleEl) headerTitleEl.textContent = data.post.postTitle;
-            var postTimeEl = document.getElementById('postTime');
-            if (postTimeEl) postTimeEl.textContent = new Date(data.post.uploadTime).toLocaleString();
-            var likeCountEl = document.getElementById('likeCount');
-            if (likeCountEl) likeCountEl.textContent = data.post.likeCount || 0;
-            var commentCountEl = document.getElementById('commentCount');
-            if (commentCountEl) commentCountEl.textContent = data.commentCount || 0;
-            var totalCommentsEl = document.getElementById('totalComments');
-            if (totalCommentsEl) totalCommentsEl.textContent = data.commentCount || 0;
-            
-            // Stats
-            var statLikesEl = document.getElementById('statLikes');
-            if (statLikesEl) statLikesEl.textContent = data.post.likeCount || 0;
-            var statCommentsEl = document.getElementById('statComments');
-            if (statCommentsEl) statCommentsEl.textContent = data.commentCount || 0;
-            var statViewsEl = document.getElementById('statViews');
-            if (statViewsEl) statViewsEl.textContent = data.post.viewCount || 0;
-            var postViewCountEl = document.getElementById('postViewCount');
-            if (postViewCountEl) postViewCountEl.textContent = (data.post.viewCount || 0) + ' 阅读';
-            
-            // Author
-            const authorName = data.authorName || '匿名';
-            const authorInitial = authorName.charAt(0);
-            var authorNameEl = document.getElementById('authorName');
-            if (authorNameEl) authorNameEl.textContent = authorName;
-            var sidebarAuthorNameEl = document.getElementById('sidebarAuthorName');
-            if (sidebarAuthorNameEl) sidebarAuthorNameEl.textContent = authorName;
-            var authorLinkEl = document.getElementById('authorLink');
-            if (authorLinkEl) authorLinkEl.href = '/user/profile.html?id=' + data.post.authorId;
-            var sidebarAuthorLinkEl = document.getElementById('sidebarAuthorLink');
-            if (sidebarAuthorLinkEl) sidebarAuthorLinkEl.href = '/user/profile.html?id=' + data.post.authorId;
-            
-            // Avatar with image support
-            var authorAvatarEl = document.getElementById('authorAvatar');
-            var sidebarAvatarEl = document.getElementById('sidebarAuthorAvatar');
-            if (data.authorAvatar) {
-                if (authorAvatarEl) authorAvatarEl.innerHTML = '<img src="' + data.authorAvatar + '" class="w-full h-full rounded-full object-cover" alt="" />';
-                if (sidebarAvatarEl) sidebarAvatarEl.innerHTML = '<img src="' + data.authorAvatar + '" class="w-full h-full rounded-full object-cover" alt="" />';
-            } else {
-                if (authorAvatarEl) authorAvatarEl.textContent = authorInitial;
-                if (sidebarAvatarEl) sidebarAvatarEl.textContent = authorInitial;
-            }
-
-            // Tags
-            const tagsContainer = document.getElementById('postTags');
-            if (tagsContainer) {
-                tagsContainer.innerHTML = '';
-                if (data.tags) {
-                    data.tags.forEach(function(tag) {
-                        const span = document.createElement('span');
-                        span.className = 'badge badge-outline';
-                        span.textContent = tag.tagName;
-                        tagsContainer.appendChild(span);
-                    });
-                }
-            }
-
-            // Related Graph
-            if (data.post.graphId) {
-                var relatedGraphCardEl = document.getElementById('relatedGraphCard');
-                if (relatedGraphCardEl) relatedGraphCardEl.style.display = 'block';
-                var relatedGraphLinkEl = document.getElementById('relatedGraphLink');
-                if (relatedGraphLinkEl) relatedGraphLinkEl.href = '/graph/graph_detail.html?id=' + data.post.graphId;
-                var relatedGraphNameEl = document.getElementById('relatedGraphName');
-                if (data.graphName && relatedGraphNameEl) relatedGraphNameEl.textContent = data.graphName;
-            }
-
-            // Permissions
-            if (currentUser) {
-                if (currentUser.userId === data.post.authorId) {
-                    var editBtnEl = document.getElementById('editBtn');
-                    if (editBtnEl) editBtnEl.style.display = 'inline-flex';
-                    var deleteBtnEl = document.getElementById('deleteBtn');
-                    if (deleteBtnEl) deleteBtnEl.style.display = 'inline-flex';
-                }
-                if (currentUser.role === 'ADMIN') {
-                    var unpublishBtnEl = document.getElementById('unpublishBtn');
-                    if (unpublishBtnEl) unpublishBtnEl.style.display = 'inline-flex';
-                    var pinBtnEl = document.getElementById('pinBtn');
-                    if (pinBtnEl) pinBtnEl.style.display = 'inline-flex';
-                    updatePinButton(data.post.isPinned);
-                }
-            }
-
-            // Render Markdown
-            const rawContent = data.post.postText || '';
-            const htmlContent = DOMPurify.sanitize(marked.parse(rawContent));
-            var postBodyEl = document.getElementById('postBody');
-            if (postBodyEl) {
-                postBodyEl.innerHTML = htmlContent;
-                hljs.highlightAll();
-                addCodeCopyButtons();
-                generateTOC();
-            }
-
-            var postLoadingEl = document.getElementById('postLoading');
-            if (postLoadingEl) postLoadingEl.classList.add('hidden');
-            var postContentEl = document.getElementById('postContent');
-            if (postContentEl) postContentEl.classList.remove('hidden');
-
-            if (data.liked) {
-                var likeBtnEl = document.getElementById('likeBtn');
-                if (likeBtnEl) likeBtnEl.classList.add('btn-active', 'btn-primary');
-            }
-        }
-
-        // ========== Code Copy Buttons ==========
-        function addCodeCopyButtons() {
-            document.querySelectorAll('.markdown-body pre').forEach(function(pre) {
-                const btn = document.createElement('button');
-                btn.className = 'code-copy-btn';
-                btn.textContent = '复制';
-                btn.onclick = function() {
-                    const code = pre.querySelector('code');
-                    navigator.clipboard.writeText(code.textContent).then(function() {
-                        btn.textContent = '已复制!';
-                        setTimeout(function() { btn.textContent = '复制'; }, 2000);
-                    });
-                };
-                pre.appendChild(btn);
-            });
-        }
-
-        // ========== TOC ==========
-        function generateTOC() {
-            const headers = document.querySelectorAll('#postBody h1, #postBody h2, #postBody h3');
-            const tocContainer = document.getElementById('toc');
-            if (headers.length === 0) {
-                tocContainer.innerHTML = '<p class="text-base-content/40 italic text-sm p-3">暂无目录</p>';
-                return;
-            }
-            tocContainer.innerHTML = '';
-            headers.forEach(function(header, index) {
-                const id = 'header-' + index;
-                header.id = id;
-                const link = document.createElement('a');
-                link.href = '#' + id;
-                link.textContent = header.textContent;
-                link.className = 'toc-link';
-                if (header.tagName === 'H2') link.classList.add('level-2');
-                if (header.tagName === 'H3') link.classList.add('level-3');
-                link.onclick = function(e) {
-                    e.preventDefault();
-                    document.getElementById(id).scrollIntoView({behavior: 'smooth', block: 'start'});
-                };
-                tocContainer.appendChild(link);
-            });
-        }
-
-        // ========== Scroll Spy ==========
-        function initScrollSpy() {
-            const mainContent = document.getElementById('mainContent');
-            mainContent.addEventListener('scroll', function() {
-                const headers = document.querySelectorAll('#postBody h1, #postBody h2, #postBody h3');
-                let current = '';
-                headers.forEach(function(header) {
-                    const rect = header.getBoundingClientRect();
-                    if (rect.top <= 100) current = header.id;
-                });
-                document.querySelectorAll('.toc-link').forEach(function(link) {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
-                });
-            });
-        }
-
-        // ========== Comments ==========
-        async function loadComments() {
-            if (!postId) return;
-            try {
-                const res = await fetch('/api/posts/' + postId + '/comments');
-                const data = await res.json();
-                if (data.success) {
-                    const list = document.getElementById('commentsList');
-                    list.innerHTML = '';
-                    if (!data.comments || data.comments.length === 0) {
-                        list.innerHTML = '<p class="text-center text-base-content/40 py-8">暂无评论，快来抢沙发</p>';
-                        return;
-                    }
-                    data.comments.forEach(function(c) {
-                        list.innerHTML += createCommentHTML(c, false);
-                        if (c.replies) {
-                            c.replies.forEach(function(r) { list.innerHTML += createCommentHTML(r, true, c.username); });
-                        }
-                    });
-                }
-            } catch(e) {}
-        }
-
-        function createCommentHTML(comment, isReply, parentName) {
-            var name = comment.username || '匿名';
-            var initial = name.charAt(0);
-            var replyPrefix = isReply && parentName ? '<span class="text-primary">@' + parentName + '</span> ' : '';
-            var replyClass = isReply ? 'reply-item level-2' : '';
-            var canDelete = currentUser && (currentUser.userId === comment.userId || currentUser.role === 'ADMIN');
-            var avatarHtml = comment.avatar 
-                ? '<img src="' + comment.avatar + '" class="w-8 h-8 rounded-full object-cover" alt="" />'
-                : initial;
-            
-            var html = '<div class="flex gap-3 p-3 rounded-lg ' + replyClass + '">';
-            html += '<div class="w-8 h-8 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-xs font-bold flex-shrink-0">' + avatarHtml + '</div>';
-            html += '<div class="flex-1">';
-            html += '<div class="flex justify-between items-center mb-1">';
-            html += '<span class="font-bold text-sm">' + name + '</span>';
-            html += '<div class="flex items-center gap-2">';
-            html += '<span class="text-xs text-base-content/50">' + new Date(comment.commentTime).toLocaleString() + '</span>';
-            if (canDelete) {
-                html += '<button class="btn btn-ghost btn-xs text-error" onclick="deleteComment(' + comment.commentId + ')">删除</button>';
-            }
-            html += '</div></div>';
-            html += '<p class="text-sm text-base-content/80">' + replyPrefix + comment.commentText + '</p>';
-            html += '<button class="btn btn-ghost btn-xs mt-1" onclick="replyTo(' + comment.commentId + ', \'' + name.replace(/'/g, "\\'") + '\')">回复</button>';
-            html += '</div></div>';
-            return html;
-        }
-
-        function replyTo(commentId, name) {
-            replyToCommentId = commentId;
-            document.getElementById('replyingTo').classList.remove('hidden');
-            document.getElementById('replyingToName').textContent = name;
-            document.getElementById('commentText').focus();
-            document.getElementById('commentText').placeholder = '回复 ' + name + '...';
-        }
-
-        function cancelReply() {
-            replyToCommentId = null;
-            document.getElementById('replyingTo').classList.add('hidden');
-            document.getElementById('commentText').placeholder = '写下你的想法...';
-        }
-
-        async function submitComment() {
-            const text = document.getElementById('commentText').value;
-            if (!text.trim()) { showToast('请输入评论内容', 'warning'); return; }
-            if (!postId) { showToast('模拟模式无法评论', 'info'); return; }
-            try {
-                const body = { text: text };
-                if (replyToCommentId) body.parentCommentId = replyToCommentId;
-                const res = await fetch('/api/posts/' + postId + '/comments', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(body), credentials: 'include'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('评论成功', 'success');
-                    document.getElementById('commentText').value = '';
-                    cancelReply();
-                    loadComments();
-                } else { showToast('评论失败: ' + data.error, 'error'); }
-            } catch(e) { showToast('网络错误', 'error'); }
-        }
-
-        async function deleteComment(commentId) {
-            if (!confirm('确定删除此评论？')) return;
-            try {
-                const res = await fetch('/api/comments/' + commentId, { method: 'DELETE', credentials: 'include' });
-                const data = await res.json();
-                if (data.success) { showToast('删除成功', 'success'); loadComments(); }
-                else { showToast(data.error, 'error'); }
-            } catch(e) { showToast('删除失败', 'error'); }
-        }
-
-        // ========== Like/Favorite/Follow ==========
-        async function toggleLike() {
-            if (!postId) {
-                const btn = document.getElementById('likeBtn');
-                const count = document.getElementById('likeCount');
-                if (btn.classList.contains('btn-primary')) {
-                    btn.classList.remove('btn-active', 'btn-primary');
-                    count.textContent = parseInt(count.textContent) - 1;
-                } else {
-                    btn.classList.add('btn-active', 'btn-primary');
-                    count.textContent = parseInt(count.textContent) + 1;
-                }
-                return;
-            }
-            try {
-                const res = await fetch('/api/posts/' + postId + '/like', {method: 'POST', credentials: 'include'});
-                const data = await res.json();
-                if (data.success) {
-                    const btn = document.getElementById('likeBtn');
-                    const count = document.getElementById('likeCount');
-                    if (data.liked) { btn.classList.add('btn-active', 'btn-primary'); count.textContent = parseInt(count.textContent) + 1; }
-                    else { btn.classList.remove('btn-active', 'btn-primary'); count.textContent = parseInt(count.textContent) - 1; }
-                } else { if (res.status === 401) showToast('请先登录', 'warning'); else showToast(data.error, 'error'); }
-            } catch(e) { showToast('操作失败', 'error'); }
-        }
-
-        async function toggleFavorite() {
-            if (!postId) { showToast('收藏成功', 'success'); return; }
-            try {
-                const res = await fetch('/api/posts/' + postId + '/favorite', {method: 'POST', credentials: 'include'});
-                const data = await res.json();
-                if (data.success) {
-                    const icon = document.getElementById('favoriteIcon');
-                    if (data.favorited) { icon.setAttribute('data-icon', 'heroicons:bookmark-solid'); showToast('已收藏', 'success'); }
-                    else { icon.setAttribute('data-icon', 'heroicons:bookmark'); showToast('已取消收藏', 'info'); }
-                } else { if (res.status === 401) showToast('请先登录', 'warning'); else showToast(data.error, 'error'); }
-            } catch(e) { showToast('操作失败', 'error'); }
-        }
-
-        async function checkFavoriteStatus() {
-            if (!postId || !currentUser) return;
-            try {
-                const res = await fetch('/api/posts/' + postId + '/favorite/status', {credentials: 'include'});
-                const data = await res.json();
-                if (data.success && data.favorited) {
-                    document.getElementById('favoriteIcon').setAttribute('data-icon', 'heroicons:bookmark-solid');
-                }
-            } catch(e) {}
-        }
-
-        async function toggleFollow() {
-            if (!authorId) return;
-            try {
-                const res = await fetch('/api/users/' + authorId + '/follow', {method: 'POST', credentials: 'include'});
-                const data = await res.json();
-                if (data.success) {
-                    const btn = document.getElementById('followBtn');
-                    if (data.following) { btn.innerHTML = '<span class="iconify" data-icon="heroicons:user-minus" data-width="16"></span> 已关注'; btn.classList.add('btn-primary'); }
-                    else { btn.innerHTML = '<span class="iconify" data-icon="heroicons:user-plus" data-width="16"></span> 关注作者'; btn.classList.remove('btn-primary'); }
-                } else { if (res.status === 401) showToast('请先登录', 'warning'); else showToast(data.error, 'error'); }
-            } catch(e) { showToast('操作失败', 'error'); }
-        }
-
-        async function checkFollowStatus(userId) {
-            if (!userId || !currentUser) return;
-            try {
-                const res = await fetch('/api/users/' + userId + '/follow/status', {credentials: 'include'});
-                const data = await res.json();
-                if (data.success && data.following) {
-                    const btn = document.getElementById('followBtn');
-                    btn.innerHTML = '<span class="iconify" data-icon="heroicons:user-minus" data-width="16"></span> 已关注';
-                    btn.classList.add('btn-primary');
-                }
-            } catch(e) {}
-        }
-
-        // ========== Pin (Admin) ==========
-        function updatePinButton(isPinned) {
-            var btn = document.getElementById('pinBtn');
-            var icon = document.getElementById('pinIcon');
-            if (isPinned) {
-                btn.classList.add('text-primary');
-                btn.setAttribute('data-tip', '取消置顶');
-                icon.setAttribute('data-icon', 'heroicons:arrow-up-circle-solid');
-            } else {
-                btn.classList.remove('text-primary');
-                btn.setAttribute('data-tip', '置顶');
-                icon.setAttribute('data-icon', 'heroicons:arrow-up-circle');
-            }
-        }
-
-        async function togglePin() {
-            if (!postId) return;
-            try {
-                var res = await fetch('/api/posts/' + postId + '/pin', {method: 'POST', credentials: 'include'});
-                var data = await res.json();
-                if (data.success) {
-                    updatePinButton(data.pinned);
-                    showToast(data.pinned ? '已置顶' : '已取消置顶', 'success');
-                } else {
-                    showToast(data.error || '操作失败', 'error');
-                }
-            } catch(e) { showToast('操作失败', 'error'); }
-        }
-
-        // ========== Post Actions ==========
-        function sharePost() { navigator.clipboard.writeText(window.location.href); showToast('链接已复制', 'success'); }
-        function scrollToComments() { document.getElementById('commentsSection').scrollIntoView({behavior: 'smooth'}); }
-        function editPost() { window.location.href = '/community/post_edit.html?id=' + postId; }
-
-        async function deletePost() {
-            if (!confirm('确定要删除这篇帖子吗？')) return;
-            try {
-                const res = await fetch('/api/posts/' + postId, { method: 'DELETE', credentials: 'include' });
-                const data = await res.json();
-                if (data.success) { showToast('删除成功', 'success'); setTimeout(function() { window.location.href = '/community/forum_list.html'; }, 1000); }
-                else { showToast(data.error || '删除失败', 'error'); }
-            } catch(e) { showToast('删除失败', 'error'); }
-        }
-
-        async function unpublishPost() {
-            if (!confirm('确定要下架这篇帖子吗？')) return;
-            showToast('下架功能开发中', 'info');
-        }
-
-        function showToast(msg, type) {
-            type = type || 'info';
-            const t = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = msg;
-            const alert = t.querySelector('.alert');
-            alert.className = 'alert';
-            if (type === 'success') alert.classList.add('alert-success');
-            if (type === 'error') alert.classList.add('alert-error');
-            if (type === 'warning') alert.classList.add('alert-warning');
-            
-            t.classList.remove('hidden');
-            setTimeout(function() { t.classList.add('hidden'); }, 3000);
-        }
-    </script>
-    
-    <!-- 复用 graph_detail.html 的导航栏JS -->
-    <script>
-(function() {
-'use strict';
-
-// Initialize global namespace
-window.APP_GLOBALS = window.APP_GLOBALS || {};
-
-// Global navigation utility
-window.navigateTo = function(targetPageId, params) {
-    var pagePathMap = {
-        'home_page': '/graph/home.html',
-        'login_register_page': '/user/login_register.html',
-        'graph_list_page': '/graph/graph_list.html',
-        'graph_detail_page': '/graph/graph_detail.html',
-        'user_profile_page': '/user/profile.html',
-        'documentation_page': '/pages/documentation.html',
-        'about_page': '/pages/about.html',
-        'feedback_page': '/community/feedback.html',
-        'page_998124': '/admin/dashboard.html',
-        'page_998125': '/community/forum_list.html'
-    };
-    var targetPath = pagePathMap[targetPageId] || '/' + targetPageId + '.html';
-    if (params && typeof params === 'object') {
-        var queryString = Object.keys(params).map(function(k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
-        targetPath += (targetPath.indexOf('?') >= 0 ? '&' : '?') + queryString;
-    }
-    window.location.href = targetPath;
-};
-
-window.navigateToFavorites = function() {
-    navigateTo('user_profile_page', { section: 'favorites' });
-};
-
-// User authentication state management
-window.APP_GLOBALS.user = {
-    isLoggedIn: false,
-    userInfo: null,
-
-    logout: function() {
-        this.isLoggedIn = false;
-        this.userInfo = null;
-        localStorage.removeItem('userState');
-        fetch('/user/api/logout', { method: 'POST', credentials: 'include' })
-        .finally(function() {
-            window.location.href = '/graph/home.html';
-        });
-    },
-
-    updateUserInterface: function() {
-        var self = this;
-        var userControls = document.querySelectorAll('[data-user-control]');
-        userControls.forEach(function(control) {
-            var controlType = control.getAttribute('data-user-control');
-            if (controlType === 'logged-out' && self.isLoggedIn) {
-                control.style.display = 'none';
-            } else if (controlType === 'logged-in' && !self.isLoggedIn) {
-                control.style.display = 'none';
-            } else {
-                control.style.display = '';
-            }
-        });
-
-        // 更新导航栏头像
-        if (this.isLoggedIn && this.userInfo) {
-            var avatarText = document.getElementById('nav-avatar-text');
-            var avatarImg = document.getElementById('nav-avatar-img');
-            if (avatarText && avatarImg) {
-                if (this.userInfo.avatar) {
-                    avatarText.classList.add('hidden');
-                    avatarImg.src = this.userInfo.avatar;
-                    avatarImg.classList.remove('hidden');
-                } else {
-                    var initial = (this.userInfo.userName || '用').substring(0, 1);
-                    avatarText.textContent = initial;
-                    avatarText.classList.remove('hidden');
-                    avatarImg.classList.add('hidden');
-                }
-            }
-        }
-    },
-
-    init: function() {
-        var self = this;
-        // 从API获取真实登录状态
-        fetch('/user/api/check-auth', { credentials: 'include' })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.authenticated && data.user) {
-                self.isLoggedIn = true;
-                self.userInfo = data.user;
-            } else {
-                self.isLoggedIn = false;
-                self.userInfo = null;
-            }
-            self.updateUserInterface();
-        })
-        .catch(function() {
-            self.updateUserInterface();
-        });
-    }
-};
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    window.APP_GLOBALS.user.init();
-});
-
-})();
-    </script>
+    <th:block layout:fragment="js">
+        <script th:src="@{/js/post-detail.js}"></script>
+    </th:block>
 </body>
+
 </html>

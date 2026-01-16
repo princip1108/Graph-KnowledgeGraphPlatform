@@ -1,0 +1,1608 @@
+
+                <!DOCTYPE html>
+                <html lang="zh">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>管理</title>
+                  <style>
+                    *,
+                    *::before,
+                    *::after {
+                      box-sizing: border-box;
+                      margin: 0;
+                    }
+                    .iframe-outer {
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      bottom: 0;
+                      right: 0;
+                      display: flex;
+                      justify-content: center;
+                      background-color: #E0E0E0;
+                    }
+                    .iframe-wrapper {
+                      width: 100%;
+                      height: 100%;
+                      margin: 0 auto;
+                      transform-origin: center top;
+                      flex-shrink: 0;
+                    }
+                    #dynamicIframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  </style>
+                  <script>
+                const width = 1920
+                const height = 1080
+                const resolutionRatio = width && height ? width / height : 1
+                const pageNameMap = {
+                  'home_page': '首页',
+    'login_register_page': '登录注册',
+    'registration_success_page': '注册成功',
+    'password_reset_page': '找回密码',
+    'graph_list_page': '图谱列表页',
+    'graph_detail_page': '图谱详情页',
+    'user_profile_page': '个人中心',
+    'documentation_page': '文档',
+    'about_page': '关于我们',
+    'feedback_page': '用户反馈',
+    'page_998124': '管理',
+    'page_998125': '论坛'
+                }
+                function setIframeSize(w, h) {
+                  const currentContainerRadio = w / h
+                  let widthValue = w
+                  let heightValue = h
+                  let zoom = 1
+                  if (currentContainerRadio > resolutionRatio) {
+                    widthValue = h * resolutionRatio
+                    heightValue = h
+                  } else {
+                    widthValue = w
+                    heightValue = w / resolutionRatio
+                  }
+                  zoom = width ? widthValue / width : 1
+                  return {
+                    width: widthValue / zoom + 'px',
+                    height: heightValue / zoom + 'px',
+                    zoom,
+                  }
+                }
+                function adjustIframeSize() {
+                  const iframeWrapper = document.querySelector(".iframe-wrapper")
+                  if (!iframeWrapper) return
+                  iframeWrapper.style.width = '100%'
+                  iframeWrapper.style.height = window.innerHeight + 'px'
+                  iframeWrapper.style.transform = ''
+                }
+                function sanitizeFilename(name) {
+                  return name.replace(/[\/:*?"<>|]/g, '_')
+                }
+                function handlePostMessage(event) {
+                  if (!event.data) {
+                    return
+                  }
+                  const { type, targetPageId } = event.data
+                  const targetPageName = pageNameMap[targetPageId]
+                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
+                    window.location.href = targetPageName + '.html'
+                  }
+                }
+                window.addEventListener('message', handlePostMessage)
+                window.onload = adjustIframeSize
+                window.onresize = adjustIframeSize
+                window.onunload = () => {
+                  window.removeEventListener('message', handlePostMessage)
+                }
+              </script>
+                </head>
+                <body>
+                  <div class="iframe-outer">
+                    <div class="iframe-wrapper">
+                      <iframe id="dynamicIframe" srcdoc='<html lang="zh-CN" data-theme="corporate"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理 - Graph+知识图谱平台</title>
+    <link href="./assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
+    <script src="./assets/static/libs/tailwind-browser@4.js"></script>
+    <link href="./assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
+    <script src="./assets/3/3.1.1/iconify.min.js"></script>
+    <style>
+/* daisyUI Theme Variables Customization
+* Based on the selected daisyUI theme and UI guidance requirements,
+* customize only the CSS variables that need to be different from the theme defaults.
+*/
+:root {
+/* Corporate theme customization for knowledge graph platform */
+--color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
+--color-primary-content: rgba(255, 255, 255, 1);
+--color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
+--color-secondary-content: rgba(255, 255, 255, 1);
+--color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
+--color-accent-content: rgba(255, 255, 255, 1);
+--color-base-100: rgba(255, 255, 255, 1);
+--color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
+--color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
+--color-base-content: rgba(55, 65, 81, 1); /* #374151 */
+--color-success: rgba(16, 185, 129, 1);
+--color-warning: rgba(245, 158, 11, 1);
+--color-error: rgba(239, 68, 68, 1);
+--color-info: rgba(59, 130, 246, 1);
+--radius-box: 0.375rem; /* 6px for micro-rounded corners */
+--radius-field: 0.375rem;
+--border: 1px;
+}
+
+/* Global component styles */
+.transition-width {
+transition: width 0.3s ease-in-out;
+}
+
+.nav-hover {
+transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.shadow-soft {
+box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header height consistency */
+.header-height {
+height: 64px;
+}
+
+/* Focus styles for accessibility */
+.focus-primary:focus {
+outline: 2px solid var(--color-primary);
+outline-offset: 2px;
+}
+
+/* Academic style enhancements */
+.academic-border {
+border: var(--border) solid var(--color-base-300);
+}
+
+.hover-lift {
+transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional grid spacing */
+.academic-grid {
+gap: 1.5rem;
+}
+
+/* Clean divider lines */
+.academic-divider {
+border-color: var(--color-base-300);
+border-width: var(--border);
+}
+</style> <style>
+/* Management page specific styles */
+.content-section {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.content-section.hidden {
+    display: none;
+}
+
+.nav-item {
+    transition: all 0.15s ease-in-out;
+}
+
+.nav-item:hover {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+}
+
+.nav-item.active {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+}
+
+.nav-item.active .iconify {
+    color: var(--color-primary-content);
+}
+
+/* Enhanced table styling */
+.table th {
+    background-color: var(--color-base-200);
+    font-weight: 600;
+    color: var(--color-base-content);
+    border-bottom: var(--border) solid var(--color-base-300);
+}
+
+.table tbody tr:hover {
+    background-color: var(--color-base-100);
+}
+
+/* Card hover effects */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.15s ease-in-out;
+}
+
+/* Badge styling enhancements */
+.badge-outline {
+    border: var(--border) solid currentColor;
+}
+
+/* Button group spacing */
+.btn + .btn {
+    margin-left: 0.5rem;
+}
+
+/* Search and filter section */
+.join .input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Sidebar styling */
+.w-64 {
+    min-height: calc(100vh - 64px);
+}
+
+/* Stats card enhancements */
+.card .card-body {
+    padding: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .w-64 {
+        width: 100%;
+        min-height: auto;
+    }
+    
+    .flex {
+        flex-direction: column;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .header-height { height: 56px; }
+}
+
+/* Focus states for accessibility */
+.nav-item:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Loading states */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Animation for section transitions */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.content-section:not(.hidden) {
+    animation: fadeIn 0.3s ease-in-out;
+}
+</style>
+  <script src="./assets/static/libs/25_6/holder.js"></script></head>
+  <body class="bg-base-100">
+    <div class="header-wrapper"><div data-section-id="common_header" data-section-type="common_header">
+  <div id="inq2" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 inq2 spark-custom-inq2 inq2">
+    <!-- Left section: Logo -->
+    <div class="navbar-start">
+      <div class="flex items-center cursor-pointer" onclick="navigateTo(&#39;home_page&#39;)">
+        <img alt="Graph+知识图谱平台 Logo" class="w-10 h-10" data-src="placehold.co/40x40.png?text=KG"><span class="ml-3 text-xl font-semibold text-primary hidden lg:block">Graph+知识图谱平台</span>
+      </div>
+      <!-- Mobile menu -->
+      <div class="dropdown lg:hidden ml-2">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
+        </div>
+        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Center section: Main navigation -->
+    <div class="navbar-center hidden xl:flex">
+      <ul class="menu menu-horizontal px-1 gap-1">
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Right section: User controls -->
+    <div class="navbar-end">
+      <!-- Login/Register buttons for logged-out users -->
+      <div data-user-control="logged-out" class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm nav-hover focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+          登录</button><button class="btn btn-primary btn-sm focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+          注册
+        </button>
+      </div>
+      <!-- User profile dropdown for logged-in users -->
+      <div data-user-control="logged-in" id="imebb" class="dropdown dropdown-end" style="display: none;">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
+          <div class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content">
+            <span class="font-semibold text-lg">用</span>
+          </div>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
+          <li class="menu-title"><span>用户中心</span></li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
+          </li>
+          <div class="divider my-1"></div>
+          <li>
+            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+    <!-- Main Layout -->
+    <div class="flex min-h-screen">
+      <!-- Sidebar Navigation -->
+      <div id="ivg1p" class="w-64 bg-base-200 border-r academic-border ivg1p spark-custom-ivg1p">
+        <div class="p-6">
+          <h2 class="text-lg font-semibold text-base-content mb-6">管理中心</h2>
+          <!-- User Management Section -->
+          <div class="mb-8">
+            <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
+              用户管理
+            </h3>
+            <nav class="space-y-2">
+              <a data-section="graph-batch" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content nav-hover cursor-pointer" onclick="showSection(&#39;graph-batch&#39;)"><span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="20"></span><span>图谱批量管理</span></a><a data-section="realtime-update" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content nav-hover cursor-pointer" onclick="showSection(&#39;realtime-update&#39;)"><span class="iconify text-primary" data-icon="heroicons:clock" data-width="20"></span><span>实时更新图谱日期</span></a>
+            </nav>
+          </div>
+          <!-- Admin Management Section -->
+          <div class="mb-8">
+            <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">
+              管理员管理
+            </h3>
+            <nav class="space-y-2">
+              <a data-section="user-permission" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content nav-hover cursor-pointer" onclick="showSection(&#39;user-permission&#39;)"><span class="iconify text-primary" data-icon="heroicons:user-group" data-width="20"></span><span>用户权限管理</span></a><a data-section="forum-management" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content nav-hover cursor-pointer" onclick="showSection(&#39;forum-management&#39;)"><span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span><span>论坛管理</span></a><a data-section="graph-management" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content nav-hover cursor-pointer" onclick="showSection(&#39;graph-management&#39;)"><span class="iconify text-primary" data-icon="heroicons:squares-plus" data-width="20"></span><span>图谱管理</span></a>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <!-- Main Content Area -->
+      <div class="flex-1 p-8">
+        <!-- Graph Batch Operations Section -->
+        <div id="graph-batch-section" class="content-section">
+          <div class="mb-6">
+            <h1 class="text-2xl font-bold text-base-content mb-2">
+              图谱批量管理
+            </h1>
+            <p class="text-base-content/70">
+              批量管理您的知识图谱，包括上线、下线、删除、上传和修改操作
+            </p>
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap gap-3 mb-6">
+            <button class="btn btn-primary gap-2">
+              <span class="iconify" data-icon="heroicons:arrow-up-circle" data-width="20"></span>
+              批量上线</button><button class="btn btn-secondary gap-2">
+              <span class="iconify" data-icon="heroicons:arrow-down-circle" data-width="20"></span>
+              批量下线</button><button class="btn btn-error gap-2">
+              <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>
+              批量删除</button><button class="btn btn-accent gap-2">
+              <span class="iconify" data-icon="heroicons:arrow-up-tray" data-width="20"></span>
+              上传图谱
+            </button>
+          </div>
+          <!-- Search and Filter -->
+          <div class="flex gap-4 mb-6">
+            <div class="join flex-1">
+              <input placeholder="搜索图谱名称..." class="input input-bordered join-item flex-1"><button class="btn join-item btn-primary">
+                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+              </button>
+            </div>
+            <select class="select select-bordered w-48">
+              <option disabled="" selected="">筛选状态</option>
+              <option>全部</option>
+              <option>已上线</option>
+              <option>已下线</option>
+              <option>草稿</option>
+            </select>
+          </div>
+          <!-- Graph Table -->
+          <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft">
+            <table class="table">
+              <thead>
+                <tr class="border-b academic-divider">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>图谱名称</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>状态</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>创建日期</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>最后修改</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-repeatable="true" data-type="graph-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="24"></span>
+                      </div>
+                      <div>
+                        <div class="font-semibold">人工智能基础知识图谱</div>
+                        <div class="text-sm text-base-content/70">
+                          AI基础概念和技术
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-success badge-outline">已上线</span>
+                  </td>
+                  <td>2024-10-15</td>
+                  <td>2024-10-28</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr data-repeatable="true" data-type="graph-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
+                        <span class="iconify text-secondary" data-icon="heroicons:squares-2x2" data-width="24"></span>
+                      </div>
+                      <div>
+                        <div class="font-semibold">机器学习算法图谱</div>
+                        <div class="text-sm text-base-content/70">
+                          常用ML算法分类
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-warning badge-outline">已下线</span>
+                  </td>
+                  <td>2024-10-10</td>
+                  <td>2024-10-25</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr data-repeatable="true" data-type="graph-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <span class="iconify text-accent" data-icon="heroicons:squares-2x2" data-width="24"></span>
+                      </div>
+                      <div>
+                        <div class="font-semibold">深度学习框架对比</div>
+                        <div class="text-sm text-base-content/70">
+                          TensorFlow vs PyTorch
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-info badge-outline">草稿</span>
+                  </td>
+                  <td>2024-10-20</td>
+                  <td>2024-10-29</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Pagination -->
+          <div class="flex justify-between items-center mt-6">
+            <div class="text-sm text-base-content/70">
+              显示 1-10 条，共 25 条记录
+            </div>
+            <div class="join">
+              <button class="join-item btn btn-sm">«</button><button class="join-item btn btn-sm btn-active">1</button><button class="join-item btn btn-sm">2</button><button class="join-item btn btn-sm">3</button><button class="join-item btn btn-sm">»</button>
+            </div>
+          </div>
+        </div>
+        <!-- Realtime Update Section -->
+        <div id="realtime-update-section" class="content-section hidden">
+          <div class="mb-6">
+            <h1 class="text-2xl font-bold text-base-content mb-2">
+              实时更新图谱日期
+            </h1>
+            <p class="text-base-content/70">批量更新选中图谱的日期信息</p>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Date Picker Section -->
+            <div class="card bg-base-100 shadow-soft">
+              <div class="card-body">
+                <h3 class="card-title mb-4">选择新日期</h3>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">更新日期</span></label><input type="date" value="2024-10-29" class="input input-bordered">
+                </div>
+                <div class="form-control mt-4">
+                  <label class="label cursor-pointer"><span class="label-text">同时更新创建日期</span><input type="checkbox" class="checkbox checkbox-primary"></label>
+                </div>
+              </div>
+            </div>
+            <!-- Selected Graphs -->
+            <div class="card bg-base-100 shadow-soft">
+              <div class="card-body">
+                <h3 class="card-title mb-4">选中的图谱 (2)</h3>
+                <div class="space-y-3">
+                  <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                    <div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                      <span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="16"></span>
+                    </div>
+                    <span class="flex-1">人工智能基础知识图谱</span><button class="btn btn-ghost btn-xs">
+                      <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
+                    </button>
+                  </div>
+                  <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                    <div class="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center">
+                      <span class="iconify text-secondary" data-icon="heroicons:squares-2x2" data-width="16"></span>
+                    </div>
+                    <span class="flex-1">机器学习算法图谱</span><button class="btn btn-ghost btn-xs">
+                      <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-actions justify-end mt-6">
+                  <button class="btn btn-primary gap-2">
+                    <span class="iconify" data-icon="heroicons:clock" data-width="20"></span>
+                    更新日期
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- User Permission Management Section -->
+        <div id="user-permission-section" class="content-section hidden">
+          <div class="mb-6">
+            <h1 class="text-2xl font-bold text-base-content mb-2">
+              用户权限管理
+            </h1>
+            <p class="text-base-content/70">管理用户角色和权限设置</p>
+          </div>
+          <!-- Search and Filter -->
+          <div class="flex gap-4 mb-6">
+            <div class="join flex-1">
+              <input placeholder="搜索用户名或邮箱..." class="input input-bordered join-item flex-1"><button class="btn join-item btn-primary">
+                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+              </button>
+            </div>
+            <select class="select select-bordered w-48">
+              <option disabled="" selected="">筛选角色</option>
+              <option>全部</option>
+              <option>管理员</option>
+              <option>普通用户</option>
+              <option>访客</option></select><select class="select select-bordered w-48">
+              <option disabled="" selected="">筛选状态</option>
+              <option>全部</option>
+              <option>活跃</option>
+              <option>禁用</option>
+            </select>
+          </div>
+          <!-- User Table -->
+          <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft">
+            <table class="table">
+              <thead>
+                <tr class="border-b academic-divider">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>用户信息</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>角色</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>状态</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th class="cursor-pointer hover:bg-base-200">
+                    <div class="flex items-center gap-2">
+                      <span>注册时间</span><span class="iconify" data-icon="heroicons:arrows-up-down" data-width="16"></span>
+                    </div>
+                  </th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-repeatable="true" data-type="user-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-full bg-primary text-primary-content flex items-center justify-center text-sm font-bold">
+                        张三
+                      </div>
+                      <div>
+                        <div class="font-semibold">张三</div>
+                        <div class="text-sm text-base-content/70">
+                          zhangsan@example.com
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-primary">管理员</span></td>
+                  <td>
+                    <span class="badge badge-success badge-outline">活跃</span>
+                  </td>
+                  <td>2024-01-15</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-warning">
+                        <span class="iconify" data-icon="heroicons:no-symbol" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr data-repeatable="true" data-type="user-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-sm font-bold">
+                        李四
+                      </div>
+                      <div>
+                        <div class="font-semibold">李四</div>
+                        <div class="text-sm text-base-content/70">
+                          lisi@example.com
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-secondary">普通用户</span></td>
+                  <td>
+                    <span class="badge badge-success badge-outline">活跃</span>
+                  </td>
+                  <td>2024-03-20</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-warning">
+                        <span class="iconify" data-icon="heroicons:no-symbol" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr data-repeatable="true" data-type="user-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-full bg-base-300 text-base-content flex items-center justify-center text-sm font-bold">
+                        王五
+                      </div>
+                      <div>
+                        <div class="font-semibold">王五</div>
+                        <div class="text-sm text-base-content/70">
+                          wangwu@example.com
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-ghost">访客</span></td>
+                  <td>
+                    <span class="badge badge-error badge-outline">禁用</span>
+                  </td>
+                  <td>2024-05-10</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-success">
+                        <span class="iconify" data-icon="heroicons:check-circle" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Forum Management Section -->
+        <div id="forum-management-section" class="content-section hidden">
+          <div class="mb-6">
+            <h1 class="text-2xl font-bold text-base-content mb-2">论坛管理</h1>
+            <p class="text-base-content/70">管理论坛内容、审核帖子和维护版块</p>
+          </div>
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="card bg-base-100 shadow-soft">
+              <div class="card-body">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <span class="iconify text-primary" data-icon="heroicons:document-text" data-width="24"></span>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold">156</div>
+                    <div class="text-sm text-base-content/70">总帖子数</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-soft">
+              <div class="card-body">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
+                    <span class="iconify text-warning" data-icon="heroicons:clock" data-width="24"></span>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold">12</div>
+                    <div class="text-sm text-base-content/70">待审核</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-soft">
+              <div class="card-body">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
+                    <span class="iconify text-success" data-icon="heroicons:chat-bubble-left-right" data-width="24"></span>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold">89</div>
+                    <div class="text-sm text-base-content/70">活跃讨论</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card bg-base-100 shadow-soft">
+              <div class="card-body">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-lg bg-error/10 flex items-center justify-center">
+                    <span class="iconify text-error" data-icon="heroicons:exclamation-triangle" data-width="24"></span>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold">3</div>
+                    <div class="text-sm text-base-content/70">举报内容</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Forum Posts Table -->
+          <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft">
+            <table class="table">
+              <thead>
+                <tr class="border-b academic-divider">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <th>帖子信息</th>
+                  <th>作者</th>
+                  <th>状态</th>
+                  <th>发布时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-repeatable="true" data-type="forum-post">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div>
+                      <div class="font-semibold">
+                        如何构建高质量的知识图谱？
+                      </div>
+                      <div class="text-sm text-base-content/70">
+                        讨论知识图谱构建的最佳实践和常见问题...
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full bg-primary text-primary-content flex items-center justify-center text-xs font-bold">
+                        专家
+                      </div>
+                      <span>AI专家</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-success badge-outline">已发布</span>
+                  </td>
+                  <td>2024-10-28</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:eye" data-width="16"></span></button><button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr data-repeatable="true" data-type="forum-post">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div>
+                      <div class="font-semibold">机器学习算法选择指南</div>
+                      <div class="text-sm text-base-content/70">
+                        分享不同场景下机器学习算法的选择经验...
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-xs font-bold">
+                        学者
+                      </div>
+                      <span>ML学者</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-warning badge-outline">待审核</span>
+                  </td>
+                  <td>2024-10-29</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:eye" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-success">
+                        <span class="iconify" data-icon="heroicons:check" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Graph Management Section -->
+        <div id="graph-management-section" class="content-section hidden">
+          <div class="mb-6">
+            <h1 class="text-2xl font-bold text-base-content mb-2">图谱管理</h1>
+            <p class="text-base-content/70">
+              统一管理所有用户的知识图谱，进行审核和维护
+            </p>
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap gap-3 mb-6">
+            <button class="btn btn-success gap-2">
+              <span class="iconify" data-icon="heroicons:check-circle" data-width="20"></span>
+              批量审核通过</button><button class="btn btn-warning gap-2">
+              <span class="iconify" data-icon="heroicons:x-circle" data-width="20"></span>
+              批量驳回</button><button class="btn btn-error gap-2">
+              <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>
+              批量删除
+            </button>
+          </div>
+          <!-- Advanced Search -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="join">
+              <input placeholder="搜索图谱..." class="input input-bordered join-item"><button class="btn join-item btn-primary">
+                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+              </button>
+            </div>
+            <select class="select select-bordered">
+              <option disabled="" selected="">审核状态</option>
+              <option>全部</option>
+              <option>待审核</option>
+              <option>已通过</option>
+              <option>已驳回</option></select><select class="select select-bordered">
+              <option disabled="" selected="">上传者</option>
+              <option>全部用户</option>
+              <option>张三</option>
+              <option>李四</option>
+              <option>王五</option></select><input type="date" placeholder="创建日期" class="input input-bordered">
+          </div>
+          <!-- Graph Management Table -->
+          <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft">
+            <table class="table">
+              <thead>
+                <tr class="border-b academic-divider">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <th>图谱信息</th>
+                  <th>上传者</th>
+                  <th>审核状态</th>
+                  <th>上传时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-repeatable="true" data-type="admin-graph-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="24"></span>
+                      </div>
+                      <div>
+                        <div class="font-semibold">自然语言处理技术图谱</div>
+                        <div class="text-sm text-base-content/70">
+                          NLP技术栈和应用场景
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-xs font-bold">
+                        李四
+                      </div>
+                      <span>李四</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-warning badge-outline">待审核</span>
+                  </td>
+                  <td>2024-10-29</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:eye" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-success">
+                        <span class="iconify" data-icon="heroicons:check" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr data-repeatable="true" data-type="admin-graph-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
+                        <span class="iconify text-success" data-icon="heroicons:squares-2x2" data-width="24"></span>
+                      </div>
+                      <div>
+                        <div class="font-semibold">计算机视觉算法图谱</div>
+                        <div class="text-sm text-base-content/70">
+                          CV领域核心算法和模型
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full bg-primary text-primary-content flex items-center justify-center text-xs font-bold">
+                        张三
+                      </div>
+                      <span>张三</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-success badge-outline">已通过</span>
+                  </td>
+                  <td>2024-10-25</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:eye" data-width="16"></span></button><button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:pencil" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr data-repeatable="true" data-type="admin-graph-item">
+                  <th>
+                    <label><input type="checkbox" class="checkbox checkbox-primary"></label>
+                  </th>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-lg bg-error/10 flex items-center justify-center">
+                        <span class="iconify text-error" data-icon="heroicons:squares-2x2" data-width="24"></span>
+                      </div>
+                      <div>
+                        <div class="font-semibold">区块链技术图谱</div>
+                        <div class="text-sm text-base-content/70">
+                          区块链核心概念和应用
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full bg-base-300 text-base-content flex items-center justify-center text-xs font-bold">
+                        王五
+                      </div>
+                      <span>王五</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-error badge-outline">已驳回</span>
+                  </td>
+                  <td>2024-10-20</td>
+                  <td>
+                    <div class="flex gap-1">
+                      <button class="btn btn-ghost btn-xs">
+                        <span class="iconify" data-icon="heroicons:eye" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-success">
+                        <span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span></button><button class="btn btn-ghost btn-xs text-error">
+                        <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="footer-wrapper"><div data-section-id="common_footer" data-section-type="common_footer">
+<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
+<div class="grid grid-flow-col gap-4">
+<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
+<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
+<a class="link link-hover focus-primary">隐私政策</a>
+<a class="link link-hover focus-primary">服务条款</a>
+</div>
+<div class="grid grid-flow-col gap-4">
+<a class="link link-hover focus-primary" aria-label="官方微信">
+<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
+</a>
+<a class="link link-hover focus-primary" aria-label="企业QQ">
+<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
+</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
+<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+</a>
+</div>
+<div class="text-center">
+<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
+<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
+</div>
+</footer>
+</div></div>
+    <script>
+(function() {
+&#39;use strict&#39;;
+
+// Initialize global namespace
+window.APP_GLOBALS = window.APP_GLOBALS || {};
+
+// Global navigation utility
+window.navigateTo = function(targetPageId) {
+const isInIframe = window.self !== window.top;
+const targetFileName = `${targetPageId}.html`;
+
+if (isInIframe) {
+window.parent.postMessage({
+type: &#39;iframeNavigation&#39;,
+targetPageId: targetPageId
+}, &#39;*&#39;);
+} else {
+window.location.href = targetFileName;
+}
+};
+
+// User authentication state management
+window.APP_GLOBALS.user = {
+isLoggedIn: false,
+userInfo: null,
+
+login: function(userInfo) {
+this.isLoggedIn = true;
+this.userInfo = userInfo;
+localStorage.setItem(&#39;userState&#39;, JSON.stringify({
+isLoggedIn: true,
+userInfo: userInfo
+}));
+this.updateUserInterface();
+},
+
+logout: function() {
+this.isLoggedIn = false;
+this.userInfo = null;
+localStorage.removeItem(&#39;userState&#39;);
+this.updateUserInterface();
+navigateTo(&#39;home_page&#39;);
+},
+
+updateUserInterface: function() {
+const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
+userControls.forEach(control => {
+const controlType = control.getAttribute(&#39;data-user-control&#39;);
+if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else {
+control.style.display = &#39;&#39;;
+}
+});
+},
+
+init: function() {
+const savedState = localStorage.getItem(&#39;userState&#39;);
+if (savedState) {
+const state = JSON.parse(savedState);
+this.isLoggedIn = state.isLoggedIn;
+this.userInfo = state.userInfo;
+}
+this.updateUserInterface();
+}
+};
+
+// Search functionality
+window.APP_GLOBALS.search = {
+history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
+recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
+
+addToHistory: function(query) {
+if (query &amp;&amp; !this.history.includes(query)) {
+this.history.unshift(query);
+this.history = this.history.slice(0, 10); // Keep only last 10 searches
+localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
+}
+},
+
+getSearchSuggestions: function() {
+return this.history.length > 0 ? this.history : this.recommendations;
+},
+
+performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
+this.addToHistory(query);
+// Navigate to search results or graph detail based on context
+navigateTo(targetPage);
+}
+};
+
+// Notification utilities
+window.showNotification = function(message, type = &#39;info&#39;) {
+const notification = document.createElement(&#39;div&#39;);
+notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+notification.innerHTML = `
+<div class="flex items-center gap-2">
+<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
+<span>${message}</span>
+</div>
+`;
+document.body.appendChild(notification);
+
+setTimeout(() => {
+notification.remove();
+}, 5000);
+};
+
+// Favorites management
+window.APP_GLOBALS.favorites = {
+items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+
+add: function(graphId, graphData) {
+if (!this.items.find(item => item.id === graphId)) {
+this.items.push({
+id: graphId,
+data: graphData,
+addedAt: new Date().toISOString()
+});
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+}
+},
+
+remove: function(graphId) {
+this.items = this.items.filter(item => item.id !== graphId);
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+},
+
+isFavorited: function(graphId) {
+return this.items.some(item => item.id === graphId);
+},
+
+toggle: function(graphId, graphData) {
+if (this.isFavorited(graphId)) {
+this.remove(graphId);
+} else {
+this.add(graphId, graphData);
+}
+}
+};
+
+// Initialize components when DOM is loaded
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+window.APP_GLOBALS.user.init();
+});
+
+})();
+</script><script>
+(function() {
+    &#39;use strict&#39;;
+
+    // Section management
+    function showSection(sectionId) {
+        // Hide all content sections
+        const sections = document.querySelectorAll(&#39;.content-section&#39;);
+        sections.forEach(section => {
+            section.classList.add(&#39;hidden&#39;);
+        });
+
+        // Show selected section
+        const targetSection = document.getElementById(sectionId + &#39;-section&#39;);
+        if (targetSection) {
+            targetSection.classList.remove(&#39;hidden&#39;);
+        }
+
+        // Update navigation active state
+        const navItems = document.querySelectorAll(&#39;.nav-item&#39;);
+        navItems.forEach(item => {
+            item.classList.remove(&#39;active&#39;);
+        });
+
+        const activeNavItem = document.querySelector(`[data-section="${sectionId}"]`);
+        if (activeNavItem) {
+            activeNavItem.classList.add(&#39;active&#39;);
+        }
+
+        // Show notification
+        showNotification(`已切换到${getSectionName(sectionId)}`, &#39;info&#39;);
+    }
+
+    function getSectionName(sectionId) {
+        const names = {
+            &#39;graph-batch&#39;: &#39;图谱批量管理&#39;,
+            &#39;realtime-update&#39;: &#39;实时更新图谱日期&#39;,
+            &#39;user-permission&#39;: &#39;用户权限管理&#39;,
+            &#39;forum-management&#39;: &#39;论坛管理&#39;,
+            &#39;graph-management&#39;: &#39;图谱管理&#39;
+        };
+        return names[sectionId] || &#39;未知功能&#39;;
+    }
+
+    // Batch operations
+    function handleBatchOperation(operation) {
+        const checkedItems = document.querySelectorAll(&#39;input[type="checkbox"]:checked&#39;);
+        const count = checkedItems.length - 1; // Exclude header checkbox
+
+        if (count === 0) {
+            showNotification(&#39;请先选择要操作的项目&#39;, &#39;warning&#39;);
+            return;
+        }
+
+        const operationNames = {
+            &#39;online&#39;: &#39;上线&#39;,
+            &#39;offline&#39;: &#39;下线&#39;,
+            &#39;delete&#39;: &#39;删除&#39;,
+            &#39;approve&#39;: &#39;审核通过&#39;,
+            &#39;reject&#39;: &#39;驳回&#39;
+        };
+
+        const operationName = operationNames[operation] || operation;
+        
+        if (confirm(`确定要${operationName} ${count} 个项目吗？`)) {
+            // Simulate operation
+            setTimeout(() => {
+                showNotification(`成功${operationName} ${count} 个项目`, &#39;success&#39;);
+                // Uncheck all items
+                checkedItems.forEach(item => {
+                    if (item !== document.querySelector(&#39;thead input[type="checkbox"]&#39;)) {
+                        item.checked = false;
+                    }
+                });
+            }, 1000);
+        }
+    }
+
+    // Table functionality
+    function initializeTableFeatures() {
+        // Header checkbox functionality
+        const headerCheckboxes = document.querySelectorAll(&#39;thead input[type="checkbox"]&#39;);
+        headerCheckboxes.forEach(headerCheckbox => {
+            headerCheckbox.addEventListener(&#39;change&#39;, function() {
+                const table = this.closest(&#39;table&#39;);
+                const bodyCheckboxes = table.querySelectorAll(&#39;tbody input[type="checkbox"]&#39;);
+                bodyCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        });
+
+        // Row checkbox functionality
+        const rowCheckboxes = document.querySelectorAll(&#39;tbody input[type="checkbox"]&#39;);
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener(&#39;change&#39;, function() {
+                const table = this.closest(&#39;table&#39;);
+                const headerCheckbox = table.querySelector(&#39;thead input[type="checkbox"]&#39;);
+                const bodyCheckboxes = table.querySelectorAll(&#39;tbody input[type="checkbox"]&#39;);
+                const checkedCount = Array.from(bodyCheckboxes).filter(cb => cb.checked).length;
+                
+                headerCheckbox.checked = checkedCount === bodyCheckboxes.length;
+                headerCheckbox.indeterminate = checkedCount > 0 &amp;&amp; checkedCount < bodyCheckboxes.length;
+            });
+        });
+    }
+
+    // Search functionality
+    function initializeSearch() {
+        const searchInputs = document.querySelectorAll(&#39;input[placeholder*="搜索"]&#39;);
+        searchInputs.forEach(input => {
+            input.addEventListener(&#39;keypress&#39;, function(e) {
+                if (e.key === &#39;Enter&#39;) {
+                    performSearch(this.value);
+                }
+            });
+        });
+
+        const searchButtons = document.querySelectorAll(&#39;.btn .iconify[data-icon="heroicons:magnifying-glass"]&#39;);
+        searchButtons.forEach(button => {
+            button.closest(&#39;.btn&#39;).addEventListener(&#39;click&#39;, function() {
+                const input = this.parentElement.querySelector(&#39;input&#39;);
+                if (input) {
+                    performSearch(input.value);
+                }
+            });
+        });
+    }
+
+    function performSearch(query) {
+        if (!query.trim()) {
+            showNotification(&#39;请输入搜索关键词&#39;, &#39;warning&#39;);
+            return;
+        }
+        
+        showNotification(`正在搜索"${query}"...`, &#39;info&#39;);
+        
+        // Simulate search
+        setTimeout(() => {
+            showNotification(`搜索完成，找到相关结果`, &#39;success&#39;);
+        }, 1000);
+    }
+
+    // Filter functionality
+    function initializeFilters() {
+        const filterSelects = document.querySelectorAll(&#39;select&#39;);
+        filterSelects.forEach(select => {
+            select.addEventListener(&#39;change&#39;, function() {
+                if (this.value &amp;&amp; this.value !== &#39;Choose category&#39; &amp;&amp; this.value !== &#39;Pick one&#39;) {
+                    showNotification(`已应用筛选条件：${this.value}`, &#39;info&#39;);
+                }
+            });
+        });
+    }
+
+    // Date update functionality
+    function handleDateUpdate() {
+        const selectedGraphs = document.querySelectorAll(&#39;#realtime-update-section .bg-base-200&#39;);
+        if (selectedGraphs.length === 0) {
+            showNotification(&#39;请先选择要更新的图谱&#39;, &#39;warning&#39;);
+            return;
+        }
+
+        const dateInput = document.querySelector(&#39;#realtime-update-section input[type="date"]&#39;);
+        if (!dateInput || !dateInput.value) {
+            showNotification(&#39;请选择更新日期&#39;, &#39;warning&#39;);
+            return;
+        }
+
+        if (confirm(`确定要更新 ${selectedGraphs.length} 个图谱的日期吗？`)) {
+            showNotification(`正在更新图谱日期...`, &#39;info&#39;);
+            setTimeout(() => {
+                showNotification(`成功更新 ${selectedGraphs.length} 个图谱的日期`, &#39;success&#39;);
+            }, 1500);
+        }
+    }
+
+    // Remove selected graph from date update
+    function removeSelectedGraph(button) {
+        const graphItem = button.closest(&#39;.bg-base-200&#39;);
+        if (graphItem) {
+            graphItem.remove();
+            showNotification(&#39;已移除选中的图谱&#39;, &#39;info&#39;);
+        }
+    }
+
+    // Individual item actions
+    function handleItemAction(action, itemName) {
+        const actionNames = {
+            &#39;edit&#39;: &#39;编辑&#39;,
+            &#39;delete&#39;: &#39;删除&#39;,
+            &#39;view&#39;: &#39;查看&#39;,
+            &#39;approve&#39;: &#39;审核通过&#39;,
+            &#39;reject&#39;: &#39;驳回&#39;,
+            &#39;disable&#39;: &#39;禁用&#39;,
+            &#39;enable&#39;: &#39;启用&#39;
+        };
+
+        const actionName = actionNames[action] || action;
+        
+        if (action === &#39;delete&#39; || action === &#39;disable&#39;) {
+            if (confirm(`确定要${actionName}"${itemName}"吗？`)) {
+                showNotification(`已${actionName}"${itemName}"`, action === &#39;delete&#39; ? &#39;error&#39; : &#39;warning&#39;);
+            }
+        } else {
+            showNotification(`正在${actionName}"${itemName}"...`, &#39;info&#39;);
+        }
+    }
+
+    // Global functions for HTML onclick handlers
+    window.showSection = showSection;
+    window.handleBatchOperation = handleBatchOperation;
+    window.handleDateUpdate = handleDateUpdate;
+    window.removeSelectedGraph = removeSelectedGraph;
+    window.handleItemAction = handleItemAction;
+
+    // Initialize page
+    document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+        // Show default section
+        showSection(&#39;graph-batch&#39;);
+        
+        // Initialize features
+        initializeTableFeatures();
+        initializeSearch();
+        initializeFilters();
+
+        // Add event listeners for action buttons
+        const actionButtons = document.querySelectorAll(&#39;.btn&#39;);
+        actionButtons.forEach(button => {
+            const text = button.textContent.trim();
+            if (text.includes(&#39;批量&#39;)) {
+                button.addEventListener(&#39;click&#39;, function() {
+                    let operation = &#39;unknown&#39;;
+                    if (text.includes(&#39;上线&#39;)) operation = &#39;online&#39;;
+                    else if (text.includes(&#39;下线&#39;)) operation = &#39;offline&#39;;
+                    else if (text.includes(&#39;删除&#39;)) operation = &#39;delete&#39;;
+                    else if (text.includes(&#39;审核&#39;)) operation = &#39;approve&#39;;
+                    else if (text.includes(&#39;驳回&#39;)) operation = &#39;reject&#39;;
+                    
+                    handleBatchOperation(operation);
+                });
+            } else if (text.includes(&#39;更新日期&#39;)) {
+                button.addEventListener(&#39;click&#39;, handleDateUpdate);
+            }
+        });
+
+        // Add event listeners for individual action buttons
+        const individualButtons = document.querySelectorAll(&#39;.btn-xs&#39;);
+        individualButtons.forEach(button => {
+            button.addEventListener(&#39;click&#39;, function(e) {
+                e.stopPropagation();
+                const icon = this.querySelector(&#39;.iconify&#39;);
+                if (!icon) return;
+
+                const iconName = icon.getAttribute(&#39;data-icon&#39;);
+                const row = this.closest(&#39;tr&#39;);
+                const itemName = row ? (row.querySelector(&#39;.font-semibold&#39;)?.textContent || &#39;项目&#39;) : &#39;项目&#39;;
+
+                let action = &#39;unknown&#39;;
+                if (iconName.includes(&#39;pencil&#39;)) action = &#39;edit&#39;;
+                else if (iconName.includes(&#39;trash&#39;)) action = &#39;delete&#39;;
+                else if (iconName.includes(&#39;eye&#39;)) action = &#39;view&#39;;
+                else if (iconName.includes(&#39;check&#39;)) action = &#39;approve&#39;;
+                else if (iconName.includes(&#39;x-mark&#39;)) action = &#39;reject&#39;;
+                else if (iconName.includes(&#39;no-symbol&#39;)) action = &#39;disable&#39;;
+                else if (iconName.includes(&#39;check-circle&#39;)) action = &#39;enable&#39;;
+
+                handleItemAction(action, itemName);
+            });
+        });
+
+        // Add event listeners for remove buttons in date update section
+        const removeButtons = document.querySelectorAll(&#39;#realtime-update-section .btn-xs&#39;);
+        removeButtons.forEach(button => {
+            button.addEventListener(&#39;click&#39;, function() {
+                removeSelectedGraph(this);
+            });
+        });
+    });
+
+})();
+</script>
+  
+
+<script>
+    setTimeout(() => {
+      Holder.run({
+        domain: "placehold.co"
+      })
+    }, 100)
+  </script></body></html>'></iframe>
+                    </div>
+                  </div>
+
+                </body>
+                </html>
+            

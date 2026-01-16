@@ -29,6 +29,11 @@ public class GraphCreateDto {
     private String coverImage;
 
     /**
+     * 是否为用户自定义封面
+     */
+    private Boolean isCustomCover;
+
+    /**
      * 初始状态：DRAFT(草稿), PUBLISHED(已发布), PRIVATE(私有)
      */
     private String status;

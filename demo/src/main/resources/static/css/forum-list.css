@@ -1,0 +1,175 @@
+/**
+ * Forum List Page Styles
+ * 论坛列表页面样式
+ */
+
+/* Line clamp */
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Like button */
+.like-btn.liked .iconify {
+    color: var(--color-error);
+    animation: likeAnimation 0.3s ease-in-out;
+}
+
+@keyframes likeAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Comments section */
+.comments-section {
+    animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 500px; }
+}
+
+/* Skeleton loading */
+.post-skeleton {
+    background: linear-gradient(90deg, var(--color-base-200) 25%, var(--color-base-300) 50%, var(--color-base-200) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Sidebar */
+.sidebar-wrapper {
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+}
+
+.sidebar-wrapper::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-wrapper::-webkit-scrollbar-track {
+    background: var(--color-base-200);
+}
+
+.sidebar-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-base-300);
+    border-radius: 2px;
+}
+
+.sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+}
+
+/* Online indicator */
+.online-indicator {
+    position: relative;
+}
+
+.online-indicator::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: var(--color-success);
+    border: 2px solid var(--color-base-100);
+    border-radius: 50%;
+}
+
+/* Modal styling */
+.modal-box {
+    background: var(--color-base-100);
+    border: var(--border) solid var(--color-base-300);
+}
+
+#privateMessageModal .modal-box,
+#quickCommentModal .modal-box,
+#shareModal .modal-box {
+    border-radius: var(--radius-box);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+#privateMessageModal .textarea,
+#quickCommentModal .textarea {
+    resize: none;
+    transition: border-color 0.15s ease-in-out;
+}
+
+#privateMessageModal .textarea:focus,
+#quickCommentModal .textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
+}
+
+/* Character counter */
+#charCount, #quickCommentCharCount {
+    transition: color 0.15s ease-in-out;
+    font-weight: 500;
+}
+
+/* Modal backdrop */
+.modal .modal-backdrop {
+    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Academic post card */
+.academic-post-card {
+    border: var(--border) solid var(--color-base-300);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.academic-post-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.1);
+}
+
+/* Forum action button */
+.forum-action-btn {
+    transition: all 0.15s ease-in-out;
+    border-radius: var(--radius-field);
+}
+
+.forum-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Share modal */
+#shareModal .input {
+    background-color: var(--color-base-200);
+    border-color: var(--color-base-300);
+}
+
+#shareModal .btn-primary.copied {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    animation: copySuccess 0.3s ease-in-out;
+}
+
+@keyframes copySuccess {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+    .sidebar-wrapper { width: 16rem; }
+}
+
+@media (max-width: 1024px) {
+    .sidebar-wrapper { display: none; }
+    .main-content-wrapper { width: 100%; }
+}

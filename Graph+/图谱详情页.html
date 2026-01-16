@@ -1,0 +1,1825 @@
+
+                <!DOCTYPE html>
+                <html lang="zh">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>图谱详情页</title>
+                  <style>
+                    *,
+                    *::before,
+                    *::after {
+                      box-sizing: border-box;
+                      margin: 0;
+                    }
+                    .iframe-outer {
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      bottom: 0;
+                      right: 0;
+                      display: flex;
+                      justify-content: center;
+                      background-color: #E0E0E0;
+                    }
+                    .iframe-wrapper {
+                      width: 100%;
+                      height: 100%;
+                      margin: 0 auto;
+                      transform-origin: center top;
+                      flex-shrink: 0;
+                    }
+                    #dynamicIframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  </style>
+                  <script>
+                const width = 1920
+                const height = 1080
+                const resolutionRatio = width && height ? width / height : 1
+                const pageNameMap = {
+                  'home_page': '首页',
+    'login_register_page': '登录注册',
+    'registration_success_page': '注册成功',
+    'password_reset_page': '找回密码',
+    'graph_list_page': '图谱列表页',
+    'graph_detail_page': '图谱详情页',
+    'user_profile_page': '个人中心',
+    'documentation_page': '文档',
+    'about_page': '关于我们',
+    'feedback_page': '用户反馈',
+    'page_998124': '管理',
+    'page_998125': '论坛'
+                }
+                function setIframeSize(w, h) {
+                  const currentContainerRadio = w / h
+                  let widthValue = w
+                  let heightValue = h
+                  let zoom = 1
+                  if (currentContainerRadio > resolutionRatio) {
+                    widthValue = h * resolutionRatio
+                    heightValue = h
+                  } else {
+                    widthValue = w
+                    heightValue = w / resolutionRatio
+                  }
+                  zoom = width ? widthValue / width : 1
+                  return {
+                    width: widthValue / zoom + 'px',
+                    height: heightValue / zoom + 'px',
+                    zoom,
+                  }
+                }
+                function adjustIframeSize() {
+                  const iframeWrapper = document.querySelector(".iframe-wrapper")
+                  if (!iframeWrapper) return
+                  iframeWrapper.style.width = '100%'
+                  iframeWrapper.style.height = window.innerHeight + 'px'
+                  iframeWrapper.style.transform = ''
+                }
+                function sanitizeFilename(name) {
+                  return name.replace(/[\/:*?"<>|]/g, '_')
+                }
+                function handlePostMessage(event) {
+                  if (!event.data) {
+                    return
+                  }
+                  const { type, targetPageId } = event.data
+                  const targetPageName = pageNameMap[targetPageId]
+                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
+                    window.location.href = targetPageName + '.html'
+                  }
+                }
+                window.addEventListener('message', handlePostMessage)
+                window.onload = adjustIframeSize
+                window.onresize = adjustIframeSize
+                window.onunload = () => {
+                  window.removeEventListener('message', handlePostMessage)
+                }
+              </script>
+                </head>
+                <body>
+                  <div class="iframe-outer">
+                    <div class="iframe-wrapper">
+                      <iframe id="dynamicIframe" srcdoc='<html lang="zh-CN" data-theme="corporate"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图谱详情 - Graph+知识图谱平台</title>
+    <link href="./assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
+    <script src="./assets/static/libs/tailwind-browser@4.js"></script>
+    <link href="./assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
+    <script src="./assets/3/3.1.1/iconify.min.js"></script>
+    <style>
+/* daisyUI Theme Variables Customization
+* Based on the selected daisyUI theme and UI guidance requirements,
+* customize only the CSS variables that need to be different from the theme defaults.
+*/
+:root {
+/* Corporate theme customization for knowledge graph platform */
+--color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
+--color-primary-content: rgba(255, 255, 255, 1);
+--color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
+--color-secondary-content: rgba(255, 255, 255, 1);
+--color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
+--color-accent-content: rgba(255, 255, 255, 1);
+--color-base-100: rgba(255, 255, 255, 1);
+--color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
+--color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
+--color-base-content: rgba(55, 65, 81, 1); /* #374151 */
+--color-success: rgba(16, 185, 129, 1);
+--color-warning: rgba(245, 158, 11, 1);
+--color-error: rgba(239, 68, 68, 1);
+--color-info: rgba(59, 130, 246, 1);
+--radius-box: 0.375rem; /* 6px for micro-rounded corners */
+--radius-field: 0.375rem;
+--border: 1px;
+}
+
+/* Global component styles */
+.transition-width {
+transition: width 0.3s ease-in-out;
+}
+
+.nav-hover {
+transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.shadow-soft {
+box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header height consistency */
+.header-height {
+height: 64px;
+}
+
+/* Focus styles for accessibility */
+.focus-primary:focus {
+outline: 2px solid var(--color-primary);
+outline-offset: 2px;
+}
+
+/* Academic style enhancements */
+.academic-border {
+border: var(--border) solid var(--color-base-300);
+}
+
+.hover-lift {
+transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional grid spacing */
+.academic-grid {
+gap: 1.5rem;
+}
+
+/* Clean divider lines */
+.academic-divider {
+border-color: var(--color-base-300);
+border-width: var(--border);
+}
+</style> <style>
+/* Graph Detail Page Specific Styles */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Graph canvas styles with subtle grid background */
+#graphCanvas {
+    background: linear-gradient(45deg, rgba(229, 231, 235, 0.15) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(229, 231, 235, 0.15) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(229, 231, 235, 0.15) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(229, 231, 235, 0.15) 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+}
+
+/* Node details card styling */
+.node-detail-card {
+    background: var(--color-base-100);
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    padding: 1.5rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.node-detail-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Graph node styles */
+.graph-node {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.graph-node:hover {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+}
+
+.graph-node.selected {
+    stroke: var(--color-primary);
+    stroke-width: 3px;
+    filter: drop-shadow(0 2px 4px rgba(30, 58, 138, 0.3));
+}
+
+.graph-edge {
+    stroke: var(--color-base-content);
+    stroke-opacity: 0.5;
+    stroke-width: 1.5px;
+    transition: all 0.2s ease-in-out;
+}
+
+.graph-edge.highlighted {
+    stroke: var(--color-accent);
+    stroke-opacity: 0.8;
+    stroke-width: 2.5px;
+}
+
+/* Statistics section collapsible */
+.statistics-collapsed #statisticsContent {
+    display: none;
+}
+
+/* Enhanced range slider styling for academic look */
+.range {
+    height: 0.375rem;
+    background: var(--color-base-300);
+    border-radius: var(--radius-field);
+}
+
+.range::-webkit-slider-thumb {
+    height: 1.125rem;
+    width: 1.125rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-base-100);
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+    transition: all 0.15s ease-in-out;
+}
+
+.range::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(30, 58, 138, 0.3);
+}
+
+.range::-moz-range-thumb {
+    height: 1.125rem;
+    width: 1.125rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-base-100);
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+    transition: all 0.15s ease-in-out;
+}
+
+/* Checkbox styling enhancements for academic look */
+.checkbox {
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-selector);
+}
+
+.checkbox:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.checkbox-secondary:checked {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+}
+
+/* Recommendation scroll styling */
+#recommendationsContainer::-webkit-scrollbar {
+    height: 8px;
+}
+
+#recommendationsContainer::-webkit-scrollbar-track {
+    background: var(--color-base-300);
+    border-radius: 4px;
+}
+
+#recommendationsContainer::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+}
+
+#recommendationsContainer::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+}
+
+/* Favorite button active state */
+.favorite-active {
+    color: var(--color-error) !important;
+}
+
+/* Search highlight */
+.search-highlight {
+    background-color: rgba(245, 158, 11, 0.25);
+    border-radius: var(--radius-selector);
+    padding: 1px 3px;
+}
+
+/* Loading overlay */
+.graph-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+}
+
+/* Tooltip customization for graph elements */
+.graph-tooltip {
+    position: absolute;
+    background: var(--color-base-100);
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    pointer-events: none;
+    max-width: 240px;
+}
+
+/* Statistics cards styling */
+.stat {
+    border-radius: var(--radius-box);
+    border: var(--border) solid var(--color-base-300);
+    transition: all 0.15s ease-in-out;
+}
+
+.stat:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Enhanced button styling for academic look */
+.btn {
+    border-radius: var(--radius-field);
+    transition: all 0.15s ease-in-out;
+    border: var(--border) solid transparent;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-circle {
+    border-radius: 50%;
+}
+
+/* Select dropdown styling */
+.select {
+    border-radius: var(--radius-field);
+    border: var(--border) solid var(--color-base-300);
+}
+
+/* Input field styling */
+.input {
+    border-radius: var(--radius-field);
+    border: var(--border) solid var(--color-base-300);
+}
+
+/* Card styling enhancements */
+.card {
+    border-radius: var(--radius-box);
+    border: var(--border) solid var(--color-base-300);
+}
+
+/* Badge styling */
+.badge {
+    border-radius: var(--radius-selector);
+    border: var(--border) solid transparent;
+}
+
+.badge-outline {
+    border-color: var(--color-base-300);
+}
+
+/* Chart container styling */
+#chartContainer {
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    transition: all 0.15s ease-in-out;
+}
+
+#chartContainer:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Dropdown styling for chart selection */
+.dropdown-content {
+    border: var(--border) solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dropdown-content a {
+    transition: all 0.15s ease-in-out;
+    border-radius: var(--radius-selector);
+    margin: 2px;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--color-base-200);
+    transform: translateX(2px);
+}
+
+.dropdown-content a.active {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-content) !important;
+    font-weight: 500;
+}
+
+.dropdown-content a.active:hover {
+    background-color: var(--color-primary) !important;
+    transform: none;
+}
+
+/* Chart container loading animation */
+.chartContainer {
+    transition: all 0.3s ease-in-out;
+}
+
+.chartContainer img {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Enhanced loading spinner for charts */
+.loading.loading-spinner.loading-lg {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1280px) {
+    .w-80 {
+        width: 18rem;
+    }
+    
+    .w-16 {
+        width: 3.5rem;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    .w-80 {
+        width: 16rem;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Stack the three main columns vertically */
+    .flex-1.flex { flex-direction: column; }
+    .w-80 { width: 100%; }
+    .w-16 { display: none; }
+    #graphVisualizationArea { min-height: 50vh; }
+    .p-6 { padding: 1rem; }
+}
+
+/* Extra small screens */
+@media (max-width: 640px) {
+    .header-height { height: 56px; }
+    .btn.btn-sm { height: 2.5rem; }
+    .join .input { height: 3rem; }
+    .join .btn { height: 3rem; }
+}
+
+/* Smooth transitions for interactive elements */
+.checkbox,
+.range,
+.select,
+.input {
+    transition: all 0.15s ease-in-out;
+}
+
+/* Focus states for accessibility */
+.checkbox:focus,
+.range:focus,
+.select:focus,
+.input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Modal styling enhancements */
+.modal-box {
+    border-radius: var(--radius-box);
+    border: var(--border) solid var(--color-base-300);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+/* Copy button animation */
+.btn.btn-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+}
+
+/* Join input styling */
+.join .input {
+    border-right: none;
+}
+
+.join .btn {
+    border-left: none;
+}
+
+/* Download format buttons */
+.btn-outline:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Modal close button styling */
+.modal-box .btn-circle {
+    background-color: var(--color-base-200);
+    border: var(--border) solid var(--color-base-300);
+}
+
+.modal-box .btn-circle:hover {
+    background-color: var(--color-base-300);
+}
+
+/* Academic spacing enhancements */
+.space-y-3 > * + * {
+    margin-top: 0.75rem;
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+.space-y-6 > * + * {
+    margin-top: 1.5rem;
+}
+
+/* Professional typography */
+.label-text {
+    font-weight: 500;
+    color: var(--color-base-content);
+}
+
+.stat-title {
+    font-weight: 500;
+    color: var(--color-base-content);
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-weight: 600;
+}
+
+/* Enhanced academic borders */
+.academic-border {
+    border-color: var(--color-base-300);
+}
+
+/* Subtle hover effects for academic feel */
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Clean dividers */
+.divider {
+    border-color: var(--color-base-300);
+}
+</style>
+  <script src="./assets/static/libs/25_6/holder.js"></script></head>
+  <body class="bg-base-100 min-h-screen">
+    <div class="header-wrapper"></div>
+    <!-- Main Content -->
+    <div id="i9njq" class="flex-1 flex flex-col" style="min-height: calc(100vh - 64px);">
+      <!-- Graph Detail Layout -->
+      <div class="flex-1 flex">
+        <!-- Left Sidebar -->
+        <div class="w-80 bg-base-200 border-r academic-border flex flex-col">
+          <!-- Return Button -->
+          <div class="p-6 border-b academic-border">
+            <button class="btn btn-ghost btn-sm w-full justify-start gap-2 focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">
+              <span class="iconify text-base-content" data-icon="heroicons:arrow-left" data-width="16"></span>
+              返回图谱列表
+            </button>
+          </div>
+          <!-- Graph Info -->
+          <div class="p-6 border-b academic-border">
+            <h1 class="text-lg font-semibold text-base-content mb-3">
+              人工智能知识图谱
+            </h1>
+            <p class="text-sm text-base-content/70 mb-4 leading-relaxed">
+              涵盖机器学习、深度学习、自然语言处理等AI核心领域的综合知识体系
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <div class="badge badge-primary badge-sm">人工智能</div>
+              <div class="badge badge-secondary badge-sm">机器学习</div>
+              <div class="badge badge-accent badge-sm">深度学习</div>
+            </div>
+          </div>
+          <!-- Search in Graph -->
+          <div class="p-6 border-b academic-border">
+            <label class="form-control"><div class="label">
+                <span class="label-text text-sm font-medium">图谱内搜索</span>
+              </div>
+              <div class="join">
+                <input type="text" placeholder="搜索节点或关系..." id="graphSearchInput" class="input input-bordered input-sm join-item flex-1 focus-primary"><button class="btn btn-primary btn-sm join-item" onclick="searchInGraph()">
+                  <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                </button></div></label>
+          </div>
+          <!-- Entity Types -->
+          <div class="p-6 border-b academic-border">
+            <div class="label">
+              <span class="label-text text-sm font-medium">实体类型</span>
+            </div>
+            <div class="space-y-3">
+              <label class="label cursor-pointer justify-start gap-3 py-1"><input type="checkbox" checked="" class="checkbox checkbox-primary checkbox-sm"><span class="label-text text-sm">概念 (12)</span></label><label class="label cursor-pointer justify-start gap-3 py-1"><input type="checkbox" checked="" class="checkbox checkbox-primary checkbox-sm"><span class="label-text text-sm">算法 (8)</span></label><label class="label cursor-pointer justify-start gap-3 py-1"><input type="checkbox" checked="" class="checkbox checkbox-primary checkbox-sm"><span class="label-text text-sm">应用 (15)</span></label><label class="label cursor-pointer justify-start gap-3 py-1"><input type="checkbox" class="checkbox checkbox-primary checkbox-sm"><span class="label-text text-sm">工具 (6)</span></label>
+            </div>
+          </div>
+          <!-- Relationship Types -->
+          <div class="p-6 border-b academic-border">
+            <div class="label">
+              <span class="label-text text-sm font-medium">关系类型</span>
+            </div>
+            <div class="space-y-3">
+              <label class="label cursor-pointer justify-start gap-3 py-1"><input type="checkbox" checked="" class="checkbox checkbox-secondary checkbox-sm"><span class="label-text text-sm">包含 (25)</span></label><label class="label cursor-pointer justify-start gap-3 py-1"><input type="checkbox" checked="" class="checkbox checkbox-secondary checkbox-sm"><span class="label-text text-sm">应用于 (18)</span></label><label class="label cursor-pointer justify-start gap-3 py-1"><input type="checkbox" class="checkbox checkbox-secondary checkbox-sm"><span class="label-text text-sm">依赖 (12)</span></label>
+            </div>
+          </div>
+          <!-- Query Tools -->
+          <div class="p-6 border-b academic-border">
+            <div class="label">
+              <span class="label-text text-sm font-medium">查询工具</span>
+            </div>
+            <div class="space-y-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text text-xs">节点查询</span></label><select class="select select-bordered select-sm">
+                  <option>按度数排序</option>
+                  <option>按重要性排序</option>
+                  <option>按类型筛选</option>
+                </select>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text text-xs">路径查询</span></label><select class="select select-bordered select-sm">
+                  <option>最短路径</option>
+                  <option>所有路径</option>
+                  <option>关键路径</option>
+                </select>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text text-xs">子图查询</span></label><select class="select select-bordered select-sm">
+                  <option>连通子图</option>
+                  <option>核心子图</option>
+                  <option>社区检测</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <!-- View Controls -->
+          <div class="p-6 border-b academic-border">
+            <div class="label">
+              <span class="label-text text-sm font-medium">视图控制</span>
+            </div>
+            <div class="space-y-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text text-xs">显示节点数量</span></label><input type="range" min="10" max="100" value="50" id="nodeCountRange" class="range range-primary range-sm">
+                <div class="w-full flex justify-between text-xs px-2 text-base-content/60">
+                  <span>10</span><span>50</span><span>100</span>
+                </div>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text text-xs">邻居深度</span></label><input type="range" min="1" max="5" value="2" id="depthRange" class="range range-secondary range-sm">
+                <div class="w-full flex justify-between text-xs px-2 text-base-content/60">
+                  <span>1</span><span>3</span><span>5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Node Details -->
+          <div class="flex-1 p-6 overflow-y-auto">
+            <div class="label">
+              <span class="label-text text-sm font-medium">节点详情</span>
+            </div>
+            <div id="nodeDetailsContainer" class="space-y-3">
+              <div class="text-sm text-base-content/50 text-center py-8">
+                点击图谱中的节点查看详细信息
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Main Graph Area -->
+        <div class="flex-1 flex flex-col">
+          <!-- Graph Statistics Section -->
+          <div class="bg-base-100 border-b academic-border"></div>
+          <!-- Graph Visualization Area -->
+          <div id="graphVisualizationArea" class="flex-1 relative bg-base-100">
+            <!-- Graph Canvas -->
+            <div id="graphCanvas" class="w-full h-full relative overflow-hidden graphCanvas spark-custom-graphCanvas">
+              <!-- Graph visualization will be rendered here -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                  <div class="loading loading-spinner loading-lg text-primary mb-4"></div>
+                  <p class="text-base-content/70">正在加载知识图谱...</p>
+                </div>
+              </div>
+            </div>
+            <!-- Graph Controls Overlay -->
+            <div class="absolute top-6 left-6 flex flex-col gap-3">
+              <div data-tip="放大" class="tooltip tooltip-right">
+                <button id="i3qyic" class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift i3qyic spark-custom-i3qyic" onclick="zoomIn()">
+                  <span class="iconify text-base-content" data-icon="heroicons:plus" data-width="16"></span>
+                </button>
+              </div>
+              <div data-tip="缩小" class="tooltip tooltip-right">
+                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift" onclick="zoomOut()">
+                  <span class="iconify text-base-content" data-icon="heroicons:minus" data-width="16"></span>
+                </button>
+              </div>
+              <div data-tip="重置视图" class="tooltip tooltip-right">
+                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift" onclick="resetView()">
+                  <span class="iconify text-base-content" data-icon="heroicons:arrow-path" data-width="16"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Right Action Panel -->
+        <div class="w-16 bg-base-200 border-l academic-border flex flex-col items-center py-6 gap-4">
+          <div data-tip="收藏图谱" class="tooltip tooltip-left">
+            <button id="favoriteBtn" class="btn btn-circle btn-sm hover-lift focus-primary" onclick="toggleFavorite()">
+              <span class="iconify text-base-content" data-icon="heroicons:heart" data-width="20"></span>
+            </button>
+          </div>
+          <div data-tip="分享图谱" class="tooltip tooltip-left">
+            <button class="btn btn-circle btn-sm hover-lift focus-primary" onclick="shareGraph()">
+              <span class="iconify text-base-content" data-icon="heroicons:share" data-width="20"></span>
+            </button>
+          </div>
+          <div data-tip="下载图谱" class="tooltip tooltip-left">
+            <button class="btn btn-circle btn-sm hover-lift focus-primary" onclick="downloadGraph()">
+              <span class="iconify text-base-content" data-icon="heroicons:arrow-down-tray" data-width="20"></span>
+            </button>
+          </div>
+          <div data-tip="全屏显示" class="tooltip tooltip-left">
+            <button class="btn btn-circle btn-sm hover-lift focus-primary" onclick="toggleFullscreen()">
+              <span class="iconify text-base-content" data-icon="heroicons:arrows-pointing-out" data-width="20"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Related Graph Recommendations Section -->
+      <div id="ijdr1z" class="p-6 ijdr1z spark-custom-ijdr1z">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-semibold text-base-content">图谱统计概览</h2>
+          <button class="btn btn-ghost btn-sm" onclick="toggleStatistics()">
+            <span class="iconify" data-icon="heroicons:chevron-up" data-width="16" id="statsToggleIcon"></span>
+          </button>
+        </div>
+        <div id="statisticsContent" class="space-y-6">
+          <!-- Key Metrics -->
+          <div class="grid grid-cols-4 gap-4">
+            <div class="stat bg-base-200 rounded-lg p-4">
+              <div class="stat-title text-xs">节点总数</div>
+              <div class="stat-value text-lg text-primary">156</div>
+            </div>
+            <div class="stat bg-base-200 rounded-lg p-4">
+              <div class="stat-title text-xs">关系总数</div>
+              <div class="stat-value text-lg text-secondary">284</div>
+            </div>
+            <div class="stat bg-base-200 rounded-lg p-4">
+              <div class="stat-title text-xs">平均连接度</div>
+              <div class="stat-value text-lg text-accent">3.6</div>
+            </div>
+            <div class="stat bg-base-200 rounded-lg p-4">
+              <div class="stat-title text-xs">图谱密度</div>
+              <div class="stat-value text-lg text-info">0.23</div>
+            </div>
+          </div>
+          <!-- Chart Selection and Display -->
+          <div id="i1o35t" class="bg-base-200 rounded-lg p-6 i1o35t spark-custom-i1o35t">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-medium">统计图表</h3>
+              <div id="iwjh1f" class="dropdown dropdown-end iwjh1f spark-custom-iwjh1f">
+                <button tabindex="0" role="button" class="btn btn-outline btn-sm">
+                  <span id="selectedChartType">节点类型分布饼状图</span><span class="iconify" data-icon="heroicons:chevron-down" data-width="16"></span>
+                </button>
+                <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-64 mt-2">
+                  <li>
+                    <a id="iilalo" class="iilalo spark-custom-iilalo" onclick="selectChart(&#39;pie&#39;)">节点类型分布饼状图</a>
+                  </li>
+                  <li>
+                    <a id="i97qbj" class="i97qbj spark-custom-i97qbj" onclick="selectChart(&#39;histogram&#39;)">属性特征直方图</a>
+                  </li>
+                  <li>
+                    <a id="ihqeci" class="ihqeci spark-custom-ihqeci" onclick="selectChart(&#39;wordcloud&#39;)">词云</a>
+                  </li>
+                  <li>
+                    <a id="ix9plt" class="ix9plt spark-custom-ix9plt" onclick="selectChart(&#39;line&#39;)">活跃度趋势曲线</a>
+                  </li>
+                  <li><a onclick="selectChart(&#39;thumbnail&#39;)">图谱缩略图</a></li>
+                  <li>
+                    <a id="i9s5o8" class="i9s5o8 spark-custom-i9s5o8" onclick="selectChart(&#39;network&#39;)">网络拓扑图</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div id="chartContainer" class="h-64 bg-base-100 rounded flex items-center justify-center chartContainer spark-custom-chartContainer">
+              <img alt="节点类型分布饼状图" class="rounded" data-src="placehold.co/400x240.png?text=Node+Type+Distribution+Pie+Chart">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-base-200 border-t academic-border">
+        <div class="p-6">
+          <h2 class="text-lg font-semibold text-base-content mb-6">
+            相关图谱推荐
+          </h2>
+          <div id="recommendationsContainer" class="flex gap-6 overflow-x-auto pb-2">
+            <!-- Recommendation cards -->
+            <div data-repeatable="true" class="card w-64 bg-base-100 shadow-soft hover-lift shrink-0 cursor-pointer" onclick="navigateTo(&#39;graph_detail_page&#39;)">
+              <figure class="h-32">
+                <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/5799cbb3-9457-4add-bf87-22d2520d9900.png" alt="机器学习基础图谱" class="w-full h-full object-cover">
+              </figure>
+              <div class="card-body p-4">
+                <h3 class="card-title text-sm">机器学习基础</h3>
+                <p class="text-xs text-base-content/70 line-clamp-2">
+                  涵盖监督学习、无监督学习、强化学习等核心算法
+                </p>
+                <div class="flex gap-1 mt-2">
+                  <div class="badge badge-outline badge-xs">算法</div>
+                  <div class="badge badge-outline badge-xs">基础</div>
+                </div>
+              </div>
+            </div>
+            <div data-repeatable="true" class="card w-64 bg-base-100 shadow-soft hover-lift shrink-0 cursor-pointer" onclick="navigateTo(&#39;graph_detail_page&#39;)">
+              <figure class="h-32">
+                <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/2f145208-90a2-40f1-a32d-6cdb765d39a1.png" alt="神经网络架构图谱" class="w-full h-full object-cover">
+              </figure>
+              <div class="card-body p-4">
+                <h3 class="card-title text-sm">神经网络架构</h3>
+                <p class="text-xs text-base-content/70 line-clamp-2">
+                  从感知机到深度神经网络的演进历程
+                </p>
+                <div class="flex gap-1 mt-2">
+                  <div class="badge badge-outline badge-xs">神经网络</div>
+                  <div class="badge badge-outline badge-xs">架构</div>
+                </div>
+              </div>
+            </div>
+            <div data-repeatable="true" class="card w-64 bg-base-100 shadow-soft hover-lift shrink-0 cursor-pointer" onclick="navigateTo(&#39;graph_detail_page&#39;)">
+              <figure class="h-32">
+                <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/0333837b-d9e1-4e93-9607-4d11e714a5d6.png" alt="计算机视觉图谱" class="w-full h-full object-cover">
+              </figure>
+              <div class="card-body p-4">
+                <h3 class="card-title text-sm">计算机视觉</h3>
+                <p class="text-xs text-base-content/70 line-clamp-2">
+                  图像处理、目标检测、图像分割等技术体系
+                </p>
+                <div class="flex gap-1 mt-2">
+                  <div class="badge badge-outline badge-xs">视觉</div>
+                  <div class="badge badge-outline badge-xs">图像</div>
+                </div>
+              </div>
+            </div>
+            <div data-repeatable="true" class="card w-64 bg-base-100 shadow-soft hover-lift shrink-0 cursor-pointer" onclick="navigateTo(&#39;graph_detail_page&#39;)">
+              <figure class="h-32">
+                <img loading="lazy" decoding="async" fetchpriority="low" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/70b0ea03-c4c9-43ca-9435-0f154a156133.png" alt="自然语言处理图谱" class="w-full h-full object-cover">
+              </figure>
+              <div class="card-body p-4">
+                <h3 class="card-title text-sm">自然语言处理</h3>
+                <p class="text-xs text-base-content/70 line-clamp-2">
+                  文本分析、语言模型、机器翻译等NLP技术
+                </p>
+                <div class="flex gap-1 mt-2">
+                  <div class="badge badge-outline badge-xs">NLP</div>
+                  <div class="badge badge-outline badge-xs">语言</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Share Modal -->
+    <dialog id="shareModal" class="modal">
+      <div class="modal-box">
+        <form method="dialog">
+          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+            ✕
+          </button>
+        </form>
+        <h3 class="font-bold text-lg mb-6">分享图谱</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="label"><span class="label-text">分享链接</span></label>
+            <div class="join w-full">
+              <input type="text" id="shareLink" readonly="" value="" class="input input-bordered join-item flex-1"><button id="copyShareBtn" class="btn btn-primary join-item" onclick="copyShareLink()">
+                <span class="iconify" data-icon="heroicons:clipboard-document" data-width="16"></span>
+                复制
+              </button>
+            </div>
+          </div>
+          <div class="text-sm text-base-content/70">
+            通过此链接，其他用户可以直接访问这个知识图谱
+          </div>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+    <!-- Download Modal -->
+    <dialog id="downloadModal" class="modal">
+      <div class="modal-box">
+        <form method="dialog">
+          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+            ✕
+          </button>
+        </form>
+        <h3 class="font-bold text-lg mb-6">下载图谱</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="label"><span class="label-text">下载链接</span></label>
+            <div class="join w-full">
+              <input type="text" id="downloadLink" readonly="" value="" class="input input-bordered join-item flex-1"><button id="copyDownloadBtn" class="btn btn-primary join-item" onclick="copyDownloadLink()">
+                <span class="iconify" data-icon="heroicons:clipboard-document" data-width="16"></span>
+                复制
+              </button>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="text-sm font-medium text-base-content">可用格式：</div>
+            <div class="flex gap-2">
+              <button class="btn btn-outline btn-sm" onclick="downloadFormat(&#39;json&#39;)">
+                <span class="iconify" data-icon="heroicons:document-text" data-width="16"></span>
+                JSON</button><button class="btn btn-outline btn-sm" onclick="downloadFormat(&#39;csv&#39;)">
+                <span class="iconify" data-icon="heroicons:table-cells" data-width="16"></span>
+                CSV</button><button class="btn btn-outline btn-sm" onclick="downloadFormat(&#39;png&#39;)">
+                <span class="iconify" data-icon="heroicons:photo" data-width="16"></span>
+                PNG
+              </button>
+            </div>
+          </div>
+          <div class="text-sm text-base-content/70">
+            选择格式后将生成对应的下载链接
+          </div>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+    <!-- Footer -->
+    <div class="footer-wrapper"><div data-section-id="common_footer" data-section-type="common_footer">
+<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
+<div class="grid grid-flow-col gap-4">
+<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
+<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
+<a class="link link-hover focus-primary">隐私政策</a>
+<a class="link link-hover focus-primary">服务条款</a>
+</div>
+<div class="grid grid-flow-col gap-4">
+<a class="link link-hover focus-primary" aria-label="官方微信">
+<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
+</a>
+<a class="link link-hover focus-primary" aria-label="企业QQ">
+<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
+</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
+<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+</a>
+</div>
+<div class="text-center">
+<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
+<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
+</div>
+</footer>
+</div></div>
+    <script>
+(function() {
+&#39;use strict&#39;;
+
+// Initialize global namespace
+window.APP_GLOBALS = window.APP_GLOBALS || {};
+
+// Global navigation utility
+window.navigateTo = function(targetPageId) {
+const isInIframe = window.self !== window.top;
+const targetFileName = `${targetPageId}.html`;
+
+if (isInIframe) {
+window.parent.postMessage({
+type: &#39;iframeNavigation&#39;,
+targetPageId: targetPageId
+}, &#39;*&#39;);
+} else {
+window.location.href = targetFileName;
+}
+};
+
+// User authentication state management
+window.APP_GLOBALS.user = {
+isLoggedIn: false,
+userInfo: null,
+
+login: function(userInfo) {
+this.isLoggedIn = true;
+this.userInfo = userInfo;
+localStorage.setItem(&#39;userState&#39;, JSON.stringify({
+isLoggedIn: true,
+userInfo: userInfo
+}));
+this.updateUserInterface();
+},
+
+logout: function() {
+this.isLoggedIn = false;
+this.userInfo = null;
+localStorage.removeItem(&#39;userState&#39;);
+this.updateUserInterface();
+navigateTo(&#39;home_page&#39;);
+},
+
+updateUserInterface: function() {
+const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
+userControls.forEach(control => {
+const controlType = control.getAttribute(&#39;data-user-control&#39;);
+if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else {
+control.style.display = &#39;&#39;;
+}
+});
+},
+
+init: function() {
+const savedState = localStorage.getItem(&#39;userState&#39;);
+if (savedState) {
+const state = JSON.parse(savedState);
+this.isLoggedIn = state.isLoggedIn;
+this.userInfo = state.userInfo;
+}
+this.updateUserInterface();
+}
+};
+
+// Search functionality
+window.APP_GLOBALS.search = {
+history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
+recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
+
+addToHistory: function(query) {
+if (query &amp;&amp; !this.history.includes(query)) {
+this.history.unshift(query);
+this.history = this.history.slice(0, 10); // Keep only last 10 searches
+localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
+}
+},
+
+getSearchSuggestions: function() {
+return this.history.length > 0 ? this.history : this.recommendations;
+},
+
+performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
+this.addToHistory(query);
+// Navigate to search results or graph detail based on context
+navigateTo(targetPage);
+}
+};
+
+// Notification utilities
+window.showNotification = function(message, type = &#39;info&#39;) {
+const notification = document.createElement(&#39;div&#39;);
+notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+notification.innerHTML = `
+<div class="flex items-center gap-2">
+<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
+<span>${message}</span>
+</div>
+`;
+document.body.appendChild(notification);
+
+setTimeout(() => {
+notification.remove();
+}, 5000);
+};
+
+// Favorites management
+window.APP_GLOBALS.favorites = {
+items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+
+add: function(graphId, graphData) {
+if (!this.items.find(item => item.id === graphId)) {
+this.items.push({
+id: graphId,
+data: graphData,
+addedAt: new Date().toISOString()
+});
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+}
+},
+
+remove: function(graphId) {
+this.items = this.items.filter(item => item.id !== graphId);
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+},
+
+isFavorited: function(graphId) {
+return this.items.some(item => item.id === graphId);
+},
+
+toggle: function(graphId, graphData) {
+if (this.isFavorited(graphId)) {
+this.remove(graphId);
+} else {
+this.add(graphId, graphData);
+}
+}
+};
+
+// Initialize components when DOM is loaded
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+window.APP_GLOBALS.user.init();
+});
+
+})();
+</script><script>
+(function() {
+    &#39;use strict&#39;;
+
+    // Graph state management
+    let currentGraphData = {
+        id: &#39;ai_knowledge_graph&#39;,
+        name: &#39;人工智能知识图谱&#39;,
+        nodes: [],
+        edges: [],
+        selectedNode: null
+    };
+
+    let graphZoom = 1;
+    let graphPan = { x: 0, y: 0 };
+    let isFullscreen = false;
+    let statisticsCollapsed = false;
+    let currentChartType = &#39;pie&#39;;
+
+    // Chart type mapping
+    const chartTypes = {
+        &#39;pie&#39;: {
+            name: &#39;节点类型分布饼状图&#39;,
+            image: &#39;https://placehold.co/400x240.png?text=Node+Type+Distribution+Pie+Chart&#39;
+        },
+        &#39;histogram&#39;: {
+            name: &#39;属性特征直方图&#39;,
+            image: &#39;https://placehold.co/400x240.png?text=Attribute+Feature+Histogram&#39;
+        },
+        &#39;wordcloud&#39;: {
+            name: &#39;词云&#39;,
+            image: &#39;https://placehold.co/400x240.png?text=Word+Cloud+Visualization&#39;
+        },
+        &#39;line&#39;: {
+            name: &#39;活跃度趋势曲线&#39;,
+            image: &#39;https://placehold.co/400x240.png?text=Activity+Trend+Line+Chart&#39;
+        },
+        &#39;thumbnail&#39;: {
+            name: &#39;图谱缩略图&#39;,
+            image: &#39;https://placehold.co/400x240.png?text=Graph+Thumbnail+Overview&#39;
+        },
+        &#39;network&#39;: {
+            name: &#39;网络拓扑图&#39;,
+            image: &#39;https://placehold.co/400x240.png?text=Network+Topology+Diagram&#39;
+        }
+    };
+
+    // Initialize page
+    document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+        initializeGraph();
+        updateFavoriteButton();
+        setupSearchFunctionality();
+        setupViewControls();
+        setupEntityTypeFilters();
+        setupRelationshipFilters();
+        initializeChart();
+    });
+
+// Chart selection function
+    window.selectChart = function(chartType) {
+        currentChartType = chartType;
+        const chart = chartTypes[chartType];
+        
+        // Update button text
+        document.getElementById(&#39;selectedChartType&#39;).textContent = chart.name;
+        
+        // Show loading state
+        showChartLoading();
+        
+        // Simulate chart loading with delay
+        setTimeout(() => {
+            updateChartDisplay(chart);
+            updateDropdownSelection(chartType);
+        }, 800);
+        
+        // Close dropdown
+        document.activeElement.blur();
+    };
+
+    // Show chart loading state
+    function showChartLoading() {
+        const container = document.getElementById(&#39;chartContainer&#39;);
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full">
+                <div class="loading loading-spinner loading-lg text-primary mb-4"></div>
+                <p class="text-sm text-base-content/70">正在加载图表...</p>
+            </div>
+        `;
+    }
+
+    // Update chart display with animation
+    function updateChartDisplay(chart) {
+        const container = document.getElementById(&#39;chartContainer&#39;);
+        
+        // Create new image element
+        const img = document.createElement(&#39;img&#39;);
+        img.src = chart.image;
+        img.alt = chart.name;
+        img.className = &#39;rounded max-w-full max-h-full opacity-0 transition-opacity duration-300&#39;;
+        
+        // Clear container and add image
+        container.innerHTML = &#39;&#39;;
+        container.appendChild(img);
+        
+        // Fade in the image
+        setTimeout(() => {
+            img.classList.remove(&#39;opacity-0&#39;);
+            img.classList.add(&#39;opacity-100&#39;);
+        }, 100);
+        
+        // Show success notification
+        window.showNotification(`已切换到${chart.name}`, &#39;success&#39;);
+    }
+
+    // Update dropdown menu selection state
+    function updateDropdownSelection(selectedType) {
+        // Remove active state from all menu items
+        document.querySelectorAll(&#39;.dropdown-content a&#39;).forEach(item => {
+            item.classList.remove(&#39;active&#39;, &#39;bg-primary&#39;, &#39;text-primary-content&#39;);
+            item.classList.add(&#39;hover:bg-base-200&#39;);
+        });
+        
+        // Add active state to selected item
+        const selectedItem = document.querySelector(`[onclick="selectChart(&#39;${selectedType}&#39;)"]`);
+        if (selectedItem) {
+            selectedItem.classList.add(&#39;active&#39;, &#39;bg-primary&#39;, &#39;text-primary-content&#39;);
+            selectedItem.classList.remove(&#39;hover:bg-base-200&#39;);
+        }
+    }
+
+// Initialize chart display
+    function initializeChart() {
+        const chart = chartTypes[currentChartType];
+        
+        // Show initial loading
+        showChartLoading();
+        
+        // Load initial chart after delay
+        setTimeout(() => {
+            updateChartDisplay(chart);
+            updateDropdownSelection(currentChartType);
+        }, 1000);
+    }
+
+    // Graph initialization
+    function initializeGraph() {
+        // Simulate graph loading
+        setTimeout(() => {
+            const canvas = document.getElementById(&#39;graphCanvas&#39;);
+            canvas.innerHTML = `
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                            <span class="iconify text-primary" data-icon="heroicons:cpu-chip" data-width="32"></span>
+                        </div>
+                        <p class="text-base-content font-medium">图谱加载完成</p>
+                        <p class="text-sm text-base-content/70 mt-2">点击节点查看详情，拖拽可移动视图</p>
+                    </div>
+                </div>
+            `;
+            
+            // Add mock interactive elements
+            addMockGraphElements();
+        }, 2000);
+    }
+
+    // Add mock graph elements for demonstration
+    function addMockGraphElements() {
+        const canvas = document.getElementById(&#39;graphCanvas&#39;);
+        const mockNodes = [
+            { id: &#39;ai&#39;, label: &#39;人工智能&#39;, x: 400, y: 200, type: &#39;concept&#39; },
+            { id: &#39;ml&#39;, label: &#39;机器学习&#39;, x: 300, y: 300, type: &#39;concept&#39; },
+            { id: &#39;dl&#39;, label: &#39;深度学习&#39;, x: 500, y: 300, type: &#39;concept&#39; },
+            { id: &#39;nlp&#39;, label: &#39;自然语言处理&#39;, x: 200, y: 400, type: &#39;application&#39; },
+            { id: &#39;cv&#39;, label: &#39;计算机视觉&#39;, x: 600, y: 400, type: &#39;application&#39; },
+            { id: &#39;svm&#39;, label: &#39;支持向量机&#39;, x: 250, y: 500, type: &#39;algorithm&#39; },
+            { id: &#39;cnn&#39;, label: &#39;卷积神经网络&#39;, x: 550, y: 500, type: &#39;algorithm&#39; }
+        ];
+
+        canvas.innerHTML = &#39;&#39;;
+        
+        // Create SVG container
+        const svg = document.createElementNS(&#39;http://www.w3.org/2000/svg&#39;, &#39;svg&#39;);
+        svg.setAttribute(&#39;width&#39;, &#39;100%&#39;);
+        svg.setAttribute(&#39;height&#39;, &#39;100%&#39;);
+        svg.style.position = &#39;absolute&#39;;
+        svg.style.top = &#39;0&#39;;
+        svg.style.left = &#39;0&#39;;
+
+        // Add edges
+        const edges = [
+            { from: &#39;ai&#39;, to: &#39;ml&#39;, type: &#39;contains&#39; },
+            { from: &#39;ai&#39;, to: &#39;dl&#39;, type: &#39;contains&#39; },
+            { from: &#39;ml&#39;, to: &#39;nlp&#39;, type: &#39;applies_to&#39; },
+            { from: &#39;ml&#39;, to: &#39;cv&#39;, type: &#39;applies_to&#39; },
+            { from: &#39;ml&#39;, to: &#39;svm&#39;, type: &#39;contains&#39; },
+            { from: &#39;dl&#39;, to: &#39;nlp&#39;, type: &#39;applies_to&#39; },
+            { from: &#39;dl&#39;, to: &#39;cv&#39;, type: &#39;applies_to&#39; },
+            { from: &#39;dl&#39;, to: &#39;cnn&#39;, type: &#39;contains&#39; }
+        ];
+
+        edges.forEach(edge => {
+            const fromNode = mockNodes.find(n => n.id === edge.from);
+            const toNode = mockNodes.find(n => n.id === edge.to);
+            
+            const line = document.createElementNS(&#39;http://www.w3.org/2000/svg&#39;, &#39;line&#39;);
+            line.setAttribute(&#39;x1&#39;, fromNode.x);
+            line.setAttribute(&#39;y1&#39;, fromNode.y);
+            line.setAttribute(&#39;x2&#39;, toNode.x);
+            line.setAttribute(&#39;y2&#39;, toNode.y);
+            line.setAttribute(&#39;class&#39;, &#39;graph-edge&#39;);
+            line.setAttribute(&#39;data-edge-type&#39;, edge.type);
+            svg.appendChild(line);
+        });
+
+        // Add nodes
+        mockNodes.forEach(node => {
+            const circle = document.createElementNS(&#39;http://www.w3.org/2000/svg&#39;, &#39;circle&#39;);
+            circle.setAttribute(&#39;cx&#39;, node.x);
+            circle.setAttribute(&#39;cy&#39;, node.y);
+            circle.setAttribute(&#39;r&#39;, 28);
+            circle.setAttribute(&#39;class&#39;, &#39;graph-node&#39;);
+            circle.setAttribute(&#39;fill&#39;, getNodeColor(node.type));
+            circle.setAttribute(&#39;data-node-id&#39;, node.id);
+            circle.setAttribute(&#39;data-node-type&#39;, node.type);
+            circle.style.cursor = &#39;pointer&#39;;
+            
+            circle.addEventListener(&#39;click&#39;, () => selectNode(node));
+            svg.appendChild(circle);
+
+            // Add text label
+            const text = document.createElementNS(&#39;http://www.w3.org/2000/svg&#39;, &#39;text&#39;);
+            text.setAttribute(&#39;x&#39;, node.x);
+            text.setAttribute(&#39;y&#39;, node.y + 48);
+            text.setAttribute(&#39;text-anchor&#39;, &#39;middle&#39;);
+            text.setAttribute(&#39;class&#39;, &#39;text-xs fill-current text-base-content font-medium&#39;);
+            text.textContent = node.label;
+            svg.appendChild(text);
+        });
+
+        canvas.appendChild(svg);
+    }
+
+    // Get node color based on type
+    function getNodeColor(type) {
+        const colors = {
+            &#39;concept&#39;: &#39;var(--color-primary)&#39;,
+            &#39;algorithm&#39;: &#39;var(--color-secondary)&#39;, 
+            &#39;application&#39;: &#39;var(--color-accent)&#39;,
+            &#39;tool&#39;: &#39;var(--color-info)&#39;
+        };
+        return colors[type] || &#39;var(--color-base-content)&#39;;
+    }
+
+    // Node selection handler
+    function selectNode(node) {
+        currentGraphData.selectedNode = node;
+        
+        // Update visual selection
+        document.querySelectorAll(&#39;.graph-node&#39;).forEach(n => n.classList.remove(&#39;selected&#39;));
+        document.querySelector(`[data-node-id="${node.id}"]`).classList.add(&#39;selected&#39;);
+        
+        // Update node details panel
+        updateNodeDetails(node);
+    }
+
+    // Update node details panel
+    function updateNodeDetails(node) {
+        const container = document.getElementById(&#39;nodeDetailsContainer&#39;);
+        container.innerHTML = `
+            <div class="node-detail-card">
+                <h3 class="font-semibold text-base-content mb-3">${node.label}</h3>
+                <div class="space-y-3">
+                    <div>
+                        <span class="text-xs font-medium text-base-content/70">类型：</span>
+                        <span class="badge badge-outline badge-xs ml-1">${getNodeTypeLabel(node.type)}</span>
+                    </div>
+                    <div>
+                        <span class="text-xs font-medium text-base-content/70">描述：</span>
+                        <p class="text-xs text-base-content/80 mt-2 leading-relaxed">${getNodeDescription(node.id)}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs font-medium text-base-content/70">相关概念：</span>
+                        <div class="flex flex-wrap gap-1 mt-2">
+                            ${getRelatedConcepts(node.id).map(concept => 
+                                `<span class="badge badge-ghost badge-xs">${concept}</span>`
+                            ).join(&#39;&#39;)}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-medium text-base-content/70">连接数：</span>
+                        <span class="text-xs text-base-content font-medium ml-1">${getNodeConnections(node.id)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Helper functions for node details
+    function getNodeTypeLabel(type) {
+        const labels = {
+            &#39;concept&#39;: &#39;核心概念&#39;,
+            &#39;algorithm&#39;: &#39;算法&#39;,
+            &#39;application&#39;: &#39;应用方向&#39;,
+            &#39;tool&#39;: &#39;工具&#39;
+        };
+        return labels[type] || &#39;未知类型&#39;;
+    }
+
+    function getNodeDescription(nodeId) {
+        const descriptions = {
+            &#39;ai&#39;: &#39;人工智能是计算机科学的一个分支，致力于创建能够执行通常需要人类智能的任务的系统。&#39;,
+            &#39;ml&#39;: &#39;机器学习是人工智能的一个子集，专注于算法和统计模型，使计算机能够从数据中学习。&#39;,
+            &#39;dl&#39;: &#39;深度学习是机器学习的一个分支，使用多层神经网络来模拟人脑的学习过程。&#39;,
+            &#39;nlp&#39;: &#39;自然语言处理结合计算机科学、人工智能和语言学，帮助计算机理解和处理人类语言。&#39;,
+            &#39;cv&#39;: &#39;计算机视觉是人工智能的一个领域，致力于让计算机能够识别和理解数字图像和视频。&#39;,
+            &#39;svm&#39;: &#39;支持向量机是一种监督学习算法，用于分类和回归分析。&#39;,
+            &#39;cnn&#39;: &#39;卷积神经网络是一种深度学习架构，特别适用于图像识别和计算机视觉任务。&#39;
+        };
+        return descriptions[nodeId] || &#39;暂无描述信息&#39;;
+    }
+
+    function getRelatedConcepts(nodeId) {
+        const relations = {
+            &#39;ai&#39;: [&#39;算法&#39;, &#39;智能系统&#39;, &#39;认知科学&#39;],
+            &#39;ml&#39;: [&#39;监督学习&#39;, &#39;无监督学习&#39;, &#39;强化学习&#39;],
+            &#39;dl&#39;: [&#39;神经网络&#39;, &#39;CNN&#39;, &#39;RNN&#39;, &#39;Transformer&#39;],
+            &#39;nlp&#39;: [&#39;语言模型&#39;, &#39;文本分析&#39;, &#39;机器翻译&#39;],
+            &#39;cv&#39;: [&#39;图像识别&#39;, &#39;目标检测&#39;, &#39;图像分割&#39;],
+            &#39;svm&#39;: [&#39;核函数&#39;, &#39;分类&#39;, &#39;回归&#39;],
+            &#39;cnn&#39;: [&#39;卷积层&#39;, &#39;池化层&#39;, &#39;特征提取&#39;]
+        };
+        return relations[nodeId] || [];
+    }
+
+    function getNodeConnections(nodeId) {
+        const connections = {
+            &#39;ai&#39;: 2, &#39;ml&#39;: 4, &#39;dl&#39;: 3, &#39;nlp&#39;: 2, &#39;cv&#39;: 2, &#39;svm&#39;: 1, &#39;cnn&#39;: 1
+        };
+        return connections[nodeId] || 0;
+    }
+
+    // Search functionality
+    function setupSearchFunctionality() {
+        const searchInput = document.getElementById(&#39;graphSearchInput&#39;);
+        searchInput.addEventListener(&#39;input&#39;, handleSearch);
+        searchInput.addEventListener(&#39;keypress&#39;, function(e) {
+            if (e.key === &#39;Enter&#39;) {
+                handleSearch();
+            }
+        });
+    }
+
+    function handleSearch() {
+        const query = document.getElementById(&#39;graphSearchInput&#39;).value.toLowerCase();
+        if (!query) {
+            clearSearchHighlight();
+            return;
+        }
+
+        // Simulate search results
+        const mockResults = [
+            { id: &#39;ml&#39;, label: &#39;机器学习&#39;, relevance: 0.9 },
+            { id: &#39;dl&#39;, label: &#39;深度学习&#39;, relevance: 0.8 },
+            { id: &#39;ai&#39;, label: &#39;人工智能&#39;, relevance: 0.7 }
+        ].filter(item => item.label.toLowerCase().includes(query));
+
+        highlightSearchResults(mockResults);
+    }
+
+    function highlightSearchResults(results) {
+        clearSearchHighlight();
+        results.forEach(result => {
+            const node = document.querySelector(`[data-node-id="${result.id}"]`);
+            if (node) {
+                node.style.stroke = &#39;var(--color-warning)&#39;;
+                node.style.strokeWidth = &#39;3px&#39;;
+            }
+        });
+    }
+
+    function clearSearchHighlight() {
+        document.querySelectorAll(&#39;.graph-node&#39;).forEach(node => {
+            if (!node.classList.contains(&#39;selected&#39;)) {
+                node.style.stroke = &#39;&#39;;
+                node.style.strokeWidth = &#39;&#39;;
+            }
+        });
+    }
+
+    // View controls setup
+    function setupViewControls() {
+        const nodeCountRange = document.getElementById(&#39;nodeCountRange&#39;);
+        const depthRange = document.getElementById(&#39;depthRange&#39;);
+
+        nodeCountRange.addEventListener(&#39;input&#39;, function() {
+            const value = this.value;
+            console.log(&#39;Node count adjusted to:&#39;, value);
+        });
+
+        depthRange.addEventListener(&#39;input&#39;, function() {
+            const value = this.value;
+            console.log(&#39;Neighbor depth adjusted to:&#39;, value);
+        });
+    }
+
+    // Entity type filters
+    function setupEntityTypeFilters() {
+        const entityCheckboxes = document.querySelectorAll(&#39;input[type="checkbox"]&#39;);
+        entityCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener(&#39;change&#39;, function() {
+                updateEntityTypeVisibility();
+            });
+        });
+    }
+
+    function updateEntityTypeVisibility() {
+        // Get checked entity types
+        const checkedTypes = [];
+        document.querySelectorAll(&#39;input[type="checkbox"]:checked&#39;).forEach(cb => {
+            const label = cb.nextElementSibling.textContent;
+            if (label.includes(&#39;概念&#39;)) checkedTypes.push(&#39;concept&#39;);
+            if (label.includes(&#39;算法&#39;)) checkedTypes.push(&#39;algorithm&#39;);
+            if (label.includes(&#39;应用&#39;)) checkedTypes.push(&#39;application&#39;);
+            if (label.includes(&#39;工具&#39;)) checkedTypes.push(&#39;tool&#39;);
+        });
+
+        // Update node visibility
+        document.querySelectorAll(&#39;.graph-node&#39;).forEach(node => {
+            const nodeType = node.getAttribute(&#39;data-node-type&#39;);
+            if (checkedTypes.includes(nodeType)) {
+                node.style.display = &#39;block&#39;;
+                node.style.opacity = &#39;1&#39;;
+            } else {
+                node.style.opacity = &#39;0.3&#39;;
+            }
+        });
+    }
+
+    // Relationship filters
+    function setupRelationshipFilters() {
+        // Similar to entity filters but for relationships
+    }
+
+    // Statistics toggle
+    window.toggleStatistics = function() {
+        const content = document.getElementById(&#39;statisticsContent&#39;);
+        const icon = document.getElementById(&#39;statsToggleIcon&#39;);
+        
+        if (statisticsCollapsed) {
+            content.style.display = &#39;block&#39;;
+            icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-up&#39;);
+            statisticsCollapsed = false;
+        } else {
+            content.style.display = &#39;none&#39;;
+            icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:chevron-down&#39;);
+            statisticsCollapsed = true;
+        }
+    };
+
+    // Graph control functions
+    window.searchInGraph = function() {
+        handleSearch();
+    };
+
+    window.zoomIn = function() {
+        graphZoom = Math.min(graphZoom * 1.2, 3);
+        applyGraphTransform();
+    };
+
+    window.zoomOut = function() {
+        graphZoom = Math.max(graphZoom / 1.2, 0.3);
+        applyGraphTransform();
+    };
+
+    window.resetView = function() {
+        graphZoom = 1;
+        graphPan = { x: 0, y: 0 };
+        applyGraphTransform();
+    };
+
+    function applyGraphTransform() {
+        const svg = document.querySelector(&#39;#graphCanvas svg&#39;);
+        if (svg) {
+            svg.style.transform = `scale(${graphZoom}) translate(${graphPan.x}px, ${graphPan.y}px)`;
+        }
+    }
+
+    // Action functions
+    window.toggleFavorite = function() {
+        const isFavorited = window.APP_GLOBALS.favorites.isFavorited(currentGraphData.id);
+        
+        if (isFavorited) {
+            window.APP_GLOBALS.favorites.remove(currentGraphData.id);
+        } else {
+            window.APP_GLOBALS.favorites.add(currentGraphData.id, currentGraphData);
+            navigateTo(&#39;user_profile_page&#39;);
+        }
+        
+        updateFavoriteButton();
+    };
+
+    function updateFavoriteButton() {
+        const btn = document.getElementById(&#39;favoriteBtn&#39;);
+        const icon = btn.querySelector(&#39;.iconify&#39;);
+        const isFavorited = window.APP_GLOBALS.favorites.isFavorited(currentGraphData.id);
+        
+        if (isFavorited) {
+            icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart-solid&#39;);
+            icon.classList.add(&#39;favorite-active&#39;);
+        } else {
+            icon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart&#39;);
+            icon.classList.remove(&#39;favorite-active&#39;);
+        }
+    }
+
+    window.shareGraph = function() {
+        // Generate share link
+        const shareUrl = `${window.location.origin}/graph_detail_page.html?id=${currentGraphData.id}`;
+        document.getElementById(&#39;shareLink&#39;).value = shareUrl;
+        
+        // Show modal
+        document.getElementById(&#39;shareModal&#39;).showModal();
+    };
+
+    window.downloadGraph = function() {
+        // Generate initial download link
+        const downloadUrl = `${window.location.origin}/api/download/${currentGraphData.id}`;
+        document.getElementById(&#39;downloadLink&#39;).value = downloadUrl;
+        
+        // Show modal
+        document.getElementById(&#39;downloadModal&#39;).showModal();
+    };
+
+    // Copy share link function
+    window.copyShareLink = function() {
+        const shareLink = document.getElementById(&#39;shareLink&#39;);
+        shareLink.select();
+        shareLink.setSelectionRange(0, 99999);
+        
+        navigator.clipboard.writeText(shareLink.value).then(() => {
+            const btn = document.getElementById(&#39;copyShareBtn&#39;);
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = &#39;<span class="iconify" data-icon="heroicons:check" data-width="16"></span>已复制&#39;;
+            btn.classList.add(&#39;btn-success&#39;);
+            btn.classList.remove(&#39;btn-primary&#39;);
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove(&#39;btn-success&#39;);
+                btn.classList.add(&#39;btn-primary&#39;);
+            }, 2000);
+            
+            window.showNotification(&#39;分享链接已复制到剪贴板&#39;, &#39;success&#39;);
+        }).catch(() => {
+            window.showNotification(&#39;复制失败，请手动复制&#39;, &#39;error&#39;);
+        });
+    };
+
+    // Copy download link function
+    window.copyDownloadLink = function() {
+        const downloadLink = document.getElementById(&#39;downloadLink&#39;);
+        downloadLink.select();
+        downloadLink.setSelectionRange(0, 99999);
+        
+        navigator.clipboard.writeText(downloadLink.value).then(() => {
+            const btn = document.getElementById(&#39;copyDownloadBtn&#39;);
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = &#39;<span class="iconify" data-icon="heroicons:check" data-width="16"></span>已复制&#39;;
+            btn.classList.add(&#39;btn-success&#39;);
+            btn.classList.remove(&#39;btn-primary&#39;);
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove(&#39;btn-success&#39;);
+                btn.classList.add(&#39;btn-primary&#39;);
+            }, 2000);
+            
+            window.showNotification(&#39;下载链接已复制到剪贴板&#39;, &#39;success&#39;);
+        }).catch(() => {
+            window.showNotification(&#39;复制失败，请手动复制&#39;, &#39;error&#39;);
+        });
+    };
+
+    // Download format selection
+    window.downloadFormat = function(format) {
+        const baseUrl = `${window.location.origin}/api/download/${currentGraphData.id}`;
+        let downloadUrl = &#39;&#39;;
+        
+        switch(format) {
+            case &#39;json&#39;:
+                downloadUrl = `${baseUrl}?format=json`;
+                break;
+            case &#39;csv&#39;:
+                downloadUrl = `${baseUrl}?format=csv`;
+                break;
+            case &#39;png&#39;:
+                downloadUrl = `${baseUrl}?format=png`;
+                break;
+            default:
+                downloadUrl = baseUrl;
+        }
+        
+        document.getElementById(&#39;downloadLink&#39;).value = downloadUrl;
+        window.showNotification(`已生成${format.toUpperCase()}格式下载链接`, &#39;info&#39;);
+    };
+
+    window.toggleFullscreen = function() {
+        const graphContainer = document.querySelector(&#39;.flex-1.flex&#39;);
+        
+        if (!isFullscreen) {
+            if (graphContainer.requestFullscreen) {
+                graphContainer.requestFullscreen();
+            }
+            isFullscreen = true;
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            isFullscreen = false;
+        }
+    };
+
+    // Handle fullscreen change
+    document.addEventListener(&#39;fullscreenchange&#39;, function() {
+        isFullscreen = !!document.fullscreenElement;
+    });
+
+})();
+</script>
+  
+
+<script>
+    setTimeout(() => {
+      Holder.run({
+        domain: "placehold.co"
+      })
+    }, 100)
+  </script></body></html>'></iframe>
+                    </div>
+                  </div>
+
+                </body>
+                </html>
+            

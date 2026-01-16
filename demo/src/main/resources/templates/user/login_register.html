@@ -1,982 +1,204 @@
-﻿
-                <!DOCTYPE html>
-                <html lang="zh">
-                <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>登录注册</title>
-                  <style>
-                    *,
-                    *::before,
-                    *::after {
-                      box-sizing: border-box;
-                      margin: 0;
-                    }
-                    .iframe-outer {
-                      position: fixed;
-                      top: 0;
-                      left: 0;
-                      bottom: 0;
-                      right: 0;
-                      display: flex;
-                      justify-content: center;
-                      background-color: #E0E0E0;
-                    }
-                    .iframe-wrapper {
-                      width: 100%;
-                      height: 100%;
-                      margin: 0 auto;
-                      transform-origin: center top;
-                      flex-shrink: 0;
-                    }
-                    #dynamicIframe {
-                      border: none;
-                      width: 100%;
-                      height: 100%;
-                    }
-                  </style>
-                  <script>
-                const width = 1920
-                const height = 1080
-                const resolutionRatio = width && height ? width / height : 1
-                const pageNameMap = {
-                  'home_page': '首页',
-    'login_register_page': '登录注册',
-    'registration_success_page': '注册成功',
-    'password_reset_page': '找回密码',
-    'graph_list_page': '图谱列表页',
-    'graph_detail_page': '图谱详情页',
-    'user_profile_page': '个人中心',
-    'documentation_page': '文档',
-    'about_page': '关于我们',
-    'feedback_page': '用户反馈',
-    'page_998124': '管理',
-    'page_998125': '论坛'
-                }
-                function setIframeSize(w, h) {
-                  const currentContainerRadio = w / h
-                  let widthValue = w
-                  let heightValue = h
-                  let zoom = 1
-                  if (currentContainerRadio > resolutionRatio) {
-                    widthValue = h * resolutionRatio
-                    heightValue = h
-                  } else {
-                    widthValue = w
-                    heightValue = w / resolutionRatio
-                  }
-                  zoom = width ? widthValue / width : 1
-                  return {
-                    width: widthValue / zoom + 'px',
-                    height: heightValue / zoom + 'px',
-                    zoom,
-                  }
-                }
-                function adjustIframeSize() {
-                  const iframeWrapper = document.querySelector(".iframe-wrapper")
-                  if (!iframeWrapper) return
-                  iframeWrapper.style.width = '100%'
-                  iframeWrapper.style.height = window.innerHeight + 'px'
-                  iframeWrapper.style.transform = ''
-                }
-                function sanitizeFilename(name) {
-                  return name.replace(/[\/:*?"<>|]/g, '_')
-                }
-                function handlePostMessage(event) {
-                  if (!event.data) {
-                    return
-                  }
-                  const { type, targetPageId, params } = event.data
-                  const pagePathMap = {
-                    'home_page': '../graph/home.html',
-                    'login_register_page': '../user/login_register.html',
-                    'registration_success_page': '../user/registration_success.html',
-                    'password_reset_page': '../user/password_reset.html',
-                    'graph_list_page': '../graph/graph_list.html',
-                    'graph_detail_page': '../graph/graph_detail.html',
-                    'user_profile_page': '../user/profile.html',
-                    'documentation_page': '../pages/documentation.html',
-                    'about_page': '../pages/about.html',
-                    'feedback_page': '../community/feedback.html',
-                    'page_998124': '../admin/dashboard.html',
-                    'page_998125': '../community/forum_list.html'
-                  };
-                  let targetPath = pagePathMap[targetPageId];
-                  if (type === "iframeNavigation" && targetPath) {
-                    if (params && params.graphId) {
-                      targetPath += '?id=' + params.graphId;
-                    }
-                    window.location.href = targetPath
-                  }
-                }
-                window.addEventListener('message', handlePostMessage)
-                window.onload = adjustIframeSize
-                window.onresize = adjustIframeSize
-                window.onunload = () => {
-                  window.removeEventListener('message', handlePostMessage)
-                }
-              </script>
-                </head>
-                <body>
-                  <div class="iframe-outer">
-                    <div class="iframe-wrapper">
-                      <iframe id="dynamicIframe" srcdoc='<html lang="zh-CN" data-theme="corporate"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title >登录注册 Graph+知识图谱平台</title>
-    <link href="/assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
-    <script src="/assets/static/libs/tailwind-browser@4.js"></script>
-    <link href="/assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
-    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-    <style>
-/* daisyUI Theme Variables Customization
-* Based on the selected daisyUI theme and UI guidance requirements,
-* customize only the CSS variables that need to be different from the theme defaults.
-*/
-:root {
-/* Corporate theme customization for knowledge graph platform */
---color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
---color-primary-content: rgba(255, 255, 255, 1);
---color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
---color-secondary-content: rgba(255, 255, 255, 1);
---color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
---color-accent-content: rgba(255, 255, 255, 1);
---color-base-100: rgba(255, 255, 255, 1);
---color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
---color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
---color-base-content: rgba(55, 65, 81, 1); /* #374151 */
---color-success: rgba(16, 185, 129, 1);
---color-warning: rgba(245, 158, 11, 1);
---color-error: rgba(239, 68, 68, 1);
---color-info: rgba(59, 130, 246, 1);
---radius-box: 0.375rem; /* 6px for micro-rounded corners */
---radius-field: 0.375rem;
---border: 1px;
-}
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
 
-/* Global component styles */
-.transition-width {
-transition: width 0.3s ease-in-out;
-}
+<head>
+    <title>登录注册 - GraphWisdom智汇星图</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/login-register.css}">
+    </th:block>
+</head>
 
-.nav-hover {
-transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-}
+<body>
+    <div layout:fragment="content">
+        <!-- Main Content -->
+        <div class="flex-1 flex items-center justify-center py-16 px-4">
+            <div class="w-full max-w-md">
+                <div class="card bg-base-100 shadow-xl border academic-border">
+                    <div class="card-body p-8">
+                        <!-- Return Home Button -->
+                        <div class="flex justify-start mb-6">
+                            <a th:href="@{/graph/home.html}"
+                                class="btn btn-ghost btn-sm gap-2 text-base-content/70 hover:text-base-content nav-hover">
+                                <span class="iconify" data-icon="heroicons:arrow-left" data-width="16"></span>
+                                返回首页
+                            </a>
+                        </div>
 
-.shadow-soft {
-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
+                        <!-- Tab Navigation -->
+                        <div class="tabs tabs-boxed mb-8 bg-base-200">
+                            <a id="loginTab" class="tab tab-active" onclick="switchTab('login')">登录</a>
+                            <a id="registerTab" class="tab" onclick="switchTab('register')">注册</a>
+                        </div>
 
-/* Header height consistency */
-.header-height {
-height: 64px;
-}
+                        <!-- Login Form -->
+                        <div id="loginForm" class="space-y-6">
+                            <div class="text-center mb-6">
+                                <h2 class="text-2xl font-bold text-base-content">欢迎回来</h2>
+                                <p class="text-base-content/70 mt-2">登录您的账户以继续使用</p>
+                            </div>
 
-/* Focus styles for accessibility */
-.focus-primary:focus {
-outline: 2px solid var(--color-primary);
-outline-offset: 2px;
-}
+                            <!-- Social Login -->
+                            <div class="space-y-3">
+                                <button class="btn btn-outline w-full gap-3 hover-lift"
+                                    onclick="handleSocialLogin('wechat')">
+                                    <div class="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                            fill="white">
+                                            <path
+                                                d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.328.328 0 0 0 .186-.059l2.114-1.225a.866.866 0 0 1 .446-.126.79.79 0 0 1 .214.03 10.07 10.07 0 0 0 2.664.35c.32 0 .636-.02.95-.05a5.6 5.6 0 0 1-.201-1.478c0-3.449 3.382-6.254 7.558-6.254.146 0 .29.007.434.017C16.752 4.842 13.027 2.188 8.69 2.188zm-2.85 4.76a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.12 0a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.849 3.32c-3.602 0-6.528 2.418-6.528 5.4 0 2.98 2.926 5.4 6.528 5.4.71 0 1.394-.093 2.038-.262.052-.015.107-.023.162-.023a.67.67 0 0 1 .345.098l1.636.947a.254.254 0 0 0 .144.046.227.227 0 0 0 .224-.229c0-.056-.023-.11-.037-.164l-.301-1.146a.456.456 0 0 1 .165-.515C22.862 18.778 24 17.167 24 15.27c0-2.983-2.926-5.402-6.528-5.402h-.662zM14.18 14.1a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48zm3.952 0a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48z" />
+                                        </svg>
+                                    </div>
+                                    <span>微信登录</span>
+                                    <div class="badge badge-primary badge-sm">推荐</div>
+                                </button>
+                                <button class="btn btn-outline w-full gap-3 hover-lift"
+                                    onclick="handleSocialLogin('github')">
+                                    <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                            fill="white">
+                                            <path
+                                                d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+                                        </svg>
+                                    </div>
+                                    <span>GitHub登录</span>
+                                </button>
+                            </div>
 
-/* Academic style enhancements */
-.academic-border {
-border: var(--border) solid var(--color-base-300);
-}
+                            <div class="divider text-base-content/50 academic-divider">或使用账号密码</div>
 
-.hover-lift {
-transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
+                            <!-- Login Form Fields -->
+                            <form class="space-y-4" onsubmit="handleLogin(event)">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">邮箱或手机号</span>
+                                    </label>
+                                    <input id="login-account" type="text" placeholder="请输入邮箱或手机号" required
+                                        class="input input-bordered w-full focus-primary">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">密码</span>
+                                    </label>
+                                    <input id="login-password" type="password" placeholder="请输入密码" required
+                                        class="input input-bordered w-full focus-primary">
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="label cursor-pointer gap-2">
+                                        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm">
+                                        <span class="label-text text-sm">记住我</span>
+                                    </label>
+                                    <a th:href="@{/user/password_reset.html}" class="link link-primary text-sm">忘记密码？</a>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-full hover-lift">
+                                    <span class="iconify" data-icon="heroicons:arrow-right-on-rectangle"
+                                        data-width="16"></span>
+                                    登录
+                                </button>
+                            </form>
+                        </div>
 
-.hover-lift:hover {
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
+                        <!-- Register Form -->
+                        <div id="registerForm" class="space-y-6 hidden">
+                            <div class="text-center mb-6">
+                                <h2 class="text-2xl font-bold text-base-content">创建账户</h2>
+                                <p class="text-base-content/70 mt-2">加入我们，开始探索知识图谱</p>
+                            </div>
 
-/* Professional grid spacing */
-.academic-grid {
-gap: 1.5rem;
-}
+                            <!-- Social Register -->
+                            <div class="space-y-3">
+                                <button class="btn btn-outline w-full gap-3 hover-lift"
+                                    onclick="handleSocialLogin('wechat')">
+                                    <div class="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                            fill="white">
+                                            <path
+                                                d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.328.328 0 0 0 .186-.059l2.114-1.225a.866.866 0 0 1 .446-.126.79.79 0 0 1 .214.03 10.07 10.07 0 0 0 2.664.35c.32 0 .636-.02.95-.05a5.6 5.6 0 0 1-.201-1.478c0-3.449 3.382-6.254 7.558-6.254.146 0 .29.007.434.017C16.752 4.842 13.027 2.188 8.69 2.188zm-2.85 4.76a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.12 0a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.849 3.32c-3.602 0-6.528 2.418-6.528 5.4 0 2.98 2.926 5.4 6.528 5.4.71 0 1.394-.093 2.038-.262.052-.015.107-.023.162-.023a.67.67 0 0 1 .345.098l1.636.947a.254.254 0 0 0 .144.046.227.227 0 0 0 .224-.229c0-.056-.023-.11-.037-.164l-.301-1.146a.456.456 0 0 1 .165-.515C22.862 18.778 24 17.167 24 15.27c0-2.983-2.926-5.402-6.528-5.402h-.662zM14.18 14.1a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48zm3.952 0a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48z" />
+                                        </svg>
+                                    </div>
+                                    <span>微信注册</span>
+                                    <div class="badge badge-primary badge-sm">快速</div>
+                                </button>
+                                <button class="btn btn-outline w-full gap-3 hover-lift"
+                                    onclick="handleSocialLogin('github')">
+                                    <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                            fill="white">
+                                            <path
+                                                d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+                                        </svg>
+                                    </div>
+                                    <span>GitHub注册</span>
+                                </button>
+                            </div>
 
-/* Clean divider lines */
-.academic-divider {
-border-color: var(--color-base-300);
-border-width: var(--border);
-}
-</style> <style>
-/* Login/Register Page Specific Styles */
-.tab-active {
-    background-color: var(--color-primary) !important;
-    color: var(--color-primary-content) !important;
-    border-color: var(--color-primary) !important;
-}
+                            <div class="divider text-base-content/50 academic-divider">或手动注册</div>
 
-.tab:not(.tab-active):hover {
-    background-color: var(--color-base-300);
-    color: var(--color-base-content);
-}
-
-/* Form input focus enhancement */
-.input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
-    outline: none;
-}
-
-/* Button press animation */
-.btn:active {
-    transform: scale(0.98);
-}
-
-/* Social login button enhancements */
-.btn-outline:hover .iconify {
-    transform: scale(1.1);
-}
-
-/* Verification code button countdown state */
-.btn-countdown {
-    background-color: var(--color-base-300) !important;
-    color: var(--color-base-content) !important;
-    cursor: not-allowed !important;
-}
-
-/* Card shadow enhancement for academic style */
-.card {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-/* Academic style divider */
-.divider::before,
-.divider::after {
-    border-color: var(--color-base-300);
-}
-
-/* Enhanced link styles */
-.link-primary:hover {
-    color: var(--color-secondary);
-    text-decoration: underline;
-}
-
-/* Form validation styles */
-.input.error {
-    border-color: var(--color-error);
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
-}
-
-.input.success {
-    border-color: var(--color-success);
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .card-body {
-        padding: 1.5rem !important;
-    }
-    
-    .btn {
-        height: 3rem;
-    }
-}
-@media (max-width: 640px) {
-    .header-height { height: 56px; }
-    .tabs.tabs-boxed { gap: 0.25rem; }
-    .join .input { height: 3rem; }
-    .join .btn { height: 3rem; }
-}
-</style>
-  <script src="/assets/static/libs/25_6/holder.js"></script></head>
-  <body class="bg-base-100 min-h-screen flex flex-col">
-    <div class="header-wrapper"><div data-section-id="common_header" data-section-type="common_header">
-  <div id="ipdh" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 ipdh spark-custom-ipdh ipdh">
-    <!-- Left section: Logo -->
-    <div class="navbar-start">
-      <div class="flex items-center gap-4">
-        <button class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;home_page&#39;)">
-          <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
-          Graph+知识图谱平台
-        </button>
-      </div>
-      <!-- Mobile menu (visible on small screens) -->
-      <div class="dropdown lg:hidden">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
-          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
-        </div>
-        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
-          <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
-        </ul>
-      </div>
-    </div>
-    <!-- Center section: Main navigation -->
-    <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 gap-2">
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
-        </li>
-        <li>
-          <a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
-        </li>
-      </ul>
-    </div>
-    <!-- Right section: User controls -->
-    <div class="navbar-end">
-      <!-- Login/Register buttons for logged-out users -->
-      <div data-user-control="logged-out" class="flex items-center gap-2" style="display: none;">
-        <button class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10" onclick="navigateTo(&#39;login_register_page&#39;)">
-          登录</button><button class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100" onclick="navigateTo(&#39;login_register_page&#39;)">
-          注册
-        </button>
-      </div>
-      <!-- User profile dropdown for logged-in users -->
-      <div data-user-control="logged-in" id="ihahz" class="dropdown dropdown-end" style="display: none;">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
-          <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
-            <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
-            <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
-          </div>
-        </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
-          <li class="menu-title"><span>用户中心</span></li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
-          </li>
-          <li>
-            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
-          </li>
-          <div class="divider my-1"></div>
-          <li>
-            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-    <!-- Main Content -->
-    <div class="flex-1 flex items-center justify-center py-16 px-4">
-      <div class="w-full max-w-md">
-        <!-- LoginRegisterForm Section -->
-        <div class="card bg-base-100 shadow-xl border academic-border">
-          <div class="card-body p-8">
-            <!-- Return Home Button -->
-            <div class="flex justify-start mb-6">
-              <button class="btn btn-ghost btn-sm gap-2 text-base-content/70 hover:text-base-content nav-hover" onclick="navigateTo(&#39;home_page&#39;)">
-                <iconify-icon icon="heroicons:arrow-left" width="16"></iconify-icon>
-                返回首页
-              </button>
-            </div>
-            <!-- Tab Navigation -->
-            <div class="tabs tabs-boxed mb-8 bg-base-200">
-              <a id="loginTab" class="tab tab-active" onclick="switchTab(&#39;login&#39;)">登录</a><a id="registerTab" class="tab" onclick="switchTab(&#39;register&#39;)">注册</a>
-            </div>
-            <!-- Login Form -->
-            <div id="loginForm" class="space-y-6">
-              <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-base-content">欢迎回来</h2>
-                <p class="text-base-content/70 mt-2">登录您的账户以继续使用</p>
-              </div>
-              <!-- Social Login -->
-              <div class="space-y-3">
-                <button class="btn btn-outline w-full gap-3 hover-lift" onclick="handleSocialLogin(&#39;wechat&#39;)">
-                  <div class="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.328.328 0 0 0 .186-.059l2.114-1.225a.866.866 0 0 1 .446-.126.79.79 0 0 1 .214.03 10.07 10.07 0 0 0 2.664.35c.32 0 .636-.02.95-.05a5.6 5.6 0 0 1-.201-1.478c0-3.449 3.382-6.254 7.558-6.254.146 0 .29.007.434.017C16.752 4.842 13.027 2.188 8.69 2.188zm-2.85 4.76a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.12 0a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.849 3.32c-3.602 0-6.528 2.418-6.528 5.4 0 2.98 2.926 5.4 6.528 5.4.71 0 1.394-.093 2.038-.262.052-.015.107-.023.162-.023a.67.67 0 0 1 .345.098l1.636.947a.254.254 0 0 0 .144.046.227.227 0 0 0 .224-.229c0-.056-.023-.11-.037-.164l-.301-1.146a.456.456 0 0 1 .165-.515C22.862 18.778 24 17.167 24 15.27c0-2.983-2.926-5.402-6.528-5.402h-.662zM14.18 14.1a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48zm3.952 0a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48z"/></svg>
-                  </div>
-                  <span>微信登录</span>
-                  <div class="badge badge-primary badge-sm">推荐</div></button><button class="btn btn-outline w-full gap-3 hover-lift" onclick="handleSocialLogin(&#39;github&#39;)">
-                  <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-                  </div>
-                  <span>GitHub登录</span>
-                </button>
-              </div>
-              <div class="divider text-base-content/50 academic-divider">
-                或使用账号密码
-              </div>
-              <!-- Login Form Fields -->
-              <form class="space-y-4" onsubmit="handleLogin(event)">
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">邮箱或手机号</span>
-                  </label>
-                  <input id="login-account" type="text" placeholder="请输入邮箱或手机号" required="" class="input input-bordered w-full focus-primary">
-                </div>
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">密码</span>
-                  </label>
-                  <input id="login-password" type="password" placeholder="请输入密码" required="" class="input input-bordered w-full focus-primary">
-                </div>
-                <div class="flex items-center justify-between">
-                  <label class="label cursor-pointer gap-2"><input type="checkbox" class="checkbox checkbox-primary checkbox-sm"><span class="label-text text-sm">记住我</span></label><a class="link link-primary text-sm" onclick="navigateTo(&#39;password_reset_page&#39;)">忘记密码？</a>
-                </div>
-                <button type="submit" class="btn btn-primary w-full hover-lift">
-                  <iconify-icon icon="heroicons:arrow-right-on-rectangle" width="16"></iconify-icon>
-                  登录
-                </button>
-              </form>
-            </div>
-            <!-- Register Form -->
-            <div id="registerForm" class="space-y-6 hidden">
-              <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-base-content">创建账户</h2>
-                <p class="text-base-content/70 mt-2">
-                  加入我们，开始探索知识图谱
-                </p>
-              </div>
-              <!-- Social Register -->
-              <div class="space-y-3">
-                <button class="btn btn-outline w-full gap-3 hover-lift" onclick="handleSocialLogin(&#39;wechat&#39;)">
-                  <div class="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.328.328 0 0 0 .186-.059l2.114-1.225a.866.866 0 0 1 .446-.126.79.79 0 0 1 .214.03 10.07 10.07 0 0 0 2.664.35c.32 0 .636-.02.95-.05a5.6 5.6 0 0 1-.201-1.478c0-3.449 3.382-6.254 7.558-6.254.146 0 .29.007.434.017C16.752 4.842 13.027 2.188 8.69 2.188zm-2.85 4.76a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.12 0a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.849 3.32c-3.602 0-6.528 2.418-6.528 5.4 0 2.98 2.926 5.4 6.528 5.4.71 0 1.394-.093 2.038-.262.052-.015.107-.023.162-.023a.67.67 0 0 1 .345.098l1.636.947a.254.254 0 0 0 .144.046.227.227 0 0 0 .224-.229c0-.056-.023-.11-.037-.164l-.301-1.146a.456.456 0 0 1 .165-.515C22.862 18.778 24 17.167 24 15.27c0-2.983-2.926-5.402-6.528-5.402h-.662zM14.18 14.1a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48zm3.952 0a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48z"/></svg>
-                  </div>
-                  <span>微信注册</span>
-                  <div class="badge badge-primary badge-sm">快速</div></button><button class="btn btn-outline w-full gap-3 hover-lift" onclick="handleSocialLogin(&#39;github&#39;)">
-                  <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-                  </div>
-                  <span>GitHub注册</span>
-                </button>
-              </div>
-              <div class="divider text-base-content/50 academic-divider">
-                或手动注册
-              </div>
-              <!-- Register Form Fields -->
-              <form class="space-y-4" onsubmit="handleRegister(event)">
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">用户名</span>
-                  </label>
-                  <input id="reg-username" type="text" placeholder="请输入用户名" required="" class="input input-bordered w-full focus-primary">
-                </div>
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">邮箱地址</span>
-                    <span class="label-text-alt text-base-content/50">选填</span>
-                  </label>
-                  <input id="reg-email" type="email" placeholder="请输入邮箱地址" class="input input-bordered w-full focus-primary">
-                </div>
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">手机号码</span>
-                    <span class="label-text-alt text-base-content/50">邮箱和手机至少填一个</span>
-                  </label>
-                  <input id="reg-phone" type="tel" placeholder="请输入手机号码" class="input input-bordered w-full focus-primary">
-                </div>
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">设置密码</span>
-                  </label>
-                  <input id="reg-password" type="password" placeholder="请设置密码（8位以上）" required="" class="input input-bordered w-full focus-primary">
-                </div>
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">确认密码</span>
-                  </label>
-                  <input id="reg-confirm-password" type="password" placeholder="请再次输入密码" required="" class="input input-bordered w-full focus-primary">
-                </div>
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3"><input type="checkbox" required="" class="checkbox checkbox-primary checkbox-sm"><span class="label-text text-sm">
-                      我已阅读并同意
-                      <a href="#" class="link link-primary">用户协议</a>
-                      和
-                      <a href="#" class="link link-primary">隐私政策</a></span></label>
-                </div>
-                <button type="submit" class="btn btn-primary w-full hover-lift">
-                  <iconify-icon icon="heroicons:user-plus" width="16"></iconify-icon>
-                  注册账户
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Footer -->
-    <div class="footer-wrapper"><div data-section-id="common_footer" data-section-type="common_footer">
-<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
-<div class="grid grid-flow-col gap-4">
-<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
-<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
-<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
-<a class="link link-hover focus-primary">隐私政策</a>
-<a class="link link-hover focus-primary">服务条款</a>
-</div>
-<div class="grid grid-flow-col gap-4">
-<a class="link link-hover focus-primary" aria-label="官方微信">
-<iconify-icon icon="ri:wechat-fill" width="20" style="color: var(--color-success);"></iconify-icon>
-</a>
-<a class="link link-hover focus-primary" aria-label="企业QQ">
-<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
-</a>
-<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
-<iconify-icon icon="heroicons:chat-bubble-left-right" width="20"></iconify-icon>
-<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
-</a>
-</div>
-<div class="text-center">
-<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
-<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
-</div>
-</footer>
-</div></div>
-    <script>
-(function() {
-&#39;use strict&#39;;
-
-// Initialize global namespace
-window.APP_GLOBALS = window.APP_GLOBALS || {};
-
-// Global navigation utility
-window.navigateTo = function(targetPageId, params) {
-const isInIframe = window.self !== window.top;
-
-if (isInIframe) {
-window.parent.postMessage({
-type: &#39;iframeNavigation&#39;,
-targetPageId: targetPageId,
-params: params
-}, &#39;*&#39;);
-} else {
-let url = `${targetPageId}.html`;
-if (params) {
-const queryString = Object.keys(params).map(k =&gt; k + &#39;=&#39; + encodeURIComponent(params[k])).join(&#39;&amp;&#39;);
-url += &#39;?&#39; + queryString;
-}
-window.location.href = url;
-}
-};
-
-window.navigateToFavorites = function() {
-navigateTo(&#39;user_profile_page&#39;, { section: &#39;favorites&#39; });
-};
-
-// User authentication state management
-window.APP_GLOBALS.user = {
-isLoggedIn: false,
-userInfo: null,
-
-login: function(userInfo) {
-this.isLoggedIn = true;
-this.userInfo = userInfo;
-localStorage.setItem(&#39;userState&#39;, JSON.stringify({
-isLoggedIn: true,
-userInfo: userInfo
-}));
-this.updateUserInterface();
-},
-
-logout: function() {
-this.isLoggedIn = false;
-this.userInfo = null;
-localStorage.removeItem(&#39;userState&#39;);
-fetch(&#39;/api/auth/logout&#39;, { method: &#39;POST&#39;, credentials: &#39;include&#39; })
-.finally(() =&gt; {
-this.updateUserInterface();
-window.top.location.href = &#39;/graph/home.html&#39;;
-});
-},
-
-updateUserInterface: function() {
-const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
-userControls.forEach(control => {
-const controlType = control.getAttribute(&#39;data-user-control&#39;);
-if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
-control.style.display = &#39;none&#39;;
-} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
-control.style.display = &#39;none&#39;;
-} else {
-control.style.display = &#39;&#39;;
-}
-});
-if (this.isLoggedIn &amp;&amp; this.userInfo) {
-const avatarText = document.getElementById(&#39;nav-avatar-text&#39;);
-const avatarImg = document.getElementById(&#39;nav-avatar-img&#39;);
-if (avatarText &amp;&amp; avatarImg) {
-if (this.userInfo.avatar) {
-avatarText.classList.add(&#39;hidden&#39;);
-avatarImg.src = this.userInfo.avatar;
-avatarImg.classList.remove(&#39;hidden&#39;);
-} else {
-avatarText.textContent = (this.userInfo.userName || &#39;用&#39;).substring(0, 1);
-avatarText.classList.remove(&#39;hidden&#39;);
-avatarImg.classList.add(&#39;hidden&#39;);
-}
-}
-}
-},
-
-init: function() {
-const savedState = localStorage.getItem(&#39;userState&#39;);
-if (savedState) {
-const state = JSON.parse(savedState);
-this.isLoggedIn = state.isLoggedIn;
-this.userInfo = state.userInfo;
-this.updateUserInterface();
-}
-fetch(&#39;/user/api/check-auth&#39;, { credentials: &#39;include&#39; })
-.then(res => res.json())
-.then(data => {
-const wasLoggedIn = this.isLoggedIn;
-if (data.authenticated) {
-this.isLoggedIn = true;
-this.userInfo = data.user || { userName: data.username };
-localStorage.setItem(&#39;userState&#39;, JSON.stringify({ isLoggedIn: true, userInfo: this.userInfo }));
-} else {
-this.isLoggedIn = false;
-this.userInfo = null;
-localStorage.removeItem(&#39;userState&#39;);
-}
-if (wasLoggedIn !== this.isLoggedIn || !savedState) this.updateUserInterface();
-})
-.catch(() => {});
-}
-};
-
-// Search functionality
-window.APP_GLOBALS.search = {
-history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
-recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
-
-addToHistory: function(query) {
-if (query &amp;&amp; !this.history.includes(query)) {
-this.history.unshift(query);
-this.history = this.history.slice(0, 10); // Keep only last 10 searches
-localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
-}
-},
-
-getSearchSuggestions: function() {
-return this.history.length > 0 ? this.history : this.recommendations;
-},
-
-performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
-this.addToHistory(query);
-// Navigate to search results or graph detail based on context
-navigateTo(targetPage);
-}
-};
-
-// Notification utilities
-window.showNotification = function(message, type = &#39;info&#39;) {
-const notification = document.createElement(&#39;div&#39;);
-notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
-notification.innerHTML = `
-<div class="flex items-center gap-2">
-<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
-<span>${message}</span>
-</div>
-`;
-document.body.appendChild(notification);
-
-setTimeout(() => {
-notification.remove();
-}, 5000);
-};
-
-// Favorites management
-window.APP_GLOBALS.favorites = {
-items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
-
-add: function(graphId, graphData) {
-if (!this.items.find(item => item.id === graphId)) {
-this.items.push({
-id: graphId,
-data: graphData,
-addedAt: new Date().toISOString()
-});
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
-}
-},
-
-remove: function(graphId) {
-this.items = this.items.filter(item => item.id !== graphId);
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
-},
-
-isFavorited: function(graphId) {
-return this.items.some(item => item.id === graphId);
-},
-
-toggle: function(graphId, graphData) {
-if (this.isFavorited(graphId)) {
-this.remove(graphId);
-} else {
-this.add(graphId, graphData);
-}
-}
-};
-
-// Initialize components when DOM is loaded
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-window.APP_GLOBALS.user.init();
-});
-
-})();
-</script><script>
-// Tab switching functionality
-function switchTab(tabType) {
-    const loginTab = document.getElementById(&#39;loginTab&#39;);
-    const registerTab = document.getElementById(&#39;registerTab&#39;);
-    const loginForm = document.getElementById(&#39;loginForm&#39;);
-    const registerForm = document.getElementById(&#39;registerForm&#39;);
-    
-    if (tabType === &#39;login&#39;) {
-        loginTab.classList.add(&#39;tab-active&#39;);
-        registerTab.classList.remove(&#39;tab-active&#39;);
-        loginForm.classList.remove(&#39;hidden&#39;);
-        registerForm.classList.add(&#39;hidden&#39;);
-    } else {
-        registerTab.classList.add(&#39;tab-active&#39;);
-        loginTab.classList.remove(&#39;tab-active&#39;);
-        registerForm.classList.remove(&#39;hidden&#39;);
-        loginForm.classList.add(&#39;hidden&#39;);
-    }
-}
-
-// Login form handler
-function handleLogin(event) {
-    event.preventDefault();
-    
-    const account = document.getElementById(&#39;login-account&#39;).value.trim();
-    const password = document.getElementById(&#39;login-password&#39;).value;
-    
-    if (!account || !password) {
-        showNotification(&#39;请输入邮箱/手机号和密码&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    showNotification(&#39;正在登录...&#39;, &#39;info&#39;);
-    
-    // 调用 Spring Security 登录接口
-    fetch(&#39;/api/auth/login&#39;, {
-        method: &#39;POST&#39;,
-        headers: {
-            &#39;Content-Type&#39;: &#39;application/x-www-form-urlencoded&#39;
-        },
-        body: new URLSearchParams({
-            username: account,
-            password: password
-        }),
-        redirect: &#39;manual&#39;  // 不自动跟随重定向
-    })
-    .then(response => {
-        if (response.ok || response.type === &#39;opaqueredirect&#39; || response.status === 302 || response.redirected) {
-            // 登录成功
-            showNotification(&#39;登录成功！&#39;, &#39;success&#39;);
-            setTimeout(() => {
-                window.top.location.href = &#39;/graph/home.html&#39;;
-            }, 500);
-        } else if (response.status === 401) {
-            // 登录失败 - 解析错误信息
-            return response.json().then(data => {
-                showNotification(data.error || &#39;邮箱/手机号或密码错误&#39;, &#39;error&#39;);
-            });
-        } else {
-            showNotification(&#39;登录失败，请稍后重试&#39;, &#39;error&#39;);
-        }
-    })
-    .catch(error => {
-        console.error(&#39;登录错误:&#39;, error);
-        showNotification(&#39;登录失败，请检查网络&#39;, &#39;error&#39;);
-    });
-}
-
-// Register form handler
-function handleRegister(event) {
-    event.preventDefault();
-    
-    // 获取表单数据
-    const username = document.getElementById(&#39;reg-username&#39;).value.trim();
-    const email = document.getElementById(&#39;reg-email&#39;).value.trim();
-    const phone = document.getElementById(&#39;reg-phone&#39;).value.trim();
-    const password = document.getElementById(&#39;reg-password&#39;).value;
-    const confirmPassword = document.getElementById(&#39;reg-confirm-password&#39;).value;
-    
-    // 验证用户名
-    if (!username) {
-        showNotification(&#39;请输入用户名&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    // 验证邮箱或手机号至少填一个
-    if (!email &amp;&amp; !phone) {
-        showNotification(&#39;邮箱和手机号至少填一个&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    // 验证密码
-    if (password !== confirmPassword) {
-        showNotification(&#39;两次输入的密码不一致&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    if (password.length < 8) {
-        showNotification(&#39;密码长度至少8位&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    showNotification(&#39;正在注册...&#39;, &#39;info&#39;);
-    
-    // 调用后端注册 API
-    fetch(&#39;/register&#39;, {
-        method: &#39;POST&#39;,
-        headers: {
-            &#39;Content-Type&#39;: &#39;application/x-www-form-urlencoded&#39;
-        },
-        body: new URLSearchParams({
-            userName: username,
-            email: email,
-            phone: phone,
-            password: password
-        })
-    })
-    .then(response => {
-        if (response.ok || response.redirected) {
-            // 注册成功，跳转首页
-            showNotification(&#39;注册成功！&#39;, &#39;success&#39;);
-            setTimeout(() => {
-                window.top.location.href = &#39;/graph/home.html&#39;;
-            }, 500);
-        } else {
-            return response.text().then(text => {
-                throw new Error(text || &#39;注册失败&#39;);
-            });
-        }
-    })
-    .catch(error => {
-        console.error(&#39;注册错误:&#39;, error);
-        showNotification(error.message || &#39;注册失败，请稍后重试&#39;, &#39;error&#39;);
-    });
-}
-
-// Social login handler
-function handleSocialLogin(provider) {
-    showNotification(`正在跳转到${provider === &#39;wechat&#39; ? &#39;微信&#39; : &#39;GitHub&#39;}登录...`, &#39;info&#39;);
-    
-    // Simulate social login
-    setTimeout(() => {
-        window.APP_GLOBALS.user.login({
-            email: `user@${provider}.com`,
-            name: `${provider}用户`,
-            provider: provider,
-            loginTime: new Date().toISOString()
-        });
-        
-        showNotification(&#39;登录成功！&#39;, &#39;success&#39;);
-        setTimeout(() => {
-            navigateTo(&#39;home_page&#39;);
-        }, 1000);
-    }, 2000);
-}
-
-// Verification code sender
-function sendVerificationCode() {
-    const btn = document.getElementById(&#39;verifyBtn&#39;);
-    const phoneInput = document.querySelector(&#39;input[type="tel"]&#39;);
-    
-    if (!phoneInput.value) {
-        showNotification(&#39;请先输入手机号码&#39;, &#39;warning&#39;);
-        return;
-    }
-    
-    // Phone number validation
-    const phoneRegex = /^1[3-9]\d{9}$/;
-    if (!phoneRegex.test(phoneInput.value)) {
-        showNotification(&#39;请输入正确的手机号码&#39;, &#39;error&#39;);
-        return;
-    }
-    
-    // Start countdown
-    let countdown = 60;
-    btn.textContent = `${countdown}秒后重发`;
-    btn.disabled = true;
-    btn.classList.add(&#39;btn-countdown&#39;);
-    
-    const timer = setInterval(() => {
-        countdown--;
-        btn.textContent = `${countdown}秒后重发`;
-        
-        if (countdown <= 0) {
-            clearInterval(timer);
-            btn.textContent = &#39;发送验证码&#39;;
-            btn.disabled = false;
-            btn.classList.remove(&#39;btn-countdown&#39;);
-        }
-    }, 1000);
-    
-    showNotification(&#39;验证码已发送&#39;, &#39;success&#39;);
-}
-
-// Form validation enhancement
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-    // Add real-time validation for inputs
-    const inputs = document.querySelectorAll(&#39;input[required]&#39;);
-    inputs.forEach(input => {
-        input.addEventListener(&#39;blur&#39;, function() {
-            if (this.value.trim() === &#39;&#39;) {
-                this.classList.add(&#39;error&#39;);
-                this.classList.remove(&#39;success&#39;);
-            } else {
-                this.classList.remove(&#39;error&#39;);
-                this.classList.add(&#39;success&#39;);
-            }
-        });
-        
-        input.addEventListener(&#39;input&#39;, function() {
-            if (this.classList.contains(&#39;error&#39;) &amp;&amp; this.value.trim() !== &#39;&#39;) {
-                this.classList.remove(&#39;error&#39;);
-                this.classList.add(&#39;success&#39;);
-            }
-        });
-    });
-    
-    // Email validation
-    const emailInputs = document.querySelectorAll(&#39;input[type="email"]&#39;);
-    emailInputs.forEach(input => {
-        input.addEventListener(&#39;blur&#39;, function() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (this.value &amp;&amp; !emailRegex.test(this.value)) {
-                this.classList.add(&#39;error&#39;);
-                this.classList.remove(&#39;success&#39;);
-            }
-        });
-    });
-});
-</script>
-  
-
-<script>
-    setTimeout(() => {
-      Holder.run({
-        domain: "placehold.co"
-      })
-    }, 100)
-  </script></body></html>'></iframe>
+                            <!-- Register Form Fields -->
+                            <form class="space-y-4" onsubmit="handleRegister(event)">
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">用户名</span>
+                                    </label>
+                                    <input id="reg-username" type="text" placeholder="请输入用户名" required
+                                        class="input input-bordered w-full focus-primary">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">邮箱地址</span>
+                                        <span class="label-text-alt text-base-content/50">选填</span>
+                                    </label>
+                                    <input id="reg-email" type="email" placeholder="请输入邮箱地址"
+                                        class="input input-bordered w-full focus-primary">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">手机号码</span>
+                                        <span class="label-text-alt text-base-content/50">邮箱和手机至少填一个</span>
+                                    </label>
+                                    <input id="reg-phone" type="tel" placeholder="请输入手机号码"
+                                        class="input input-bordered w-full focus-primary">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">设置密码</span>
+                                    </label>
+                                    <input id="reg-password" type="password" placeholder="请设置密码（8位以上）" required
+                                        class="input input-bordered w-full focus-primary">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">确认密码</span>
+                                    </label>
+                                    <input id="reg-confirm-password" type="password" placeholder="请再次输入密码" required
+                                        class="input input-bordered w-full focus-primary">
+                                </div>
+                                <div class="form-control">
+                                    <label class="label cursor-pointer justify-start gap-3">
+                                        <input type="checkbox" required class="checkbox checkbox-primary checkbox-sm">
+                                        <span class="label-text text-sm">
+                                            我已阅读并同意
+                                            <a href="#" class="link link-primary">用户协议</a>
+                                            和
+                                            <a href="#" class="link link-primary">隐私政策</a>
+                                        </span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-full hover-lift">
+                                    <span class="iconify" data-icon="heroicons:user-plus" data-width="16"></span>
+                                    注册账户
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                </body>
-                </html>
-            
+    <th:block layout:fragment="js">
+        <script th:src="@{/js/login-register.js}"></script>
+    </th:block>
+</body>
+
+</html>

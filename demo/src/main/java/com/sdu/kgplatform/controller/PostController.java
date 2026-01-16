@@ -1,5 +1,6 @@
 package com.sdu.kgplatform.controller;
 
+import com.sdu.kgplatform.common.SecurityUtils;
 import com.sdu.kgplatform.entity.*;
 import com.sdu.kgplatform.repository.PostFavoriteRepository;
 import com.sdu.kgplatform.repository.PostRepository;
@@ -8,11 +9,8 @@ import com.sdu.kgplatform.repository.UserRepository;
 import com.sdu.kgplatform.service.PostService;
 
 import java.time.LocalDateTime;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -24,30 +22,26 @@ import java.util.Map;
 @RequestMapping("/api")
 public class PostController {
 
-    @Autowired
-    private PostService postService;
-    
-    @Autowired
-    private UserRepository userRepository;
+    private final PostService postService;
+    private final UserRepository userRepository;
+    private final PostFavoriteRepository postFavoriteRepository;
+    private final UserFollowRepository userFollowRepository;
+    private final PostRepository postRepository;
 
-    @Autowired
-    private PostFavoriteRepository postFavoriteRepository;
-
-    @Autowired
-    private UserFollowRepository userFollowRepository;
-
-    @Autowired
-    private PostRepository postRepository;
+    public PostController(PostService postService, 
+                         UserRepository userRepository,
+                         PostFavoriteRepository postFavoriteRepository,
+                         UserFollowRepository userFollowRepository,
+                         PostRepository postRepository) {
+        this.postService = postService;
+        this.userRepository = userRepository;
+        this.postFavoriteRepository = postFavoriteRepository;
+        this.userFollowRepository = userFollowRepository;
+        this.postRepository = postRepository;
+    }
     
     private User getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return null;
-        }
-        String username = auth.getName();
-        return userRepository.findByEmail(username)
-                .or(() -> userRepository.findByPhone(username))
-                .orElse(null);
+        return SecurityUtils.getCurrentUser(userRepository);
     }
 
     @GetMapping("/posts")

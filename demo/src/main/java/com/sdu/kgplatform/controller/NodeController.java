@@ -2,8 +2,6 @@ package com.sdu.kgplatform.controller;
 
 import com.sdu.kgplatform.dto.NodeDto;
 import com.sdu.kgplatform.dto.RelationshipDto;
-import com.sdu.kgplatform.entity.User;
-import com.sdu.kgplatform.repository.UserRepository;
 import com.sdu.kgplatform.service.GraphService;
 import com.sdu.kgplatform.service.NodeService;
 import com.sdu.kgplatform.service.RelationshipService;
@@ -27,16 +25,13 @@ public class NodeController {
     private final NodeService nodeService;
     private final RelationshipService relationshipService;
     private final GraphService graphService;
-    private final UserRepository userRepository;
 
     public NodeController(NodeService nodeService,
-                          RelationshipService relationshipService,
-                          GraphService graphService,
-                          UserRepository userRepository) {
+            RelationshipService relationshipService,
+            GraphService graphService) {
         this.nodeService = nodeService;
         this.relationshipService = relationshipService;
         this.graphService = graphService;
-        this.userRepository = userRepository;
     }
 
     // ==================== 节点接口 ====================
@@ -50,9 +45,8 @@ public class NodeController {
         try {
             List<NodeDto> nodes = nodeService.getNodesByGraphId(graphId);
             return ResponseEntity.ok(Map.of(
-                "nodes", nodes,
-                "count", nodes.size()
-            ));
+                    "nodes", nodes,
+                    "count", nodes.size()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -64,7 +58,7 @@ public class NodeController {
      */
     @GetMapping("/nodes/{nodeId}")
     public ResponseEntity<?> getNode(@PathVariable Integer graphId,
-                                     @PathVariable String nodeId) {
+            @PathVariable String nodeId) {
         try {
             NodeDto node = nodeService.getNodeById(nodeId);
             return ResponseEntity.ok(node);
@@ -79,7 +73,7 @@ public class NodeController {
      */
     @GetMapping("/nodes/search")
     public ResponseEntity<?> searchNodes(@PathVariable Integer graphId,
-                                         @RequestParam String keyword) {
+            @RequestParam String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "搜索关键词不能为空"));
         }
@@ -93,7 +87,7 @@ public class NodeController {
      */
     @GetMapping("/nodes/type/{type}")
     public ResponseEntity<?> getNodesByType(@PathVariable Integer graphId,
-                                            @PathVariable String type) {
+            @PathVariable String type) {
         List<NodeDto> nodes = nodeService.getNodesByType(graphId, type);
         return ResponseEntity.ok(nodes);
     }
@@ -114,8 +108,8 @@ public class NodeController {
      */
     @GetMapping("/nodes/{nodeId}/neighbors")
     public ResponseEntity<?> getNeighbors(@PathVariable Integer graphId,
-                                          @PathVariable String nodeId,
-                                          @RequestParam(defaultValue = "all") String direction) {
+            @PathVariable String nodeId,
+            @RequestParam(defaultValue = "all") String direction) {
         try {
             List<NodeDto> neighbors;
             switch (direction.toLowerCase()) {
@@ -141,7 +135,7 @@ public class NodeController {
     @PostMapping("/nodes")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> createNode(@PathVariable Integer graphId,
-                                        @Valid @RequestBody NodeDto dto) {
+            @Valid @RequestBody NodeDto dto) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -149,10 +143,9 @@ public class NodeController {
         try {
             NodeDto created = nodeService.createNode(graphId, dto);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "节点创建成功",
-                "data", created
-            ));
+                    "success", true,
+                    "message", "节点创建成功",
+                    "data", created));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -165,7 +158,7 @@ public class NodeController {
     @PostMapping("/nodes/batch")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> createNodes(@PathVariable Integer graphId,
-                                         @RequestBody List<NodeDto> dtos) {
+            @RequestBody List<NodeDto> dtos) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -173,11 +166,10 @@ public class NodeController {
         try {
             List<NodeDto> created = nodeService.createNodes(graphId, dtos);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "批量创建成功",
-                "count", created.size(),
-                "data", created
-            ));
+                    "success", true,
+                    "message", "批量创建成功",
+                    "count", created.size(),
+                    "data", created));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -190,8 +182,8 @@ public class NodeController {
     @PutMapping("/nodes/{nodeId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> updateNode(@PathVariable Integer graphId,
-                                        @PathVariable String nodeId,
-                                        @Valid @RequestBody NodeDto dto) {
+            @PathVariable String nodeId,
+            @Valid @RequestBody NodeDto dto) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -199,10 +191,9 @@ public class NodeController {
         try {
             NodeDto updated = nodeService.updateNode(nodeId, dto);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "节点更新成功",
-                "data", updated
-            ));
+                    "success", true,
+                    "message", "节点更新成功",
+                    "data", updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -215,7 +206,7 @@ public class NodeController {
     @DeleteMapping("/nodes/{nodeId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> deleteNode(@PathVariable Integer graphId,
-                                        @PathVariable String nodeId) {
+            @PathVariable String nodeId) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -223,9 +214,8 @@ public class NodeController {
         try {
             nodeService.deleteNode(nodeId);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "节点已删除"
-            ));
+                    "success", true,
+                    "message", "节点已删除"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -238,7 +228,7 @@ public class NodeController {
     @DeleteMapping("/nodes/batch")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> deleteNodes(@PathVariable Integer graphId,
-                                         @RequestBody List<String> nodeIds) {
+            @RequestBody List<String> nodeIds) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -254,10 +244,9 @@ public class NodeController {
                 }
             }
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "已删除 " + deleted + " 个节点",
-                "deletedCount", deleted
-            ));
+                    "success", true,
+                    "message", "已删除 " + deleted + " 个节点",
+                    "deletedCount", deleted));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -270,7 +259,7 @@ public class NodeController {
     @DeleteMapping("/relations/batch")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> deleteRelations(@PathVariable Integer graphId,
-                                             @RequestBody List<String> relationIds) {
+            @RequestBody List<String> relationIds) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -286,10 +275,9 @@ public class NodeController {
                 }
             }
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "已删除 " + deleted + " 个关系",
-                "deletedCount", deleted
-            ));
+                    "success", true,
+                    "message", "已删除 " + deleted + " 个关系",
+                    "deletedCount", deleted));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -306,9 +294,8 @@ public class NodeController {
         try {
             List<RelationshipDto> relations = relationshipService.getRelationshipsByGraphId(graphId);
             return ResponseEntity.ok(Map.of(
-                "relations", relations,
-                "count", relations.size()
-            ));
+                    "relations", relations,
+                    "count", relations.size()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -320,7 +307,7 @@ public class NodeController {
      */
     @GetMapping("/relations/type/{type}")
     public ResponseEntity<?> getRelationsByType(@PathVariable Integer graphId,
-                                                @PathVariable String type) {
+            @PathVariable String type) {
         List<RelationshipDto> relations = relationshipService.getRelationshipsByType(graphId, type);
         return ResponseEntity.ok(relations);
     }
@@ -352,7 +339,7 @@ public class NodeController {
     @PostMapping("/relations")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> createRelation(@PathVariable Integer graphId,
-                                            @Valid @RequestBody RelationshipDto dto) {
+            @Valid @RequestBody RelationshipDto dto) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -360,10 +347,9 @@ public class NodeController {
         try {
             RelationshipDto created = relationshipService.createRelationship(graphId, dto);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "关系创建成功",
-                "data", created
-            ));
+                    "success", true,
+                    "message", "关系创建成功",
+                    "data", created));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -376,7 +362,7 @@ public class NodeController {
     @PostMapping("/relations/batch")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> createRelations(@PathVariable Integer graphId,
-                                             @RequestBody List<RelationshipDto> dtos) {
+            @RequestBody List<RelationshipDto> dtos) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -384,11 +370,10 @@ public class NodeController {
         try {
             List<RelationshipDto> created = relationshipService.createRelationships(graphId, dtos);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "批量创建成功",
-                "count", created.size(),
-                "data", created
-            ));
+                    "success", true,
+                    "message", "批量创建成功",
+                    "count", created.size(),
+                    "data", created));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -401,7 +386,7 @@ public class NodeController {
     @DeleteMapping("/relations/{relationId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> deleteRelation(@PathVariable Integer graphId,
-                                            @PathVariable String relationId) {
+            @PathVariable String relationId) {
         if (!checkGraphOwnership(graphId)) {
             return ResponseEntity.status(403).body(Map.of("error", "无权操作此图谱"));
         }
@@ -409,9 +394,8 @@ public class NodeController {
         try {
             relationshipService.deleteRelationshipByElementId(relationId);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "关系已删除"
-            ));
+                    "success", true,
+                    "message", "关系已删除"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -421,26 +405,17 @@ public class NodeController {
 
     private boolean checkGraphOwnership(Integer graphId) {
         Integer userId = getCurrentUserId();
-        if (userId == null) return false;
+        if (userId == null)
+            return false;
         return graphService.isGraphOwner(graphId, userId);
     }
 
     private Integer getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return null;
+        if (auth != null && auth.isAuthenticated()
+                && auth.getPrincipal() instanceof com.sdu.kgplatform.security.CustomUserDetails) {
+            return ((com.sdu.kgplatform.security.CustomUserDetails) auth.getPrincipal()).getUserId();
         }
-
-        String account = auth.getName();
-        User user = null;
-
-        if (account.contains("@")) {
-            user = userRepository.findByEmail(account).orElse(null);
-        }
-        if (user == null) {
-            user = userRepository.findByPhone(account).orElse(null);
-        }
-
-        return user != null ? user.getUserId() : null;
+        return null;
     }
 }

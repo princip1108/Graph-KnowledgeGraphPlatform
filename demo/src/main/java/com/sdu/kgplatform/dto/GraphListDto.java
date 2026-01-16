@@ -21,6 +21,7 @@ public class GraphListDto {
     private String description;
     private String status;
     private String coverImage;
+    private Boolean isCustomCover;
     private LocalDate uploadDate;
     
     // 上传者信息

@@ -1,0 +1,695 @@
+
+                <!DOCTYPE html>
+                <html lang="zh">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>注册成功</title>
+                  <style>
+                    *,
+                    *::before,
+                    *::after {
+                      box-sizing: border-box;
+                      margin: 0;
+                    }
+                    .iframe-outer {
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      bottom: 0;
+                      right: 0;
+                      display: flex;
+                      justify-content: center;
+                      background-color: #E0E0E0;
+                    }
+                    .iframe-wrapper {
+                      width: 100%;
+                      height: 100%;
+                      margin: 0 auto;
+                      transform-origin: center top;
+                      flex-shrink: 0;
+                    }
+                    #dynamicIframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  </style>
+                  <script>
+                const width = 1920
+                const height = 1080
+                const resolutionRatio = width && height ? width / height : 1
+                const pageNameMap = {
+                  'home_page': '首页',
+    'login_register_page': '登录注册',
+    'registration_success_page': '注册成功',
+    'password_reset_page': '找回密码',
+    'graph_list_page': '图谱列表页',
+    'graph_detail_page': '图谱详情页',
+    'user_profile_page': '个人中心',
+    'documentation_page': '文档',
+    'about_page': '关于我们',
+    'feedback_page': '用户反馈',
+    'page_998124': '管理',
+    'page_998125': '论坛'
+                }
+                function setIframeSize(w, h) {
+                  const currentContainerRadio = w / h
+                  let widthValue = w
+                  let heightValue = h
+                  let zoom = 1
+                  if (currentContainerRadio > resolutionRatio) {
+                    widthValue = h * resolutionRatio
+                    heightValue = h
+                  } else {
+                    widthValue = w
+                    heightValue = w / resolutionRatio
+                  }
+                  zoom = width ? widthValue / width : 1
+                  return {
+                    width: widthValue / zoom + 'px',
+                    height: heightValue / zoom + 'px',
+                    zoom,
+                  }
+                }
+                function adjustIframeSize() {
+                  const iframeWrapper = document.querySelector(".iframe-wrapper")
+                  if (!iframeWrapper) return
+                  iframeWrapper.style.width = '100%'
+                  iframeWrapper.style.height = window.innerHeight + 'px'
+                  iframeWrapper.style.transform = ''
+                }
+                function sanitizeFilename(name) {
+                  return name.replace(/[\/:*?"<>|]/g, '_')
+                }
+                function handlePostMessage(event) {
+                  if (!event.data) {
+                    return
+                  }
+                  const { type, targetPageId } = event.data
+                  const targetPageName = pageNameMap[targetPageId]
+                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
+                    window.location.href = targetPageName + '.html'
+                  }
+                }
+                window.addEventListener('message', handlePostMessage)
+                window.onload = adjustIframeSize
+                window.onresize = adjustIframeSize
+                window.onunload = () => {
+                  window.removeEventListener('message', handlePostMessage)
+                }
+              </script>
+                </head>
+                <body>
+                  <div class="iframe-outer">
+                    <div class="iframe-wrapper">
+                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册成功 - Graph+知识图谱平台</title>
+    <link href="./assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
+    <script src="./assets/static/libs/tailwind-browser@4.js"></script>
+    <link href="./assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
+    <script src="./assets/3/3.1.1/iconify.min.js"></script>
+    <style>
+/* daisyUI Theme Variables Customization
+* Based on the selected daisyUI theme and UI guidance requirements,
+* customize only the CSS variables that need to be different from the theme defaults.
+*/
+:root {
+/* Corporate theme customization for knowledge graph platform */
+--color-primary: rgba(30, 58, 138, 1); /* Deep Blue #1E3A8A - 学院风深蓝 */
+--color-primary-content: rgba(255, 255, 255, 1);
+--color-secondary: rgba(37, 99, 235, 1); /* Medium Blue #2563EB */
+--color-secondary-content: rgba(255, 255, 255, 1);
+--color-accent: rgba(16, 185, 129, 1); /* Emerald Green #10B981 */
+--color-accent-content: rgba(255, 255, 255, 1);
+--color-base-100: rgba(255, 255, 255, 1);
+--color-base-200: rgba(247, 249, 250, 1); /* #F7F9FA */
+--color-base-300: rgba(229, 231, 235, 1); /* #E5E7EB */
+--color-base-content: rgba(55, 65, 81, 1); /* #374151 */
+--color-success: rgba(16, 185, 129, 1);
+--color-warning: rgba(245, 158, 11, 1);
+--color-error: rgba(239, 68, 68, 1);
+--color-info: rgba(59, 130, 246, 1);
+--radius-box: 0.375rem; /* 6px for micro-rounded corners */
+--radius-field: 0.375rem;
+--border: 1px;
+}
+
+/* Global component styles */
+.transition-width {
+transition: width 0.3s ease-in-out;
+}
+
+.nav-hover {
+transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.shadow-soft {
+box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header height consistency */
+.header-height {
+height: 64px;
+}
+
+/* Focus styles for accessibility */
+.focus-primary:focus {
+outline: 2px solid var(--color-primary);
+outline-offset: 2px;
+}
+
+/* Academic style enhancements */
+.academic-border {
+border: var(--border) solid var(--color-base-300);
+}
+
+.hover-lift {
+transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional grid spacing */
+.academic-grid {
+gap: 1.5rem;
+}
+
+/* Clean divider lines */
+.academic-divider {
+border-color: var(--color-base-300);
+border-width: var(--border);
+}
+</style> <style>
+/* Registration Success Page Specific Styles */
+
+/* Success icon animation */
+.success-icon-wrapper {
+animation: successPulse 2s ease-in-out;
+}
+
+@keyframes successPulse {
+0% {
+transform: scale(0.8);
+opacity: 0;
+}
+50% {
+transform: scale(1.1);
+opacity: 1;
+}
+100% {
+transform: scale(1);
+opacity: 1;
+}
+}
+
+/* Enhanced hover effects for action buttons */
+.hover-lift {
+transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 25px rgba(30, 58, 138, 0.15);
+}
+
+/* Academic style button refinements */
+.btn-primary.btn-lg {
+border-radius: var(--radius-field);
+font-weight: 600;
+letter-spacing: 0.025em;
+}
+
+.btn-outline.btn-lg {
+border-radius: var(--radius-field);
+font-weight: 600;
+letter-spacing: 0.025em;
+border-color: var(--color-primary);
+color: var(--color-primary);
+}
+
+.btn-outline.btn-lg:hover {
+background-color: var(--color-primary);
+border-color: var(--color-primary);
+color: var(--color-primary-content);
+}
+
+/* Success message typography enhancements */
+#RegistrationSuccessMessage h1 {
+color: var(--color-base-content);
+line-height: 1.2;
+}
+
+#RegistrationSuccessMessage p {
+max-width: 28rem;
+margin: 0 auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+#NextStepsCallToAction .flex-col {
+gap: 1rem;
+}
+
+.btn-lg {
+padding: 0.75rem 1.5rem;
+font-size: 1rem;
+}
+}
+
+/* Academic style spacing consistency */
+main {
+padding-top: 4rem;
+padding-bottom: 4rem;
+}
+
+/* Subtle background pattern for academic feel */
+body::before {
+content: &#39;&#39;;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: linear-gradient(135deg, transparent 0%, rgba(30, 58, 138, 0.02) 50%, transparent 100%);
+pointer-events: none;
+z-index: -1;
+}
+</style>
+  <script src="./assets/static/libs/25_6/holder.js"></script></head>
+  <body class="bg-base-100 min-h-screen flex flex-col">
+    <div data-section-id="common_header" data-section-type="common_header">
+  <div id="ifuz" class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4 ifuz spark-custom-ifuz ifuz">
+    <!-- Left section: Logo -->
+    <div class="navbar-start">
+      <div class="flex items-center cursor-pointer" onclick="navigateTo(&#39;home_page&#39;)">
+        <img src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/4da31d39-450b-4557-950c-260a4e6eca63.png" alt="Graph+知识图谱平台 Logo" class="w-10 h-10"><span class="ml-3 text-xl font-semibold text-primary hidden lg:block">Graph+知识图谱平台</span>
+      </div>
+      <!-- Mobile menu -->
+      <div class="dropdown lg:hidden ml-2">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+          <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
+        </div>
+        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998124&#39;)">管理</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a></li>
+          <li><a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Center section: Main navigation -->
+    <div class="navbar-center hidden xl:flex">
+      <ul class="menu menu-horizontal px-1 gap-1">
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;home_page&#39;)">首页</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;graph_list_page&#39;)">探索</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998125&#39;)">论坛</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;page_998124&#39;)">管理</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;documentation_page&#39;)">使用文档</a>
+        </li>
+        <li>
+          <a class="nav-hover focus-primary" onclick="navigateTo(&#39;about_page&#39;)">关于我们</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Right section: User controls -->
+    <div class="navbar-end">
+      <!-- Login/Register buttons for logged-out users -->
+      <div data-user-control="logged-out" class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm nav-hover focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+          登录</button><button class="btn btn-primary btn-sm focus-primary" onclick="navigateTo(&#39;login_register_page&#39;)">
+          注册
+        </button>
+      </div>
+      <!-- User profile dropdown for logged-in users -->
+      <div data-user-control="logged-in" id="i2dij" class="dropdown dropdown-end" style="display: none;">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
+          <div class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content">
+            <span class="font-semibold text-lg">用</span>
+          </div>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
+          <li class="menu-title"><span>用户中心</span></li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a>
+          </li>
+          <li>
+            <a class="nav-hover focus-primary" onclick="navigateTo(&#39;user_profile_page&#39;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a>
+          </li>
+          <div class="divider my-1"></div>
+          <li>
+            <a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <main class="flex-1 flex flex-col items-center justify-center px-4 py-16">
+      <!-- Registration Success Message Section -->
+      <section id="RegistrationSuccessMessage" class="text-center mb-16 max-w-2xl">
+        <div class="success-icon-container mb-8">
+          <div class="w-24 h-24 mx-auto bg-success/10 rounded-full flex items-center justify-center success-icon-wrapper">
+            <span class="iconify text-success" data-icon="heroicons:check-circle-solid" data-width="48"></span>
+          </div>
+        </div>
+        <h1 class="text-4xl font-bold text-base-content mb-4">注册成功！</h1>
+        <p class="text-lg text-base-content/70 leading-relaxed">
+          欢迎加入Graph+知识图谱平台，您的专属智慧世界已开启。
+        </p>
+      </section>
+      <!-- Next Steps Call To Action Section -->
+      <section id="NextStepsCallToAction" class="w-full max-w-md">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button class="btn btn-primary btn-lg flex-1 hover-lift" onclick="navigateTo(&#39;home_page&#39;)">
+            <span class="iconify" data-icon="heroicons:rocket-launch" data-width="20"></span>
+            开始探索</button><button class="btn btn-outline btn-lg flex-1 hover-lift" onclick="navigateTo(&#39;user_profile_page&#39;)">
+            <span class="iconify" data-icon="heroicons:user-circle" data-width="20"></span>
+            完善资料
+          </button>
+        </div>
+        <div class="text-center mt-8">
+          <p class="text-sm text-base-content/60">
+            您可以随时在个人中心完善资料信息
+          </p>
+        </div>
+      </section>
+    </main>
+    <div data-section-id="common_footer" data-section-type="common_footer">
+<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
+<div class="grid grid-flow-col gap-4">
+<a onclick="navigateTo(&#39;about_page&#39;)" class="link link-hover focus-primary">关于我们</a>
+<a onclick="navigateTo(&#39;documentation_page&#39;)" class="link link-hover focus-primary">帮助中心</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary">用户反馈</a>
+<a class="link link-hover focus-primary">隐私政策</a>
+<a class="link link-hover focus-primary">服务条款</a>
+</div>
+<div class="grid grid-flow-col gap-4">
+<a class="link link-hover focus-primary" aria-label="官方微信">
+<span class="iconify" data-icon="simple-icons:wechat" data-width="20" style="color: var(--color-success);"></span>
+</a>
+<a class="link link-hover focus-primary" aria-label="企业QQ">
+<span class="iconify" data-icon="simple-icons:tencentqq" data-width="20" style="color: var(--color-primary);"></span>
+</a>
+<a onclick="navigateTo(&#39;feedback_page&#39;)" class="link link-hover focus-primary" aria-label="意见反馈">
+<span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+</a>
+</div>
+<div class="text-center">
+<p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
+<p class="text-xs opacity-70 mt-1">反馈邮箱: feedback@knowledgegraph.com</p>
+</div>
+</footer>
+</div><script>
+(function() {
+&#39;use strict&#39;;
+
+// Initialize global namespace
+window.APP_GLOBALS = window.APP_GLOBALS || {};
+
+// Global navigation utility
+window.navigateTo = function(targetPageId) {
+const isInIframe = window.self !== window.top;
+const targetFileName = `${targetPageId}.html`;
+
+if (isInIframe) {
+window.parent.postMessage({
+type: &#39;iframeNavigation&#39;,
+targetPageId: targetPageId
+}, &#39;*&#39;);
+} else {
+window.location.href = targetFileName;
+}
+};
+
+// User authentication state management
+window.APP_GLOBALS.user = {
+isLoggedIn: false,
+userInfo: null,
+
+login: function(userInfo) {
+this.isLoggedIn = true;
+this.userInfo = userInfo;
+localStorage.setItem(&#39;userState&#39;, JSON.stringify({
+isLoggedIn: true,
+userInfo: userInfo
+}));
+this.updateUserInterface();
+},
+
+logout: function() {
+this.isLoggedIn = false;
+this.userInfo = null;
+localStorage.removeItem(&#39;userState&#39;);
+this.updateUserInterface();
+navigateTo(&#39;home_page&#39;);
+},
+
+updateUserInterface: function() {
+const userControls = document.querySelectorAll(&#39;[data-user-control]&#39;);
+userControls.forEach(control => {
+const controlType = control.getAttribute(&#39;data-user-control&#39;);
+if (controlType === &#39;logged-out&#39; &amp;&amp; this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else if (controlType === &#39;logged-in&#39; &amp;&amp; !this.isLoggedIn) {
+control.style.display = &#39;none&#39;;
+} else {
+control.style.display = &#39;&#39;;
+}
+});
+},
+
+init: function() {
+const savedState = localStorage.getItem(&#39;userState&#39;);
+if (savedState) {
+const state = JSON.parse(savedState);
+this.isLoggedIn = state.isLoggedIn;
+this.userInfo = state.userInfo;
+}
+this.updateUserInterface();
+}
+};
+
+// Search functionality
+window.APP_GLOBALS.search = {
+history: JSON.parse(localStorage.getItem(&#39;searchHistory&#39;) || &#39;[]&#39;),
+recommendations: [&#39;人工智能&#39;, &#39;机器学习&#39;, &#39;自然语言处理&#39;, &#39;计算机视觉&#39;, &#39;深度学习&#39;],
+
+addToHistory: function(query) {
+if (query &amp;&amp; !this.history.includes(query)) {
+this.history.unshift(query);
+this.history = this.history.slice(0, 10); // Keep only last 10 searches
+localStorage.setItem(&#39;searchHistory&#39;, JSON.stringify(this.history));
+}
+},
+
+getSearchSuggestions: function() {
+return this.history.length > 0 ? this.history : this.recommendations;
+},
+
+performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
+this.addToHistory(query);
+// Navigate to search results or graph detail based on context
+navigateTo(targetPage);
+}
+};
+
+// Notification utilities
+window.showNotification = function(message, type = &#39;info&#39;) {
+const notification = document.createElement(&#39;div&#39;);
+notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+notification.innerHTML = `
+<div class="flex items-center gap-2">
+<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
+<span>${message}</span>
+</div>
+`;
+document.body.appendChild(notification);
+
+setTimeout(() => {
+notification.remove();
+}, 5000);
+};
+
+// Favorites management
+window.APP_GLOBALS.favorites = {
+items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+
+add: function(graphId, graphData) {
+if (!this.items.find(item => item.id === graphId)) {
+this.items.push({
+id: graphId,
+data: graphData,
+addedAt: new Date().toISOString()
+});
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+}
+},
+
+remove: function(graphId) {
+this.items = this.items.filter(item => item.id !== graphId);
+localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+},
+
+isFavorited: function(graphId) {
+return this.items.some(item => item.id === graphId);
+},
+
+toggle: function(graphId, graphData) {
+if (this.isFavorited(graphId)) {
+this.remove(graphId);
+} else {
+this.add(graphId, graphData);
+}
+}
+};
+
+// Initialize components when DOM is loaded
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+window.APP_GLOBALS.user.init();
+});
+
+})();
+</script><script>
+(function() {
+&#39;use strict&#39;;
+
+// Initialize page when DOM is loaded
+document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+// Add subtle entrance animation to the main content
+animatePageEntrance();
+
+// Track registration success event (for analytics)
+trackRegistrationSuccess();
+
+// Initialize button interactions
+initializeButtonInteractions();
+});
+
+// Animate page entrance
+function animatePageEntrance() {
+const successMessage = document.getElementById(&#39;RegistrationSuccessMessage&#39;);
+const callToAction = document.getElementById(&#39;NextStepsCallToAction&#39;);
+
+if (successMessage &amp;&amp; callToAction) {
+// Initial state
+successMessage.style.opacity = &#39;0&#39;;
+successMessage.style.transform = &#39;translateY(20px)&#39;;
+callToAction.style.opacity = &#39;0&#39;;
+callToAction.style.transform = &#39;translateY(20px)&#39;;
+
+// Animate success message first
+setTimeout(() => {
+successMessage.style.transition = &#39;opacity 0.6s ease-out, transform 0.6s ease-out&#39;;
+successMessage.style.opacity = &#39;1&#39;;
+successMessage.style.transform = &#39;translateY(0)&#39;;
+}, 200);
+
+// Animate call to action buttons after
+setTimeout(() => {
+callToAction.style.transition = &#39;opacity 0.6s ease-out, transform 0.6s ease-out&#39;;
+callToAction.style.opacity = &#39;1&#39;;
+callToAction.style.transform = &#39;translateY(0)&#39;;
+}, 600);
+}
+}
+
+// Track registration success for analytics
+function trackRegistrationSuccess() {
+// Stub function for analytics tracking
+console.log(&#39;Registration success page viewed&#39;);
+
+// In a real application, this would send data to analytics service
+// Example: analytics.track(&#39;registration_success_viewed&#39;, { timestamp: new Date() });
+}
+
+// Initialize button interactions
+function initializeButtonInteractions() {
+const buttons = document.querySelectorAll(&#39;.btn&#39;);
+
+buttons.forEach(button => {
+// Add focus handling for accessibility
+button.addEventListener(&#39;focus&#39;, function() {
+this.style.outline = &#39;2px solid var(--color-primary)&#39;;
+this.style.outlineOffset = &#39;2px&#39;;
+});
+
+button.addEventListener(&#39;blur&#39;, function() {
+this.style.outline = &#39;none&#39;;
+});
+
+// Add click feedback
+button.addEventListener(&#39;click&#39;, function() {
+// Provide immediate visual feedback
+this.style.transform = &#39;scale(0.98)&#39;;
+setTimeout(() => {
+this.style.transform = &#39;&#39;;
+}, 100);
+});
+});
+}
+
+// Handle navigation with loading state
+window.handleNavigationWithLoading = function(targetPageId, buttonElement) {
+if (buttonElement) {
+const originalContent = buttonElement.innerHTML;
+buttonElement.innerHTML = &#39;<span class="loading loading-spinner loading-sm"></span>正在跳转...&#39;;
+buttonElement.disabled = true;
+
+// Simulate brief loading before navigation
+setTimeout(() => {
+navigateTo(targetPageId);
+}, 500);
+}
+};
+
+// Enhanced navigation functions for this page
+window.startExploration = function() {
+const button = event.target.closest(&#39;.btn&#39;);
+handleNavigationWithLoading(&#39;home_page&#39;, button);
+};
+
+window.completeProfile = function() {
+const button = event.target.closest(&#39;.btn&#39;);
+handleNavigationWithLoading(&#39;user_profile_page&#39;, button);
+};
+
+})();
+</script>
+  
+
+<script>
+    setTimeout(() => {
+      Holder.run({
+        domain: "placehold.co"
+      })
+    }, 100)
+  </script></body></html>'></iframe>
+                    </div>
+                  </div>
+
+                </body>
+                </html>
+            

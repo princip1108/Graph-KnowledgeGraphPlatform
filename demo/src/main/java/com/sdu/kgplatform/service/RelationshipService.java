@@ -9,6 +9,8 @@ import com.sdu.kgplatform.repository.RelationshipRepository;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class RelationshipService {
+
+    private static final Logger log = LoggerFactory.getLogger(RelationshipService.class);
 
     private final RelationshipRepository relationshipRepository;
     private final NodeRepository nodeRepository;
@@ -56,7 +60,7 @@ public class RelationshipService {
         String sourceNodeId = dto.getSourceNodeId();
         String targetNodeId = dto.getTargetNodeId();
         
-        System.out.println("Creating relation via Neo4j Driver: " + sourceNodeId + " -> " + targetNodeId + " [" + type + "]");
+        log.debug("Creating relation via Neo4j Driver: {} -> {} [{}]", sourceNodeId, targetNodeId, type);
 
         // 使用 Neo4j Driver 直接执行写操作，确保立即提交
         String cypher = "MATCH (a:Entity {nodeId: $sourceNodeId}), (b:Entity {nodeId: $targetNodeId}) " +
@@ -79,16 +83,16 @@ public class RelationshipService {
                 relationId = record.get("relationId").asString();
                 sourceName = record.get("sourceName").asString();
                 targetName = record.get("targetName").asString();
-                System.out.println("Created relation with Neo4j elementId: " + relationId);
+                log.debug("Created relation with Neo4j elementId: {}", relationId);
             } else {
-                System.out.println("WARNING: No result returned - nodes may not exist");
+                log.warn("No result returned - nodes may not exist");
             }
             
             // 验证关系数量
             Result countResult = session.run("MATCH ()-[r:RELATES_TO]->() RETURN count(r) as cnt");
             if (countResult.hasNext()) {
                 long count = countResult.next().get("cnt").asLong();
-                System.out.println("DEBUG: Total relations after creation: " + count);
+                log.debug("Total relations after creation: {}", count);
             }
         }
 
@@ -122,13 +126,13 @@ public class RelationshipService {
      */
     @Transactional(value = "neo4jTransactionManager", readOnly = true)
     public List<RelationshipDto> getRelationshipsByGraphId(Integer graphId) {
-        System.out.println("Fetching relations for graphId: " + graphId);
+        log.debug("Fetching relations for graphId: {}", graphId);
         
         // 调试：统计数量
         Long totalNodes = relationshipRepository.countAllNodes();
         Long totalRelations = relationshipRepository.countAllRelations();
-        System.out.println("DEBUG: Total nodes in Neo4j: " + totalNodes);
-        System.out.println("DEBUG: Total relations in Neo4j: " + totalRelations);
+        log.debug("Total nodes in Neo4j: {}", totalNodes);
+        log.debug("Total relations in Neo4j: {}", totalRelations);
         
         // 调试：查看节点的实际属性
         String debugCypher = "MATCH (n:Entity) WHERE n.graphId = $graphId RETURN n.nodeId as nodeId, n.name as name LIMIT 3";
@@ -137,7 +141,7 @@ public class RelationshipService {
                 .fetchAs(String.class)
                 .mappedBy((ts, record) -> "nodeId=" + record.get("nodeId") + ", name=" + record.get("name"))
                 .all();
-        System.out.println("DEBUG: Sample nodes in Neo4j: " + sampleNodes);
+        log.debug("Sample nodes in Neo4j: {}", sampleNodes);
         
         // 使用 Neo4jClient 查询关系
         String cypher = "MATCH (a:Entity)-[r:RELATES_TO]->(b:Entity) WHERE a.graphId = $graphId " +
@@ -158,7 +162,7 @@ public class RelationshipService {
                         .build())
                 .all();
         
-        System.out.println("Found " + relations.size() + " relations for graphId " + graphId);
+        log.debug("Found {} relations for graphId {}", relations.size(), graphId);
         return relations.stream().collect(Collectors.toList());
     }
 

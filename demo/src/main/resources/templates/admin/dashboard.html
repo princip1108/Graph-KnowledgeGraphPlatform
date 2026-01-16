@@ -1,1646 +1,294 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>管理</title>
-  <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-    }
-    .iframe-outer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      background-color: #E0E0E0;
-    }
-    .iframe-wrapper {
-      width: 100%;
-      height: 100%;
-      margin: 0 auto;
-      transform-origin: center top;
-      flex-shrink: 0;
-    }
-    #dynamicIframe {
-      border: none;
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-  <script>
-    const width = 1920
-    const height = 1080
-    const resolutionRatio = width && height ? width / height : 1
-    const pageNameMap = {
-      'home_page': '首页',
-      'login_register_page': '登录注册',
-      'registration_success_page': '注册成功',
-      'password_reset_page': '找回密码',
-      'graph_list_page': '图谱列表页',
-      'graph_detail_page': '图谱详情页',
-      'user_profile_page': '个人中心',
-      'documentation_page': '文档',
-      'about_page': '关于我们',
-      'feedback_page': '用户反馈',
-      'page_998124': '管理',
-      'page_998125': '论坛'
-    }
-    const pagePathMap = {
-      'home_page': '../graph/home.html',
-      'login_register_page': '../user/login_register.html',
-      'registration_success_page': '../user/registration_success.html',
-      'password_reset_page': '../user/password_reset.html',
-      'graph_list_page': '../graph/graph_list.html',
-      'graph_detail_page': '../graph/graph_detail.html',
-      'user_profile_page': '../user/profile.html',
-      'documentation_page': '../pages/documentation.html',
-      'about_page': '../pages/about.html',
-      'feedback_page': '../community/feedback.html',
-      'page_998124': './dashboard.html',
-      'page_998125': '../community/forum_list.html',
-      'post_edit_page': '../community/post_edit.html',
-      'post_detail_page': '../community/post_detail.html'
-    };
-    function adjustIframeSize() {
-      const iframeWrapper = document.querySelector(".iframe-wrapper")
-      if (!iframeWrapper) return
-      iframeWrapper.style.width = '100%'
-      iframeWrapper.style.height = window.innerHeight + 'px'
-      iframeWrapper.style.transform = ''
-    }
-    function handlePostMessage(event) {
-      if (!event.data) return
-      const { type, targetPageId, params } = event.data
-      const targetPath = pagePathMap[targetPageId];
-      if (type === "iframeNavigation" && targetPath) {
-        // 如果有参数，拼接到URL
-        if (params && typeof params === "object") {
-          const queryString = Object.keys(params)
-            .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(params[key]))
-            .join("&");
-          window.location.href = targetPath + (targetPath.includes("?") ? "&" : "?") + queryString;
-        } else {
-          window.location.href = targetPath;
-        }
-      }
-    }
-    window.addEventListener('message', handlePostMessage)
-    window.onload = adjustIframeSize
-    window.onresize = adjustIframeSize
-    window.onunload = () => {
-      window.removeEventListener('message', handlePostMessage)
-    }
-  </script>
+    <title>管理中心 - Graph+知识图谱平台</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
 </head>
+
 <body>
-  <div class="iframe-outer">
-    <div class="iframe-wrapper">
-      <iframe id="dynamicIframe" srcdoc='<html lang="zh-CN" data-theme="corporate"><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>管理中心 - Graph+知识图谱平台</title>
-<link href="/assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
-<script src="/assets/static/libs/tailwind-browser@4.js"></script>
-<link href="/assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
-<script src="/assets/3/3.1.1/iconify.min.js"></script>
-<style>
-:root {
---color-primary: rgba(30, 58, 138, 1);
---color-primary-content: rgba(255, 255, 255, 1);
---color-secondary: rgba(37, 99, 235, 1);
---color-secondary-content: rgba(255, 255, 255, 1);
---color-accent: rgba(16, 185, 129, 1);
---color-accent-content: rgba(255, 255, 255, 1);
---color-base-100: rgba(255, 255, 255, 1);
---color-base-200: rgba(247, 249, 250, 1);
---color-base-300: rgba(229, 231, 235, 1);
---color-base-content: rgba(55, 65, 81, 1);
---color-success: rgba(16, 185, 129, 1);
---color-warning: rgba(245, 158, 11, 1);
---color-error: rgba(239, 68, 68, 1);
---color-info: rgba(59, 130, 246, 1);
---radius-box: 0.375rem;
---radius-field: 0.375rem;
---border: 1px;
-}
-.nav-hover { transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out; }
-.shadow-soft { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); }
-.header-height { height: 64px; }
-.focus-primary:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-.academic-border { border: var(--border) solid var(--color-base-300); }
-.content-section { display: none; }
-.content-section.active { display: block; }
-.nav-item { transition: all 0.15s ease-in-out; }
-.nav-item:hover { background-color: var(--color-primary); color: var(--color-primary-content); }
-.nav-item.active { background-color: var(--color-primary); color: var(--color-primary-content); }
-.nav-item.active .iconify { color: var(--color-primary-content); }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.content-section.active { animation: fadeIn 0.3s ease-in-out; }
-</style>
-<script src="/assets/static/libs/25_6/holder.js"></script>
-</head>
-<body class="bg-base-100">
-<!-- Header -->
-<div class="navbar bg-base-100 shadow-soft border-b academic-border header-height px-4">
-  <div class="navbar-start">
-    <div class="flex items-center gap-4">
-      <button class="btn btn-ghost text-xl font-bold text-base-content hover:bg-base-content/10" onclick="navigateTo(&apos;home_page&apos;)">
-        <span class="iconify" data-icon="heroicons:cube-transparent" data-width="28"></span>
-        Graph+知识图谱平台
-      </button>
-    </div>
-    <div class="dropdown lg:hidden">
-      <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
-        <span class="iconify" data-icon="heroicons:bars-3" data-width="22"></span>
-      </div>
-      <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2">
-        <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;home_page&apos;)">首页</a></li>
-        <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;graph_list_page&apos;)">探索</a></li>
-        <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;page_998125&apos;)">论坛</a></li>
-        <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;page_998124&apos;)">管理</a></li>
-        <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;documentation_page&apos;)">使用文档</a></li>
-        <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;about_page&apos;)">关于我们</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="navbar-center hidden lg:flex">
-    <ul class="menu menu-horizontal px-1 gap-2">
-      <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;home_page&apos;)">首页</a></li>
-      <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;graph_list_page&apos;)">探索</a></li>
-      <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;page_998125&apos;)">论坛</a></li>
-      <li><a class="nav-hover focus-primary text-base-content bg-primary/10" onclick="navigateTo(&apos;page_998124&apos;)">管理</a></li>
-      <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;documentation_page&apos;)">使用文档</a></li>
-      <li><a class="nav-hover focus-primary text-base-content" onclick="navigateTo(&apos;about_page&apos;)">关于我们</a></li>
-    </ul>
-  </div>
-  <div class="navbar-end">
-    <div data-user-control="logged-out" class="flex items-center gap-2" style="display: none;">
-      <button class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10" onclick="navigateTo(&apos;login_register_page&apos;)">登录</button>
-      <button class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100" onclick="navigateTo(&apos;login_register_page&apos;)">注册</button>
-    </div>
-    <div data-user-control="logged-in" class="dropdown dropdown-end" style="display: none;">
-      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar focus-primary">
-        <div id="nav-avatar-container" class="avatar placeholder inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-content overflow-hidden">
-          <span id="nav-avatar-text" class="font-semibold text-lg">用</span>
-          <img id="nav-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
+    <div layout:fragment="content">
+        <!-- Main Layout -->
+        <div class="flex min-h-screen">
+            <!-- Sidebar -->
+            <div class="w-64 bg-base-200 border-r academic-border">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-base-content mb-6">管理中心</h2>
+                    <div class="mb-8">
+                        <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">用户管理</h3>
+                        <nav class="space-y-2 sidebar-nav">
+                            <a data-section="graph-batch" class="nav-item active flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('graph-batch')">
+                                <span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="20"></span>
+                                <span>图谱批量管理</span>
+                            </a>
+                            <a data-section="post-batch" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('post-batch')">
+                                <span class="iconify text-primary" data-icon="heroicons:document-text" data-width="20"></span>
+                                <span>帖子批量管理</span>
+                            </a>
+                        </nav>
+                    </div>
+                    <div id="admin-section" class="mb-8" style="display: none;">
+                        <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">管理员管理</h3>
+                        <nav class="space-y-2 sidebar-nav">
+                            <a data-section="user-permission" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('user-permission')">
+                                <span class="iconify text-primary" data-icon="heroicons:user-group" data-width="20"></span>
+                                <span>用户权限管理</span>
+                            </a>
+                            <a data-section="forum-management" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('forum-management')">
+                                <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+                                <span>论坛管理</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="flex-1 p-8">
+                <!-- Graph Batch Section -->
+                <div id="graph-batch-section" class="content-section active">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-base-content mb-2">图谱批量管理</h1>
+                        <p class="text-base-content/70">批量管理您的知识图谱，包括上线、下线、删除、上传和修改操作</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <button class="btn btn-primary gap-2" onclick="openUploadModal()">
+                            <span class="iconify" data-icon="heroicons:arrow-up-tray" data-width="20"></span>上传图谱
+                        </button>
+                        <button class="btn btn-secondary gap-2" onclick="handleBatchOperation('online')">
+                            <span class="iconify" data-icon="heroicons:arrow-up-circle" data-width="20"></span>批量上线
+                        </button>
+                        <button class="btn btn-warning gap-2" onclick="handleBatchOperation('offline')">
+                            <span class="iconify" data-icon="heroicons:arrow-down-circle" data-width="20"></span>批量下线
+                        </button>
+                        <button class="btn btn-error gap-2" onclick="handleBatchOperation('delete')">
+                            <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>批量删除
+                        </button>
+                    </div>
+                    <div class="flex gap-4 mb-6">
+                        <div class="join flex-1">
+                            <input id="searchInput" type="text" placeholder="搜索图谱名称..." class="input input-bordered join-item flex-1" onkeypress="if(event.key==='Enter') performSearch()">
+                            <button class="btn join-item btn-primary" onclick="performSearch()">
+                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+                            </button>
+                        </div>
+                        <select id="statusFilter" class="select select-bordered w-48" onchange="filterByStatus(this.value)">
+                            <option value="all">全部状态</option>
+                            <option value="PUBLISHED">已上线</option>
+                            <option value="DRAFT">草稿</option>
+                            <option value="PRIVATE">私有</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
+                        <table class="table">
+                            <thead>
+                                <tr class="bg-base-200">
+                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                                    <th>图谱信息</th>
+                                    <th>状态</th>
+                                    <th>上传日期</th>
+                                    <th>最后修改</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="graphTableBody">
+                                <tr><td colspan="6" class="text-center py-8 text-base-content/60"><span class="loading loading-spinner loading-md"></span><span class="ml-2">加载中...</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-between items-center mt-6">
+                        <div id="paginationInfo" class="text-sm text-base-content/70">加载中...</div>
+                        <div id="paginationButtons" class="join"></div>
+                    </div>
+                </div>
+                
+                <!-- Post Batch Section -->
+                <div id="post-batch-section" class="content-section">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-base-content mb-2">帖子批量管理</h1>
+                        <p class="text-base-content/70">管理您发布的帖子</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        <button class="btn btn-primary gap-2" onclick="goToCreatePost()">
+                            <span class="iconify" data-icon="heroicons:plus" data-width="20"></span>发布帖子
+                        </button>
+                        <button class="btn btn-success gap-2" onclick="handlePostBatchOnline()">
+                            <span class="iconify" data-icon="heroicons:eye" data-width="20"></span>批量上线
+                        </button>
+                        <button class="btn btn-warning gap-2" onclick="handlePostBatchOffline()">
+                            <span class="iconify" data-icon="heroicons:eye-slash" data-width="20"></span>批量下线
+                        </button>
+                        <button class="btn btn-error gap-2" onclick="handlePostBatchDelete()">
+                            <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>批量删除
+                        </button>
+                    </div>
+                    <div class="flex gap-4 mb-6">
+                        <div class="join flex-1">
+                            <input id="postSearchInput" type="text" placeholder="搜索帖子标题..." class="input input-bordered join-item flex-1" onkeypress="if(event.key==='Enter') performPostSearch()">
+                            <button class="btn join-item btn-primary" onclick="performPostSearch()">
+                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+                            </button>
+                        </div>
+                        <select id="postStatusFilter" class="select select-bordered w-48" onchange="filterPostsByStatus(this.value)">
+                            <option value="all">全部状态</option>
+                            <option value="已发布">已发布</option>
+                            <option value="草稿">草稿</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
+                        <table class="table">
+                            <thead>
+                                <tr class="bg-base-200">
+                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="postSelectAll" onchange="togglePostSelectAll(this)"></th>
+                                    <th>帖子信息</th>
+                                    <th>状态</th>
+                                    <th>发布日期</th>
+                                    <th>点赞数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="postTableBody">
+                                <tr><td colspan="6" class="text-center py-8 text-base-content/60">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- User Permission Section -->
+                <div id="user-permission-section" class="content-section">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-base-content mb-2">用户权限管理</h1>
+                        <p class="text-base-content/70">管理用户角色和权限</p>
+                    </div>
+                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>此功能仅管理员可用</div>
+                </div>
+                
+                <!-- Forum Management Section -->
+                <div id="forum-management-section" class="content-section">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-base-content mb-2">论坛管理</h1>
+                        <p class="text-base-content/70">管理论坛帖子和评论</p>
+                    </div>
+                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>此功能仅管理员可用</div>
+                </div>
+            </div>
         </div>
-      </div>
-      <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-soft bg-base-100 rounded-box w-52">
-        <li class="menu-title"><span>用户中心</span></li>
-        <li><a class="nav-hover focus-primary" onclick="navigateTo(&apos;user_profile_page&apos;)"><span class="iconify" data-icon="heroicons:user" data-width="16"></span><span>个人资料</span></a></li>
-        <li><a class="nav-hover focus-primary" onclick="navigateToFavorites()"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span><span>我的收藏</span></a></li>
-        <li><a class="nav-hover focus-primary" onclick="navigateTo(&apos;user_profile_page&apos;)"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span><span>历史记录</span></a></li>
-        <li id="admin-menu-item" style="display: none;"><a class="nav-hover focus-primary text-primary" onclick="navigateTo(&apos;page_998124&apos;)"><span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="16"></span><span>管理后台</span></a></li>
-        <div class="divider my-1"></div>
-        <li><a class="nav-hover focus-primary text-error" onclick="window.APP_GLOBALS.user.logout()"><span class="iconify" data-icon="heroicons:arrow-right-on-rectangle" data-width="16"></span><span>退出登录</span></a></li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<!-- Main Layout -->
-<div class="flex min-h-screen">
-  <!-- Sidebar -->
-  <div class="w-64 bg-base-200 border-r academic-border">
-    <div class="p-6">
-      <h2 class="text-lg font-semibold text-base-content mb-6">管理中心</h2>
-      <div class="mb-8">
-        <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">用户管理</h3>
-        <nav class="space-y-2">
-          <a data-section="graph-batch" class="nav-item active flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;graph-batch&apos;)">
-            <span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="20"></span><span>图谱批量管理</span>
-          </a>
-          <a data-section="post-batch" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;post-batch&apos;)">
-            <span class="iconify text-primary" data-icon="heroicons:document-text" data-width="20"></span><span>帖子批量管理</span>
-          </a>
-          <a data-section="realtime-update" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;realtime-update&apos;)">
-            <span class="iconify text-primary" data-icon="heroicons:clock" data-width="20"></span><span>实时更新图谱日期</span>
-          </a>
-        </nav>
-      </div>
-      <div id="admin-section" class="mb-8" style="display: none;">
-        <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">管理员管理</h3>
-        <nav class="space-y-2">
-          <a data-section="user-permission" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;user-permission&apos;)">
-            <span class="iconify text-primary" data-icon="heroicons:user-group" data-width="20"></span><span>用户权限管理</span>
-          </a>
-          <a data-section="forum-management" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;forum-management&apos;)">
-            <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span><span>论坛管理</span>
-          </a>
-          <a data-section="graph-management" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection(&apos;graph-management&apos;)">
-            <span class="iconify text-primary" data-icon="heroicons:squares-plus" data-width="20"></span><span>图谱管理</span>
-          </a>
-        </nav>
-      </div>
-    </div>
-  </div>
-
-  <!-- Content Area -->
-  <div class="flex-1 p-8">
-    <!-- Graph Batch Section -->
-    <div id="graph-batch-section" class="content-section active">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-base-content mb-2">图谱批量管理</h1>
-        <p class="text-base-content/70">批量管理您的知识图谱，包括上线、下线、删除、上传和修改操作</p>
-      </div>
-      <div class="flex flex-wrap gap-3 mb-6">
-        <button class="btn btn-primary gap-2" onclick="openUploadModal()">
-          <span class="iconify" data-icon="heroicons:arrow-up-tray" data-width="20"></span>上传图谱
-        </button>
-        <button class="btn btn-secondary gap-2" onclick="handleBatchOperation(&apos;online&apos;)">
-          <span class="iconify" data-icon="heroicons:arrow-up-circle" data-width="20"></span>批量上线
-        </button>
-        <button class="btn btn-warning gap-2" onclick="handleBatchOperation(&apos;offline&apos;)">
-          <span class="iconify" data-icon="heroicons:arrow-down-circle" data-width="20"></span>批量下线
-        </button>
-        <button class="btn btn-error gap-2" onclick="handleBatchOperation(&apos;delete&apos;)">
-          <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>批量删除
-        </button>
-      </div>
-      <div class="flex gap-4 mb-6">
-        <div class="join flex-1">
-          <input id="searchInput" type="text" placeholder="搜索图谱名称..." class="input input-bordered join-item flex-1" onkeypress="if(event.key===&apos;Enter&apos;) performSearch()">
-          <button class="btn join-item btn-primary" onclick="performSearch()">
-            <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-          </button>
-        </div>
-        <select id="statusFilter" class="select select-bordered w-48" onchange="filterByStatus(this.value)">
-          <option value="all">全部状态</option>
-          <option value="PUBLISHED">已上线</option>
-          <option value="DRAFT">草稿</option>
-          <option value="PRIVATE">私有</option>
-        </select>
-      </div>
-      <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
-        <table class="table">
-          <thead>
-            <tr class="bg-base-200">
-              <th><input type="checkbox" class="checkbox checkbox-primary" id="selectAll" onchange="toggleSelectAll(this)"></th>
-              <th>图谱信息</th>
-              <th>状态</th>
-              <th>上传日期</th>
-              <th>最后修改</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="graphTableBody">
-            <tr><td colspan="6" class="text-center py-8 text-base-content/60"><span class="loading loading-spinner loading-md"></span><span class="ml-2">加载中...</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="flex justify-between items-center mt-6">
-        <div id="paginationInfo" class="text-sm text-base-content/70">加载中...</div>
-        <div id="paginationButtons" class="join"></div>
-      </div>
-    </div>
-
-    <!-- Post Batch Section -->
-    <div id="post-batch-section" class="content-section">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-base-content mb-2">帖子批量管理</h1>
-        <p class="text-base-content/70">批量管理您的论坛帖子，包括编辑、删除等操作</p>
-      </div>
-      <div class="flex flex-wrap gap-3 mb-6">
-        <button class="btn btn-primary gap-2" onclick="goToCreatePost()">
-          <span class="iconify" data-icon="heroicons:plus" data-width="20"></span>发布帖子
-        </button>
-        <button class="btn btn-success gap-2" onclick="handlePostBatchOnline()">
-          <span class="iconify" data-icon="heroicons:eye" data-width="20"></span>批量上线
-        </button>
-        <button class="btn btn-warning gap-2" onclick="handlePostBatchOffline()">
-          <span class="iconify" data-icon="heroicons:eye-slash" data-width="20"></span>批量下线
-        </button>
-        <button class="btn btn-error gap-2" onclick="handlePostBatchDelete()">
-          <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>批量删除
-        </button>
-      </div>
-      <div class="flex gap-4 mb-6">
-        <div class="join flex-1">
-          <input id="postSearchInput" type="text" placeholder="搜索帖子标题..." class="input input-bordered join-item flex-1" onkeypress="if(event.key===&apos;Enter&apos;) performPostSearch()">
-          <button class="btn join-item btn-primary" onclick="performPostSearch()">
-            <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-          </button>
-        </div>
-        <select id="postStatusFilter" class="select select-bordered w-48" onchange="filterPostsByStatus(this.value)">
-          <option value="all">全部状态</option>
-          <option value="已发布">已发布</option>
-          <option value="草稿">草稿</option>
-          <option value="仅自己可见">仅自己可见</option>
-        </select>
-      </div>
-      <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
-        <table class="table">
-          <thead>
-            <tr class="bg-base-200">
-              <th><input type="checkbox" class="checkbox checkbox-primary" id="postSelectAll" onchange="togglePostSelectAll(this)"></th>
-              <th>帖子信息</th>
-              <th>状态</th>
-              <th>发布时间</th>
-              <th>点赞数</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="postTableBody">
-            <tr><td colspan="6" class="text-center py-8 text-base-content/60"><span class="loading loading-spinner loading-md"></span><span class="ml-2">加载中...</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="flex justify-between items-center mt-6">
-        <div id="postPaginationInfo" class="text-sm text-base-content/70">加载中...</div>
-        <div id="postPaginationButtons" class="join"></div>
-      </div>
+        
+        <!-- Upload Modal -->
+        <dialog id="uploadModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg mb-4">上传图谱</h3>
+                <form id="uploadForm" class="space-y-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">图谱文件 <span class="text-error">*</span></span></label>
+                        <input type="file" id="graphFile" accept=".json" class="file-input file-input-bordered w-full" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">图谱名称</span></label>
+                        <input type="text" id="graphName" placeholder="输入图谱名称" class="input input-bordered">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">描述</span></label>
+                        <textarea id="graphDescription" placeholder="输入图谱描述" class="textarea textarea-bordered h-24"></textarea>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">状态</span></label>
+                        <select id="graphStatus" class="select select-bordered">
+                            <option value="DRAFT">草稿</option>
+                            <option value="PUBLISHED">发布</option>
+                            <option value="PRIVATE">私有</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">封面图片</span></label>
+                        <input type="file" id="graphCover" accept="image/*" class="file-input file-input-bordered w-full" onchange="previewCover(this)">
+                        <div id="coverPreview" class="hidden mt-2"><img id="coverPreviewImg" class="cover-preview" alt="封面预览"></div>
+                    </div>
+                </form>
+                <div class="modal-action">
+                    <button class="btn btn-ghost" onclick="closeUploadModal()">取消</button>
+                    <button class="btn btn-primary" onclick="submitUploadForm()">上传</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+        
+        <!-- Edit Post Modal -->
+        <dialog id="editPostModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg mb-4">编辑帖子</h3>
+                <form id="editPostForm" class="space-y-4">
+                    <input type="hidden" id="editPostId">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">帖子标题 <span class="text-error">*</span></span></label>
+                        <input type="text" id="editPostTitle" class="input input-bordered" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">摘要</span></label>
+                        <textarea id="editPostAbstract" class="textarea textarea-bordered h-24"></textarea>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">状态</span></label>
+                        <select id="editPostStatus" class="select select-bordered">
+                            <option value="草稿">草稿</option>
+                            <option value="已发布">已发布</option>
+                        </select>
+                    </div>
+                </form>
+                <div class="modal-action">
+                    <button class="btn btn-ghost" onclick="closeEditPostModal()">取消</button>
+                    <button class="btn btn-primary" onclick="submitEditPost()">保存</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+        
+        <!-- Edit Modal -->
+        <dialog id="editModal" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg mb-4">编辑图谱</h3>
+                <form id="editForm" class="space-y-4">
+                    <input type="hidden" id="editGraphId">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">图谱名称 <span class="text-error">*</span></span></label>
+                        <input type="text" id="editGraphName" class="input input-bordered" required>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">描述</span></label>
+                        <textarea id="editGraphDescription" class="textarea textarea-bordered h-24"></textarea>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">状态</span></label>
+                        <select id="editGraphStatus" class="select select-bordered">
+                            <option value="DRAFT">草稿</option>
+                            <option value="PUBLISHED">已发布</option>
+                            <option value="PRIVATE">私有</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">封面图片</span></label>
+                        <div id="editCoverPreview" class="mb-2">
+                            <img id="editCoverPreviewImg" class="w-full max-w-xs h-32 object-cover rounded-lg border" alt="当前封面">
+                        </div>
+                        <input type="file" id="editGraphCover" accept="image/*" class="file-input file-input-bordered w-full" onchange="previewEditCover(this)">
+                        <p class="text-xs text-base-content/60 mt-1">上传新封面将覆盖当前封面，且不会被自动缩略图替换</p>
+                    </div>
+                </form>
+                <div class="modal-action">
+                    <button class="btn btn-ghost" onclick="closeEditModal()">取消</button>
+                    <button class="btn btn-primary" onclick="submitEditForm()">保存</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
     </div>
 
-    <!-- Realtime Update Section -->
-    <div id="realtime-update-section" class="content-section">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-base-content mb-2">实时更新图谱日期</h1>
-        <p class="text-base-content/70">批量更新选中图谱的日期信息</p>
-      </div>
-      <div class="card bg-base-100 shadow-soft border academic-border p-6">
-        <p class="text-base-content/70">此功能正在开发中...</p>
-      </div>
-    </div>
-
-    <!-- User Permission Section -->
-    <div id="user-permission-section" class="content-section">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-base-content mb-2">用户权限管理</h1>
-        <p class="text-base-content/70">管理用户角色和权限设置</p>
-      </div>
-      <div class="card bg-base-100 shadow-soft border academic-border p-6">
-        <p class="text-base-content/70">此功能正在开发中...</p>
-      </div>
-    </div>
-
-    <!-- Forum Management Section -->
-    <div id="forum-management-section" class="content-section">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-base-content mb-2">论坛管理</h1>
-        <p class="text-base-content/70">管理论坛内容、审核帖子和维护版块</p>
-      </div>
-      <div class="card bg-base-100 shadow-soft border academic-border p-6">
-        <p class="text-base-content/70">此功能正在开发中...</p>
-      </div>
-    </div>
-
-    <!-- Graph Management Section -->
-    <div id="graph-management-section" class="content-section">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-base-content mb-2">图谱管理</h1>
-        <p class="text-base-content/70">统一管理所有用户的知识图谱，进行审核和维护</p>
-      </div>
-      <div class="card bg-base-100 shadow-soft border academic-border p-6">
-        <p class="text-base-content/70">此功能正在开发中...</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Footer -->
-<footer class="footer footer-center p-6 bg-base-200 text-base-content border-t academic-border">
-  <div class="grid grid-flow-col gap-4">
-    <a onclick="navigateTo(&apos;about_page&apos;)" class="link link-hover focus-primary">关于我们</a>
-    <a onclick="navigateTo(&apos;documentation_page&apos;)" class="link link-hover focus-primary">帮助中心</a>
-    <a onclick="navigateTo(&apos;feedback_page&apos;)" class="link link-hover focus-primary">用户反馈</a>
-    <a class="link link-hover focus-primary">隐私政策</a>
-    <a class="link link-hover focus-primary">服务条款</a>
-  </div>
-  <div class="text-center">
-    <p>© 2025 Graph+知识图谱平台. 版权所有 | <span class="text-primary font-medium">智慧知识发现与探索</span></p>
-  </div>
-</footer>
-
-<!-- Upload Modal -->
-<dialog id="uploadModal" class="modal">
-  <div class="modal-box w-11/12 max-w-lg">
-    <h3 class="font-bold text-lg mb-4">上传知识图谱</h3>
-    <form id="uploadForm">
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">图谱文件 (JSON格式) *</span></label>
-        <input type="file" id="graphFile" accept=".json" class="file-input file-input-bordered w-full" required>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">图谱名称</span></label>
-        <input type="text" id="graphName" placeholder="留空则使用文件名" class="input input-bordered w-full">
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">描述</span></label>
-        <textarea id="graphDescription" class="textarea textarea-bordered w-full" rows="3" placeholder="图谱描述..."></textarea>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">状态</span></label>
-        <select id="graphStatus" class="select select-bordered w-full">
-          <option value="DRAFT">草稿</option>
-          <option value="PUBLISHED">发布</option>
-          <option value="PRIVATE">私有</option>
-        </select>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">封面图片</span></label>
-        <input type="file" id="graphCover" accept="image/*" class="file-input file-input-bordered w-full" onchange="previewCover(this)">
-        <div id="coverPreview" class="mt-2 hidden"><img id="coverPreviewImg" class="w-32 h-32 object-cover rounded-lg"></div>
-      </div>
-    </form>
-    <div class="modal-action">
-      <button class="btn btn-ghost" onclick="closeUploadModal()">取消</button>
-      <button class="btn btn-primary" onclick="submitUploadForm()"><span class="iconify" data-icon="heroicons:arrow-up-tray" data-width="20"></span>上传</button>
-    </div>
-  </div>
-  <form method="dialog" class="modal-backdrop"><button>close</button></form>
-</dialog>
-
-<!-- Edit Modal -->
-<dialog id="editModal" class="modal">
-  <div class="modal-box w-11/12 max-w-lg">
-    <h3 class="font-bold text-lg mb-4">编辑知识图谱</h3>
-    <form id="editForm">
-      <input type="hidden" id="editGraphId">
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">图谱名称 *</span></label>
-        <input type="text" id="editGraphName" placeholder="请输入图谱名称" class="input input-bordered w-full" required>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">描述</span></label>
-        <textarea id="editGraphDescription" class="textarea textarea-bordered w-full" rows="3" placeholder="图谱描述..."></textarea>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">状态</span></label>
-        <select id="editGraphStatus" class="select select-bordered w-full">
-          <option value="DRAFT">草稿</option>
-          <option value="PUBLISHED">已发布</option>
-          <option value="PRIVATE">私有</option>
-        </select>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">封面图片</span></label>
-        <div id="editCurrentCover" class="mb-2 hidden">
-          <p class="text-sm text-base-content/70 mb-1">当前封面：</p>
-          <img id="editCurrentCoverImg" class="w-24 h-24 object-cover rounded-lg border">
-        </div>
-        <input type="file" id="editGraphCover" accept="image/*" class="file-input file-input-bordered w-full" onchange="previewEditCover(this)">
-        <div id="editCoverPreview" class="mt-2 hidden">
-          <p class="text-sm text-base-content/70 mb-1">新封面预览：</p>
-          <img id="editCoverPreviewImg" class="w-24 h-24 object-cover rounded-lg border">
-        </div>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label">
-          <span class="label-text">更新图谱文件 (JSON格式)</span>
-          <span class="label-text-alt text-warning">可选，上传后将替换原有数据</span>
-        </label>
-        <input type="file" id="editGraphFile" accept=".json" class="file-input file-input-bordered w-full">
-        <p class="text-xs text-base-content/50 mt-1">注意：上传新文件将删除原有的所有节点和关系数据</p>
-      </div>
-    </form>
-    <div class="modal-action">
-      <button class="btn btn-ghost" onclick="closeEditModal()">取消</button>
-      <button class="btn btn-primary" onclick="submitEditForm()">
-        <span class="iconify" data-icon="heroicons:check" data-width="20"></span>保存修改
-      </button>
-    </div>
-  </div>
-  <form method="dialog" class="modal-backdrop"><button>close</button></form>
-</dialog>
-
-<!-- Create Post Modal -->
-<dialog id="createPostModal" class="modal">
-  <div class="modal-box w-11/12 max-w-2xl">
-    <h3 class="font-bold text-lg mb-4">发布新帖子</h3>
-    <form id="createPostForm">
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">标题 *</span></label>
-        <input type="text" id="postTitle" placeholder="请输入帖子标题" class="input input-bordered w-full" required>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">摘要</span></label>
-        <textarea id="postAbstract" class="textarea textarea-bordered w-full" rows="2" placeholder="帖子摘要（可选）"></textarea>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">内容 *</span></label>
-        <textarea id="postContent" class="textarea textarea-bordered w-full" rows="6" placeholder="帖子正文内容..." required></textarea>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">标签</span></label>
-        <input type="text" id="postTags" placeholder="多个标签用逗号分隔，如：技术,分享" class="input input-bordered w-full">
-      </div>
-    </form>
-    <div class="modal-action">
-      <button class="btn btn-ghost" onclick="closeCreatePostModal()">取消</button>
-      <button class="btn btn-primary" onclick="submitCreatePost()"><span class="iconify" data-icon="heroicons:paper-airplane" data-width="20"></span>发布</button>
-    </div>
-  </div>
-  <form method="dialog" class="modal-backdrop"><button>close</button></form>
-</dialog>
-
-<!-- Edit Post Modal -->
-<dialog id="editPostModal" class="modal">
-  <div class="modal-box w-11/12 max-w-2xl">
-    <h3 class="font-bold text-lg mb-4">编辑帖子</h3>
-    <form id="editPostForm">
-      <input type="hidden" id="editPostId">
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">标题 *</span></label>
-        <input type="text" id="editPostTitle" placeholder="请输入帖子标题" class="input input-bordered w-full" required>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">摘要</span></label>
-        <textarea id="editPostAbstract" class="textarea textarea-bordered w-full" rows="2" placeholder="帖子摘要（可选）"></textarea>
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">标签</span></label>
-        <input type="text" id="editPostTags" placeholder="多个标签用逗号分隔" class="input input-bordered w-full">
-      </div>
-      <div class="form-control mb-4">
-        <label class="label"><span class="label-text">状态</span></label>
-        <select id="editPostStatus" class="select select-bordered w-full">
-          <option value="草稿">草稿</option>
-          <option value="已发布">已发布</option>
-          <option value="仅自己可见">仅自己可见</option>
-        </select>
-      </div>
-      <div class="text-sm text-base-content/60 mb-4">
-        <span class="iconify inline" data-icon="heroicons:information-circle" data-width="16"></span>
-        如需编辑正文内容，请点击帖子标题进入详情页编辑
-      </div>
-    </form>
-    <div class="modal-action">
-      <button class="btn btn-ghost" onclick="closeEditPostModal()">取消</button>
-      <button class="btn btn-primary" onclick="submitEditPost()"><span class="iconify" data-icon="heroicons:check" data-width="20"></span>保存修改</button>
-    </div>
-  </div>
-  <form method="dialog" class="modal-backdrop"><button>close</button></form>
-</dialog>
-
-<script>
-// ==================== 全局变量 ====================
-let allGraphs = [];
-let filteredGraphs = [];
-let currentPage = 1;
-const pageSize = 10;
-let currentStatusFilter = "all";
-let currentSearchQuery = "";
-
-// 帖子管理变量
-let allPosts = [];
-let filteredPosts = [];
-let postCurrentPage = 1;
-const postPageSize = 10;
-let postStatusFilter = "all";
-let postSearchQuery = "";
-
-// ==================== 导航 ====================
-window.navigateTo = function(targetPageId, params) {
-  const isInIframe = window.self !== window.top;
-  if (isInIframe) {
-    window.parent.postMessage({ type: "iframeNavigation", targetPageId: targetPageId, params: params }, "*");
-  }
-};
-
-window.navigateToFavorites = function() {
-  navigateTo("user_profile_page", { section: "favorites" });
-};
-
-// ==================== APP_GLOBALS ====================
-window.APP_GLOBALS = window.APP_GLOBALS || {};
-
-window.APP_GLOBALS.user = {
-  isLoggedIn: false,
-  userInfo: null,
-  
-  login: function(userInfo) {
-    this.isLoggedIn = true;
-    this.userInfo = userInfo;
-    localStorage.setItem("userState", JSON.stringify({ isLoggedIn: true, userInfo: userInfo }));
-    this.updateUserInterface();
-  },
-  
-  logout: function() {
-    this.isLoggedIn = false;
-    this.userInfo = null;
-    localStorage.removeItem("userState");
-    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
-      .finally(function() { window.top.location.href = "/graph/home.html"; });
-  },
-  
-  updateUserInterface: function() {
-    var userControls = document.querySelectorAll("[data-user-control]");
-    var self = this;
-    userControls.forEach(function(control) {
-      var controlType = control.getAttribute("data-user-control");
-      if (controlType === "logged-out" && self.isLoggedIn) {
-        control.style.display = "none";
-      } else if (controlType === "logged-in" && !self.isLoggedIn) {
-        control.style.display = "none";
-      } else {
-        control.style.display = "";
-      }
-    });
-    // 更新导航栏头像
-    if (this.isLoggedIn && this.userInfo) {
-      var avatarText = document.getElementById("nav-avatar-text");
-      var avatarImg = document.getElementById("nav-avatar-img");
-      if (avatarText && avatarImg) {
-        if (this.userInfo.avatar) {
-          avatarText.classList.add("hidden");
-          avatarImg.src = this.userInfo.avatar;
-          avatarImg.classList.remove("hidden");
-        } else {
-          var name = this.userInfo.userName || this.userInfo.nickname || "用";
-          avatarText.textContent = name.substring(0, 1);
-          avatarText.classList.remove("hidden");
-          avatarImg.classList.add("hidden");
-        }
-      }
-      // 管理员菜单
-      var adminMenuItem = document.getElementById("admin-menu-item");
-      if (adminMenuItem) {
-        adminMenuItem.style.display = this.userInfo.role === "ADMIN" ? "" : "none";
-      }
-      // 侧边栏管理员区域
-      var adminSection = document.getElementById("admin-section");
-      if (adminSection) {
-        adminSection.style.display = this.userInfo.role === "ADMIN" ? "block" : "none";
-      }
-    }
-  },
-  
-  init: function() {
-    var self = this;
-    // 先用缓存状态快速显示
-    var savedState = localStorage.getItem("userState");
-    if (savedState) {
-      var state = JSON.parse(savedState);
-      this.isLoggedIn = state.isLoggedIn;
-      this.userInfo = state.userInfo;
-      this.updateUserInterface();
-    }
-    // 再异步验证真实状态
-    fetch("/user/api/check-auth", { credentials: "include" })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        var wasLoggedIn = self.isLoggedIn;
-        if (data.authenticated) {
-          self.isLoggedIn = true;
-          self.userInfo = data.user || { userName: data.username };
-          localStorage.setItem("userState", JSON.stringify({ isLoggedIn: true, userInfo: self.userInfo }));
-        } else {
-          self.isLoggedIn = false;
-          self.userInfo = null;
-          localStorage.removeItem("userState");
-        }
-        if (wasLoggedIn !== self.isLoggedIn || !savedState) self.updateUserInterface();
-      })
-      .catch(function() {});
-  }
-};
-
-// ==================== 页面初始化 ====================
-document.addEventListener("DOMContentLoaded", function() {
-  window.APP_GLOBALS.user.init();
-  loadUserGraphs();
-  showSection("graph-batch");
-});
-
-// ==================== 侧边栏 ====================
-function showSection(sectionId) {
-  document.querySelectorAll(".content-section").forEach(s =&gt; s.classList.remove("active"));
-  document.querySelectorAll(".nav-item").forEach(n =&gt; n.classList.remove("active"));
-  const section = document.getElementById(sectionId + "-section");
-  const navItem = document.querySelector("[data-section=" + sectionId + "]");
-  if (section) section.classList.add("active");
-  if (navItem) navItem.classList.add("active");
-  // 切换到帖子管理时加载帖子数据
-  if (sectionId === "post-batch" &amp;&amp; allPosts.length === 0) {
-    loadUserPosts();
-  }
-}
-
-// ==================== 通知 ====================
-function showNotification(message, type) {
-  type = type || "info";
-  const alertClass = type === "error" ? "alert-error" : type === "success" ? "alert-success" : type === "warning" ? "alert-warning" : "alert-info";
-  const notification = document.createElement("div");
-  notification.className = "alert " + alertClass + " fixed top-4 right-4 w-96 z-50 shadow-lg";
-  notification.innerHTML = "<span>" + message + "</span>";
-  document.body.appendChild(notification);
-  setTimeout(function() { notification.remove(); }, 3000);
-}
-
-// ==================== 加载图谱 ====================
-async function loadUserGraphs() {
-  try {
-    const response = await fetch("/api/graph/my?page=0&size=100", { method: "GET", credentials: "include" });
-    if (!response.ok) {
-      if (response.status === 401) { showNotification("请先登录", "warning"); return; }
-      throw new Error("加载失败");
-    }
-    const data = await response.json();
-    allGraphs = data.content || data || [];
-    applyFilters();
-  } catch (error) {
-    console.error("加载图谱失败:", error);
-    showNotification("加载图谱数据失败", "error");
-    document.getElementById("graphTableBody").innerHTML = "<tr><td colspan=\"6\" class=\"text-center py-8 text-error\">加载失败，请刷新重试</td></tr>";
-  }
-}
-
-// ==================== 筛选搜索 ====================
-function applyFilters() {
-  filteredGraphs = allGraphs.slice();
-  if (currentStatusFilter !== "all") {
-    filteredGraphs = filteredGraphs.filter(function(g) { return g.status === currentStatusFilter; });
-  }
-  if (currentSearchQuery) {
-    var keyword = currentSearchQuery.toLowerCase();
-    filteredGraphs = filteredGraphs.filter(function(g) {
-      return (g.name || "").toLowerCase().indexOf(keyword) >= 0 || (g.description || "").toLowerCase().indexOf(keyword) >= 0;
-    });
-  }
-  currentPage = 1;
-  renderTable();
-}
-
-function performSearch() {
-  currentSearchQuery = document.getElementById("searchInput").value.trim();
-  applyFilters();
-  if (currentSearchQuery) showNotification("搜索 \"" + currentSearchQuery + "\"，找到 " + filteredGraphs.length + " 条结果", "info");
-}
-
-function filterByStatus(status) {
-  currentStatusFilter = status;
-  applyFilters();
-}
-
-// ==================== 渲染表格 ====================
-function renderTable() {
-  var tbody = document.getElementById("graphTableBody");
-  var totalCount = filteredGraphs.length;
-  var totalPages = Math.ceil(totalCount / pageSize);
-  if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
-  var startIndex = (currentPage - 1) * pageSize;
-  var pageData = filteredGraphs.slice(startIndex, startIndex + pageSize);
-  
-  if (pageData.length === 0) {
-    tbody.innerHTML = "<tr><td colspan=\"6\" class=\"text-center py-8 text-base-content/60\">" + (currentSearchQuery ? "未找到匹配的图谱" : "暂无图谱数据，点击\"上传图谱\"开始创建") + "</td></tr>";
-    document.getElementById("paginationInfo").textContent = "暂无记录";
-    document.getElementById("paginationButtons").innerHTML = "";
-    return;
-  }
-  
-  var colors = ["primary", "secondary", "accent"];
-  var html = "";
-  for (var i = 0; i < pageData.length; i++) {
-    var graph = pageData[i];
-    var color = colors[i % colors.length];
-    var statusMap = { "DRAFT": { text: "草稿", badge: "badge-info" }, "PUBLISHED": { text: "已上线", badge: "badge-success" }, "PRIVATE": { text: "私有", badge: "badge-warning" }, "ARCHIVED": { text: "已归档", badge: "badge-ghost" } };
-    var status = statusMap[graph.status] || { text: graph.status || "未知", badge: "badge-ghost" };
-    var safeName = (graph.name || "").replace(/&apos;/g, "&apos;&apos;");
-    html += "<tr data-graph-id=\"" + graph.graphId + "\"><th><input type=\"checkbox\" class=\"checkbox checkbox-primary graph-checkbox\" data-id=\"" + graph.graphId + "\"></th><td><div class=\"flex items-center gap-3 cursor-pointer\" onclick=\"viewGraph(" + graph.graphId + ")\"><div class=\"w-12 h-12 rounded-lg bg-" + color + "/10 flex items-center justify-center\"><span class=\"iconify text-" + color + "\" data-icon=\"heroicons:squares-2x2\" data-width=\"24\"></span></div><div><div class=\"font-semibold text-primary hover:underline\">" + (graph.name || "未命名图谱") + "</div><div class=\"text-sm text-base-content/70\">" + (graph.description || "暂无描述") + "</div></div></div></td><td><span class=\"badge " + status.badge + " badge-outline\">" + status.text + "</span></td><td>" + (graph.uploadDate || "-") + "</td><td>" + (graph.lastModified ? graph.lastModified.substring(0, 10) : "-") + "</td><td><div class=\"flex gap-1\"><button class=\"btn btn-ghost btn-xs\" onclick=\"editGraph(" + graph.graphId + ")\" title=\"编辑\"><span class=\"iconify\" data-icon=\"heroicons:pencil\" data-width=\"16\"></span></button><button class=\"btn btn-ghost btn-xs text-error\" onclick=\"deleteGraph(" + graph.graphId + ", &apos;" + safeName + "&apos;)\"><span class=\"iconify\" data-icon=\"heroicons:trash\" data-width=\"16\"></span></button></div></td></tr>";
-  }
-  tbody.innerHTML = html;
-  
-  var start = startIndex + 1;
-  var end = Math.min(startIndex + pageSize, totalCount);
-  document.getElementById("paginationInfo").textContent = "显示 " + start + "-" + end + " 条，共 " + totalCount + " 条记录";
-  renderPagination(totalPages);
-}
-
-function renderPagination(totalPages) {
-  var container = document.getElementById("paginationButtons");
-  if (totalPages <= 1) { container.innerHTML = ""; return; }
-  var html = "<button class=\"join-item btn btn-sm\" onclick=\"goToPage(" + (currentPage - 1) + ")\" " + (currentPage === 1 ? "disabled" : "") + ">«</button>";
-  for (var i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-      html += "<button class=\"join-item btn btn-sm " + (i === currentPage ? "btn-active" : "") + "\" onclick=\"goToPage(" + i + ")\">" + i + "</button>";
-    } else if (i === currentPage - 3 || i === currentPage + 3) {
-      html += "<button class=\"join-item btn btn-sm btn-disabled\">...</button>";
-    }
-  }
-  html += "<button class=\"join-item btn btn-sm\" onclick=\"goToPage(" + (currentPage + 1) + ")\" " + (currentPage === totalPages ? "disabled" : "") + ">»</button>";
-  container.innerHTML = html;
-}
-
-function goToPage(page) {
-  var totalPages = Math.ceil(filteredGraphs.length / pageSize);
-  if (page < 1 || page > totalPages) return;
-  currentPage = page;
-  renderTable();
-}
-
-// ==================== 选择操作 ====================
-function toggleSelectAll(checkbox) {
-  var checkboxes = document.querySelectorAll(".graph-checkbox");
-  for (var i = 0; i < checkboxes.length; i++) checkboxes[i].checked = checkbox.checked;
-}
-
-function getSelectedIds() {
-  var result = [];
-  var checkboxes = document.querySelectorAll(".graph-checkbox:checked");
-  for (var i = 0; i < checkboxes.length; i++) {
-    var id = parseInt(checkboxes[i].dataset.id);
-    if (!isNaN(id)) result.push(id);
-  }
-  return result;
-}
-
-// ==================== 图谱操作 ====================
-function viewGraph(graphId) {
-  // 使用 postMessage 通知父窗口进行导航，携带图谱ID
-  var isInIframe = window.self !== window.top;
-  if (isInIframe) {
-    window.parent.postMessage({ 
-      type: "iframeNavigation", 
-      targetPageId: "graph_detail_page",
-      params: { id: graphId }
-    }, "*");
-  } else {
-    window.location.href = "/graph/graph_detail.html?id=" + graphId;
-  }
-}
-
-async function editGraph(graphId) {
-  console.log("editGraph called with graphId:", graphId);
-  try {
-    // 从 allGraphs 中获取图谱数据
-    var graph = allGraphs.find(function(g) { return g.graphId === graphId; });
-    console.log("Found graph in allGraphs:", graph);
-    
-    if (!graph) {
-      // 如果本地没有，从服务器获取
-      console.log("Graph not found locally, fetching from server...");
-      var response = await fetch("/api/graph/" + graphId + "?incrementView=false", { credentials: "include" });
-      if (!response.ok) {
-        console.error("Failed to fetch graph:", response.status);
-        showNotification("获取图谱信息失败", "error");
-        return;
-      }
-      graph = await response.json();
-      console.log("Fetched graph from server:", graph);
-    }
-    
-    // 填充编辑表单
-    document.getElementById("editGraphId").value = graph.graphId;
-    document.getElementById("editGraphName").value = graph.name || "";
-    document.getElementById("editGraphDescription").value = graph.description || "";
-    document.getElementById("editGraphStatus").value = graph.status || "DRAFT";
-    
-    // 显示当前封面
-    var currentCoverDiv = document.getElementById("editCurrentCover");
-    var currentCoverImg = document.getElementById("editCurrentCoverImg");
-    if (graph.coverImage) {
-      currentCoverImg.src = graph.coverImage;
-      currentCoverDiv.classList.remove("hidden");
-    } else {
-      currentCoverDiv.classList.add("hidden");
-    }
-    
-    // 清除新封面预览
-    document.getElementById("editCoverPreview").classList.add("hidden");
-    document.getElementById("editGraphCover").value = "";
-    document.getElementById("editGraphFile").value = "";
-    
-    // 打开弹窗
-    var modal = document.getElementById("editModal");
-    console.log("Opening modal:", modal);
-    if (modal && typeof modal.showModal === "function") {
-      modal.showModal();
-    } else {
-      console.error("Modal element not found or showModal not available");
-      showNotification("无法打开编辑窗口", "error");
-    }
-  } catch (error) {
-    console.error("编辑图谱失败:", error);
-    showNotification("获取图谱信息失败: " + error.message, "error");
-  }
-}
-
-function closeEditModal() {
-  document.getElementById("editModal").close();
-  document.getElementById("editForm").reset();
-  document.getElementById("editCurrentCover").classList.add("hidden");
-  document.getElementById("editCoverPreview").classList.add("hidden");
-}
-
-function previewEditCover(input) {
-  if (input.files && input.files[0]) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById("editCoverPreviewImg").src = e.target.result;
-      document.getElementById("editCoverPreview").classList.remove("hidden");
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-async function submitEditForm() {
-  var graphId = document.getElementById("editGraphId").value;
-  var name = document.getElementById("editGraphName").value.trim();
-  var description = document.getElementById("editGraphDescription").value.trim();
-  var status = document.getElementById("editGraphStatus").value;
-  var coverInput = document.getElementById("editGraphCover");
-  var fileInput = document.getElementById("editGraphFile");
-  
-  if (!name) {
-    showNotification("请输入图谱名称", "warning");
-    return;
-  }
-  
-  try {
-    showNotification("正在保存...", "info");
-    
-    // 1. 如果有新的图谱文件，先上传替换数据
-    if (fileInput.files && fileInput.files[0]) {
-      var formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-      formData.append("graphId", graphId);
-      
-      var uploadResponse = await fetch("/api/upload/graph/update", { 
-        method: "POST", 
-        credentials: "include", 
-        body: formData 
-      });
-      
-      if (!uploadResponse.ok) {
-        var uploadError = await uploadResponse.json();
-        showNotification(uploadError.error || "图谱文件更新失败", "error");
-        return;
-      }
-    }
-    
-    // 2. 更新图谱基本信息
-    var updateData = {
-      name: name,
-      description: description,
-      status: status
-    };
-    
-    // 如果有新封面，先上传封面获取URL
-    if (coverInput.files && coverInput.files[0]) {
-      var coverFormData = new FormData();
-      coverFormData.append("file", coverInput.files[0]);
-      
-      var coverResponse = await fetch("/api/upload/cover", {
-        method: "POST",
-        credentials: "include",
-        body: coverFormData
-      });
-      
-      if (coverResponse.ok) {
-        var coverResult = await coverResponse.json();
-        updateData.coverImage = coverResult.url || coverResult.path;
-      } else {
-        showNotification("封面上传失败", "warning");
-      }
-    }
-    
-    // 发送更新请求
-    var response = await fetch("/api/graph/" + graphId, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(updateData)
-    });
-    
-    if (response.ok) {
-      showNotification("图谱更新成功！", "success");
-      closeEditModal();
-      loadUserGraphs();
-    } else {
-      var errorData = await response.json();
-      showNotification(errorData.error || "更新失败", "error");
-    }
-  } catch (error) {
-    console.error("更新图谱失败:", error);
-    showNotification("更新失败，请重试", "error");
-  }
-}
-
-async function deleteGraph(graphId, graphName) {
-  if (!confirm("确定要删除图谱\"" + graphName + "\"吗？此操作不可恢复！")) return;
-  try {
-    var response = await fetch("/api/graph/" + graphId, { method: "DELETE", credentials: "include" });
-    if (response.ok) {
-      showNotification("图谱\"" + graphName + "\"已删除", "success");
-      loadUserGraphs();
-    } else {
-      var data = await response.json();
-      showNotification(data.error || "删除失败", "error");
-    }
-  } catch (error) {
-    showNotification("删除失败，请重试", "error");
-  }
-}
-
-async function handleBatchOperation(operation) {
-  var selectedIds = getSelectedIds();
-  if (selectedIds.length === 0) { 
-    showNotification("请先选择要操作的图谱", "warning"); 
-    return; 
-  }
-  
-  var operationNames = { "online": "上线", "offline": "下线", "delete": "删除" };
-  var operationName = operationNames[operation] || operation;
-  
-  // 批量删除需要二次确认
-  if (operation === "delete") {
-    if (!confirm("确定要删除 " + selectedIds.length + " 个图谱吗？\n\n警告：此操作不可恢复！")) {
-      return;
-    }
-  } else {
-    if (!confirm("确定要" + operationName + " " + selectedIds.length + " 个图谱吗？")) {
-      return;
-    }
-  }
-  
-  showNotification("正在" + operationName + "...", "info");
-  
-  // 根据操作类型选择对应的 API
-  var apiEndpoints = {
-    "online": "/api/graph/batch/publish",
-    "offline": "/api/graph/batch/offline", 
-    "delete": "/api/graph/batch/delete"
-  };
-  
-  var endpoint = apiEndpoints[operation];
-  if (!endpoint) {
-    showNotification("未知操作类型", "error");
-    return;
-  }
-  
-  try {
-    var response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify({ graphIds: selectedIds })
-    });
-    
-    var result = await response.json();
-    
-    if (response.ok && result.success) {
-      showNotification(result.message || ("成功" + operationName + " " + selectedIds.length + " 个图谱"), "success");
-      // 取消全选
-      document.getElementById("selectAll").checked = false;
-      // 重新加载图谱列表
-      loadUserGraphs();
-    } else {
-      showNotification(result.error || ("批量" + operationName + "失败"), "error");
-    }
-  } catch (error) {
-    console.error("批量操作失败:", error);
-    showNotification("操作失败，请检查网络连接", "error");
-  }
-}
-
-// ==================== 帖子管理功能 ====================
-async function loadUserPosts() {
-  try {
-    // 先获取当前用户信息
-    var authResponse = await fetch("/user/api/check-auth", { credentials: "include" });
-    var authData = await authResponse.json();
-    if (!authData.authenticated || !authData.user) {
-      showNotification("请先登录", "warning");
-      return;
-    }
-    var userId = authData.user.userId;
-    
-    var response = await fetch("/api/posts/user/" + userId + "?page=0&amp;size=100", { method: "GET", credentials: "include" });
-    if (!response.ok) {
-      if (response.status === 401) { showNotification("请先登录", "warning"); return; }
-      throw new Error("加载失败");
-    }
-    var data = await response.json();
-    allPosts = data.posts || data.content || [];
-    applyPostFilters();
-  } catch (error) {
-    console.error("加载帖子失败:", error);
-    showNotification("加载帖子数据失败", "error");
-    document.getElementById("postTableBody").innerHTML = "&lt;tr&gt;&lt;td colspan=\"6\" class=\"text-center py-8 text-error\"&gt;加载失败，请刷新重试&lt;/td&gt;&lt;/tr&gt;";
-  }
-}
-
-function applyPostFilters() {
-  filteredPosts = allPosts.slice();
-  if (postStatusFilter !== "all") {
-    filteredPosts = filteredPosts.filter(function(p) { return p.postStatus === postStatusFilter; });
-  }
-  if (postSearchQuery) {
-    var keyword = postSearchQuery.toLowerCase();
-    filteredPosts = filteredPosts.filter(function(p) {
-      return (p.postTitle || "").toLowerCase().indexOf(keyword) &gt;= 0 || (p.postAbstract || "").toLowerCase().indexOf(keyword) &gt;= 0;
-    });
-  }
-  postCurrentPage = 1;
-  renderPostTable();
-}
-
-function performPostSearch() {
-  postSearchQuery = document.getElementById("postSearchInput").value.trim();
-  applyPostFilters();
-  if (postSearchQuery) showNotification("搜索 \"" + postSearchQuery + "\"，找到 " + filteredPosts.length + " 条结果", "info");
-}
-
-function filterPostsByStatus(status) {
-  postStatusFilter = status;
-  applyPostFilters();
-}
-
-function renderPostTable() {
-  var tbody = document.getElementById("postTableBody");
-  var totalCount = filteredPosts.length;
-  var totalPages = Math.ceil(totalCount / postPageSize);
-  if (postCurrentPage &gt; totalPages &amp;&amp; totalPages &gt; 0) postCurrentPage = totalPages;
-  var startIndex = (postCurrentPage - 1) * postPageSize;
-  var pageData = filteredPosts.slice(startIndex, startIndex + postPageSize);
-  
-  if (pageData.length === 0) {
-    tbody.innerHTML = "&lt;tr&gt;&lt;td colspan=\"6\" class=\"text-center py-8 text-base-content/60\"&gt;" + (postSearchQuery ? "未找到匹配的帖子" : "暂无帖子数据，点击\"发布帖子\"开始创建") + "&lt;/td&gt;&lt;/tr&gt;";
-    document.getElementById("postPaginationInfo").textContent = "暂无记录";
-    document.getElementById("postPaginationButtons").innerHTML = "";
-    return;
-  }
-  
-  var html = "";
-  for (var i = 0; i &lt; pageData.length; i++) {
-    var post = pageData[i];
-    var statusMap = { "已发布": { text: "已发布", badge: "badge-success" }, "草稿": { text: "草稿", badge: "badge-info" } };
-    var status = statusMap[post.postStatus] || { text: post.postStatus || "未知", badge: "badge-ghost" };
-    var safeTitle = (post.postTitle || "").replace(/&apos;/g, "&amp;apos;&amp;apos;");
-    var uploadTime = post.uploadTime ? post.uploadTime.substring(0, 10) : "-";
-    html += "&lt;tr data-post-id=\"" + post.postId + "\"&gt;&lt;th&gt;&lt;input type=\"checkbox\" class=\"checkbox checkbox-primary post-checkbox\" data-id=\"" + post.postId + "\"&gt;&lt;/th&gt;&lt;td&gt;&lt;div class=\"cursor-pointer\" onclick=\"viewPost(" + post.postId + ")\"&gt;&lt;div class=\"font-semibold text-primary hover:underline\"&gt;" + (post.postTitle || "无标题") + "&lt;/div&gt;&lt;div class=\"text-sm text-base-content/70 truncate max-w-xs\"&gt;" + (post.postAbstract || "暂无摘要") + "&lt;/div&gt;&lt;/div&gt;&lt;/td&gt;&lt;td&gt;&lt;span class=\"badge " + status.badge + " badge-outline\"&gt;" + status.text + "&lt;/span&gt;&lt;/td&gt;&lt;td&gt;" + uploadTime + "&lt;/td&gt;&lt;td&gt;" + (post.likeCount || 0) + "&lt;/td&gt;&lt;td&gt;&lt;div class=\"flex gap-1\"&gt;&lt;button class=\"btn btn-ghost btn-xs\" onclick=\"editPost(" + post.postId + ")\" title=\"编辑\"&gt;&lt;span class=\"iconify\" data-icon=\"heroicons:pencil\" data-width=\"16\"&gt;&lt;/span&gt;&lt;/button&gt;&lt;button class=\"btn btn-ghost btn-xs text-error\" onclick=\"deletePost(" + post.postId + ", &apos;" + safeTitle + "&apos;)\"&gt;&lt;span class=\"iconify\" data-icon=\"heroicons:trash\" data-width=\"16\"&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;";
-  }
-  tbody.innerHTML = html;
-  
-  var start = startIndex + 1;
-  var end = Math.min(startIndex + postPageSize, totalCount);
-  document.getElementById("postPaginationInfo").textContent = "显示 " + start + "-" + end + " 条，共 " + totalCount + " 条记录";
-  renderPostPagination(totalPages);
-}
-
-function renderPostPagination(totalPages) {
-  var container = document.getElementById("postPaginationButtons");
-  if (totalPages &lt;= 1) { container.innerHTML = ""; return; }
-  var html = "&lt;button class=\"join-item btn btn-sm\" onclick=\"goToPostPage(" + (postCurrentPage - 1) + ")\" " + (postCurrentPage === 1 ? "disabled" : "") + "&gt;«&lt;/button&gt;";
-  for (var i = 1; i &lt;= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i &gt;= postCurrentPage - 2 &amp;&amp; i &lt;= postCurrentPage + 2)) {
-      html += "&lt;button class=\"join-item btn btn-sm " + (i === postCurrentPage ? "btn-active" : "") + "\" onclick=\"goToPostPage(" + i + ")\"&gt;" + i + "&lt;/button&gt;";
-    } else if (i === postCurrentPage - 3 || i === postCurrentPage + 3) {
-      html += "&lt;button class=\"join-item btn btn-sm btn-disabled\"&gt;...&lt;/button&gt;";
-    }
-  }
-  html += "&lt;button class=\"join-item btn btn-sm\" onclick=\"goToPostPage(" + (postCurrentPage + 1) + ")\" " + (postCurrentPage === totalPages ? "disabled" : "") + "&gt;»&lt;/button&gt;";
-  container.innerHTML = html;
-}
-
-function goToPostPage(page) {
-  var totalPages = Math.ceil(filteredPosts.length / postPageSize);
-  if (page &lt; 1 || page &gt; totalPages) return;
-  postCurrentPage = page;
-  renderPostTable();
-}
-
-function togglePostSelectAll(checkbox) {
-  var checkboxes = document.querySelectorAll(".post-checkbox");
-  for (var i = 0; i &lt; checkboxes.length; i++) checkboxes[i].checked = checkbox.checked;
-}
-
-function getSelectedPostIds() {
-  var result = [];
-  var checkboxes = document.querySelectorAll(".post-checkbox:checked");
-  for (var i = 0; i &lt; checkboxes.length; i++) {
-    var id = parseInt(checkboxes[i].dataset.id);
-    if (!isNaN(id)) result.push(id);
-  }
-  return result;
-}
-
-function viewPost(postId) {
-  var isInIframe = window.self !== window.top;
-  if (isInIframe) {
-    window.parent.postMessage({ type: "iframeNavigation", targetPageId: "post_detail_page", params: { id: postId } }, "*");
-  } else {
-    window.location.href = "/community/post_detail.html?id=" + postId;
-  }
-}
-
-// 跳转到发布帖子页
-function goToCreatePost() {
-  var isInIframe = window.self !== window.top;
-  if (isInIframe) {
-    window.parent.postMessage({ type: "iframeNavigation", targetPageId: "post_edit_page" }, "*");
-  } else {
-    window.location.href = "/community/post_edit.html";
-  }
-}
-
-// 创建帖子
-function openCreatePostModal() { document.getElementById("createPostModal").showModal(); }
-function closeCreatePostModal() {
-  document.getElementById("createPostModal").close();
-  document.getElementById("createPostForm").reset();
-}
-
-async function submitCreatePost() {
-  var title = document.getElementById("postTitle").value.trim();
-  var postAbstract = document.getElementById("postAbstract").value.trim();
-  var content = document.getElementById("postContent").value.trim();
-  var tagsInput = document.getElementById("postTags").value.trim();
-  
-  if (!title) { showNotification("请输入帖子标题", "warning"); return; }
-  if (!content) { showNotification("请输入帖子内容", "warning"); return; }
-  
-  var tags = tagsInput ? tagsInput.split(",").map(function(t) { return t.trim(); }).filter(function(t) { return t; }) : [];
-  
-  try {
-    showNotification("正在发布...", "info");
-    var response = await fetch("/api/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ title: title, abstract: postAbstract, content: content, tags: tags })
-    });
-    var data = await response.json();
-    if (response.ok &amp;&amp; data.success) {
-      showNotification("帖子发布成功！", "success");
-      closeCreatePostModal();
-      loadUserPosts();
-    } else {
-      showNotification(data.error || "发布失败", "error");
-    }
-  } catch (error) {
-    console.error("发布帖子失败:", error);
-    showNotification("发布失败，请重试", "error");
-  }
-}
-
-// 编辑帖子
-async function editPost(postId) {
-  try {
-    var response = await fetch("/api/posts/" + postId, { credentials: "include" });
-    if (!response.ok) { showNotification("获取帖子信息失败", "error"); return; }
-    var data = await response.json();
-    var post = data.post || data;
-    
-    document.getElementById("editPostId").value = post.postId;
-    document.getElementById("editPostTitle").value = post.postTitle || "";
-    document.getElementById("editPostAbstract").value = post.postAbstract || "";
-    // 标签处理
-    var tags = data.tags || [];
-    document.getElementById("editPostTags").value = tags.map(function(t) { return t.tagName || t; }).join(", ");
-    // 状态处理
-    document.getElementById("editPostStatus").value = post.postStatus || "草稿";
-    
-    document.getElementById("editPostModal").showModal();
-  } catch (error) {
-    console.error("获取帖子失败:", error);
-    showNotification("获取帖子信息失败", "error");
-  }
-}
-
-function closeEditPostModal() {
-  document.getElementById("editPostModal").close();
-  document.getElementById("editPostForm").reset();
-}
-
-async function submitEditPost() {
-  var postId = document.getElementById("editPostId").value;
-  var title = document.getElementById("editPostTitle").value.trim();
-  var postAbstract = document.getElementById("editPostAbstract").value.trim();
-  var tagsInput = document.getElementById("editPostTags").value.trim();
-  var status = document.getElementById("editPostStatus").value;
-  
-  if (!title) { showNotification("请输入帖子标题", "warning"); return; }
-  
-  var tags = tagsInput ? tagsInput.split(",").map(function(t) { return t.trim(); }).filter(function(t) { return t; }) : [];
-  
-  try {
-    showNotification("正在保存...", "info");
-    var response = await fetch("/api/posts/" + postId, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ title: title, abstract: postAbstract, tags: tags, status: status })
-    });
-    var data = await response.json();
-    if (response.ok &amp;&amp; data.success) {
-      showNotification("帖子更新成功！", "success");
-      closeEditPostModal();
-      loadUserPosts();
-    } else {
-      showNotification(data.error || "更新失败", "error");
-    }
-  } catch (error) {
-    console.error("更新帖子失败:", error);
-    showNotification("更新失败，请重试", "error");
-  }
-}
-
-// 删除帖子
-async function deletePost(postId, postTitle) {
-  if (!confirm("确定要删除帖子\"" + postTitle + "\"吗？此操作不可恢复！")) return;
-  try {
-    var response = await fetch("/api/posts/" + postId, { method: "DELETE", credentials: "include" });
-    var data = await response.json();
-    if (response.ok &amp;&amp; data.success) {
-      showNotification("帖子\"" + postTitle + "\"已删除", "success");
-      loadUserPosts();
-    } else {
-      showNotification(data.error || "删除失败", "error");
-    }
-  } catch (error) {
-    showNotification("删除失败，请重试", "error");
-  }
-}
-
-// 批量删除帖子
-async function handlePostBatchDelete() {
-  var selectedIds = getSelectedPostIds();
-  if (selectedIds.length === 0) { 
-    showNotification("请先选择要删除的帖子", "warning"); 
-    return; 
-  }
-  
-  if (!confirm("确定要删除 " + selectedIds.length + " 个帖子吗？\n\n警告：此操作不可恢复！")) {
-    return;
-  }
-  
-  showNotification("正在删除...", "info");
-  
-  try {
-    var response = await fetch("/api/posts/batch/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ postIds: selectedIds })
-    });
-    
-    var result = await response.json();
-    
-    if (response.ok &amp;&amp; result.success) {
-      showNotification(result.message || ("成功删除 " + selectedIds.length + " 个帖子"), "success");
-      document.getElementById("postSelectAll").checked = false;
-      loadUserPosts();
-    } else {
-      showNotification(result.error || "批量删除失败", "error");
-    }
-  } catch (error) {
-    console.error("批量删除失败:", error);
-    showNotification("操作失败，请检查网络连接", "error");
-  }
-}
-
-// 批量上线帖子
-async function handlePostBatchOnline() {
-  var selectedIds = getSelectedPostIds();
-  if (selectedIds.length === 0) { 
-    showNotification("请先选择要上线的帖子", "warning"); 
-    return; 
-  }
-  
-  if (!confirm("确定要上线 " + selectedIds.length + " 个帖子吗？")) {
-    return;
-  }
-  
-  showNotification("正在上线...", "info");
-  
-  try {
-    var response = await fetch("/api/posts/batch/online", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ postIds: selectedIds })
-    });
-    
-    var result = await response.json();
-    
-    if (response.ok &amp;&amp; result.success) {
-      showNotification(result.message || ("成功上线 " + selectedIds.length + " 个帖子"), "success");
-      document.getElementById("postSelectAll").checked = false;
-      loadUserPosts();
-    } else {
-      showNotification(result.error || "批量上线失败", "error");
-    }
-  } catch (error) {
-    console.error("批量上线失败:", error);
-    showNotification("操作失败，请检查网络连接", "error");
-  }
-}
-
-// 批量下线帖子
-async function handlePostBatchOffline() {
-  var selectedIds = getSelectedPostIds();
-  if (selectedIds.length === 0) { 
-    showNotification("请先选择要下线的帖子", "warning"); 
-    return; 
-  }
-  
-  if (!confirm("确定要下线 " + selectedIds.length + " 个帖子吗？\n下线后帖子将变为仅自己可见")) {
-    return;
-  }
-  
-  showNotification("正在下线...", "info");
-  
-  try {
-    var response = await fetch("/api/posts/batch/offline", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ postIds: selectedIds })
-    });
-    
-    var result = await response.json();
-    
-    if (response.ok &amp;&amp; result.success) {
-      showNotification(result.message || ("成功下线 " + selectedIds.length + " 个帖子"), "success");
-      document.getElementById("postSelectAll").checked = false;
-      loadUserPosts();
-    } else {
-      showNotification(result.error || "批量下线失败", "error");
-    }
-  } catch (error) {
-    console.error("批量下线失败:", error);
-    showNotification("操作失败，请检查网络连接", "error");
-  }
-}
-
-// ==================== 上传功能 ====================
-function openUploadModal() { document.getElementById("uploadModal").showModal(); }
-function closeUploadModal() {
-  document.getElementById("uploadModal").close();
-  document.getElementById("uploadForm").reset();
-  document.getElementById("coverPreview").classList.add("hidden");
-}
-
-function previewCover(input) {
-  if (input.files && input.files[0]) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById("coverPreviewImg").src = e.target.result;
-      document.getElementById("coverPreview").classList.remove("hidden");
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-// 缩略图生成工具（复用公共逻辑）
-var ThumbnailUtil = {
-  nodeColors: {
-    "人物": "#3b82f6", "组织": "#10b981", "地点": "#f59e0b",
-    "事件": "#ef4444", "概念": "#8b5cf6", "作品": "#ec4899",
-    "时间": "#06b6d4", "default": "#6b7280"
-  },
-  getNodeColor: function(type) {
-    return this.nodeColors[type] || this.nodeColors["default"];
-  },
-  generateSVG: function(nodes, edges, width, height) {
-    width = width || 400; height = height || 300;
-    if (!nodes || nodes.length === 0) {
-      return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + width + " " + height + "\"><rect width=\"100%\" height=\"100%\" fill=\"#f8fafc\"/><text x=\"50%\" y=\"50%\" text-anchor=\"middle\" fill=\"#9ca3af\">暂无数据</text></svg>";
-    }
-    var nodePositions = {};
-    var centerX = width / 2, centerY = height / 2;
-    var radius = Math.min(width, height) / 2 - 30;
-    var self = this;
-    nodes.forEach(function(n, i) {
-      var angle = (2 * Math.PI * i) / nodes.length;
-      var nodeId = n.nodeId || n.name;
-      nodePositions[nodeId] = { x: centerX + radius * Math.cos(angle), y: centerY + radius * Math.sin(angle) };
-    });
-    var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + width + " " + height + "\"><rect width=\"100%\" height=\"100%\" fill=\"#f8fafc\"/>";
-    if (edges && edges.length > 0) {
-      edges.forEach(function(e) {
-        var sourceId = e.sourceNodeId || e.source;
-        var targetId = e.targetNodeId || e.target;
-        var src = nodePositions[sourceId];
-        var tgt = nodePositions[targetId];
-        if (src && tgt) {
-          svg += "<line x1=\"" + src.x + "\" y1=\"" + src.y + "\" x2=\"" + tgt.x + "\" y2=\"" + tgt.y + "\" stroke=\"#cbd5e1\" stroke-width=\"1.5\" opacity=\"0.6\"/>";
-        }
-      });
-    }
-    nodes.forEach(function(n) {
-      var nodeId = n.nodeId || n.name;
-      var pos = nodePositions[nodeId];
-      var color = self.getNodeColor(n.type || "default");
-      svg += "<circle cx=\"" + pos.x + "\" cy=\"" + pos.y + "\" r=\"8\" fill=\"" + color + "\"/>";
-    });
-    svg += "</svg>";
-    return svg;
-  },
-  svgToPngBlob: function(svgString, width, height) {
-    return new Promise(function(resolve) {
-      width = width || 400; height = height || 300;
-      var canvas = document.createElement("canvas");
-      canvas.width = width; canvas.height = height;
-      var ctx = canvas.getContext("2d");
-      var img = new Image();
-      var svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-      var url = URL.createObjectURL(svgBlob);
-      img.onload = function() {
-        ctx.fillStyle = "#f8fafc";
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        URL.revokeObjectURL(url);
-        canvas.toBlob(function(blob) { resolve(blob); }, "image/png");
-      };
-      img.onerror = function() { URL.revokeObjectURL(url); resolve(null); };
-      img.src = url;
-    });
-  }
-};
-
-// 解析 JSON 文件获取节点和关系
-function parseGraphJson(jsonContent) {
-  try {
-    var data = JSON.parse(jsonContent);
-    return { nodes: data.nodes || [], relations: data.relations || [] };
-  } catch (e) {
-    console.error("JSON 解析失败:", e);
-    return { nodes: [], relations: [] };
-  }
-}
-
-async function submitUploadForm() {
-  var fileInput = document.getElementById("graphFile");
-  if (!fileInput.files || !fileInput.files[0]) { showNotification("请选择图谱文件", "warning"); return; }
-  
-  var coverInput = document.getElementById("graphCover");
-  var hasCover = coverInput.files && coverInput.files[0];
-  var formData = new FormData();
-  formData.append("file", fileInput.files[0]);
-  
-  var name = document.getElementById("graphName").value.trim();
-  var description = document.getElementById("graphDescription").value.trim();
-  var status = document.getElementById("graphStatus").value;
-  if (name) formData.append("name", name);
-  if (description) formData.append("description", description);
-  formData.append("status", status);
-  
-  // 如果有封面直接使用，否则生成缩略图
-  if (hasCover) {
-    formData.append("cover", coverInput.files[0]);
-    console.log("[缩略图] 使用用户上传的封面");
-  } else {
-    // 读取 JSON 文件生成缩略图
-    try {
-      console.log("[缩略图] 开始读取 JSON 文件...");
-      var jsonContent = await fileInput.files[0].text();
-      console.log("[缩略图] JSON 内容长度:", jsonContent.length);
-      var graphData = parseGraphJson(jsonContent);
-      console.log("[缩略图] 解析结果 - 节点:", graphData.nodes.length, "关系:", graphData.relations.length);
-      if (graphData.nodes.length > 0) {
-        console.log("[缩略图] 节点示例:", graphData.nodes[0]);
-        var svgString = ThumbnailUtil.generateSVG(graphData.nodes, graphData.relations, 400, 300);
-        console.log("[缩略图] SVG 长度:", svgString.length);
-        var pngBlob = await ThumbnailUtil.svgToPngBlob(svgString, 400, 300);
-        console.log("[缩略图] PNG Blob:", pngBlob);
-        if (pngBlob) {
-          formData.append("cover", pngBlob, "thumbnail.png");
-          console.log("[缩略图] 已添加到 FormData");
-        } else {
-          console.error("[缩略图] PNG Blob 生成失败");
-        }
-      } else {
-        console.log("[缩略图] 没有节点，跳过生成");
-      }
-    } catch (e) {
-      console.error("[缩略图] 生成失败:", e);
-    }
-  }
-  
-  try {
-    showNotification("正在上传...", "info");
-    var response = await fetch("/api/upload/graph", { method: "POST", credentials: "include", body: formData });
-    var data = await response.json();
-    if (response.ok) {
-      showNotification("图谱上传成功！节点: " + data.nodeCount + ", 关系: " + data.relationCount + "，即将跳转到详情页...", "success");
-      closeUploadModal();
-      // 跳转到图谱详情页
-      setTimeout(function() {
-        window.location.href = "/graph/graph_detail.html?id=" + data.graphId;
-      }, 1500);
-    } else {
-      showNotification(data.error || "上传失败", "error");
-    }
-  } catch (error) {
-    console.error("Upload error:", error);
-    showNotification("上传失败，请重试", "error");
-  }
-}
-</script>
-<script>setTimeout(function() { if (typeof Holder !== "undefined") Holder.run({ domain: "placehold.co" }); }, 100);</script>
-</body></html>'></iframe>
-    </div>
-  </div>
+    <th:block layout:fragment="js">
+        <script th:src="@{/js/dashboard.js}"></script>
+    </th:block>
 </body>
+
 </html>

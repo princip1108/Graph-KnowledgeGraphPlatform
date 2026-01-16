@@ -55,6 +55,8 @@ public class SecurityConfig {
                     "/user/api/check-auth",   // 检查登录状态
                     "/api/public/**",         // 公开接口
                     "/assets/**",             // 静态资源
+                    "/css/**",                // CSS 静态资源
+                    "/js/**",                 // JS 静态资源
                     "/uploads/**",            // 上传文件目录
                     "/templates/**",          // 模板文件
                     "/*.html",                // HTML页面

@@ -1,327 +1,294 @@
 ﻿<!DOCTYPE html>
 <html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Common Scripts Fragment</title>
 </head>
+
 <body>
-<!-- 公共脚本片段 -->
-<th:block th:fragment="scripts">
-<!-- 图谱 API 模块 -->
-<script src="/assets/js/graph-api.js"></script>
-<script th:inline="javascript">
-(function() {
-    'use strict';
+    <!-- 公共脚本片段 -->
+    <th:block th:fragment="scripts">
+        <!-- 图谱 API 模块 -->
+        <script src="/assets/js/graph-api.js"></script>
+        <script>
+            (function () {
+                'use strict';
 
-    // 初始化全局命名空间
-    window.APP_GLOBALS = window.APP_GLOBALS || {};
+                // 初始化全局命名空间
+                window.APP_GLOBALS = window.APP_GLOBALS || {};
 
-    // 页面路由映射
-    const pageRoutes = {
-        'home_page': /*[[@{/}]]*/ '/',
-        'login_register_page': /*[[@{/login}]]*/ '/login',
-        'registration_success_page': /*[[@{/registration-success}]]*/ '/registration-success',
-        'password_reset_page': /*[[@{/password-reset}]]*/ '/password-reset',
-        'graph_list_page': /*[[@{/graphs}]]*/ '/graphs',
-        'graph_detail_page': /*[[@{/graph/1}]]*/ '/graph/1',
-        'user_profile_page': /*[[@{/profile}]]*/ '/profile',
-        'documentation_page': /*[[@{/documentation}]]*/ '/documentation',
-        'about_page': /*[[@{/about}]]*/ '/about',
-        'feedback_page': /*[[@{/feedback}]]*/ '/feedback',
-        'page_998124': /*[[@{/admin}]]*/ '/admin',
-        'page_998125': /*[[@{/forum}]]*/ '/forum'
-    };
+                // 页面路由映射
+                const pageRoutes = {
+                    'home_page': '/graph/home.html',
+                    'login_register_page': '/user/login_register.html',
+                    'registration_success_page': '/user/registration_success.html',
+                    'password_reset_page': '/user/password_reset.html',
+                    'graph_list_page': '/graph/graph_list.html',
+                    'graph_detail_page': '/graph/graph_detail.html',
+                    'user_profile_page': '/user/profile.html',
+                    'documentation_page': '/pages/documentation.html',
+                    'about_page': '/pages/about.html',
+                    'feedback_page': '/community/feedback.html',
+                    'page_998124': '/admin/dashboard.html',
+                    'page_998125': '/community/forum_list.html'
+                };
 
-    // 全局导航函数
-    window.navigateTo = function(targetPageId) {
-        const targetUrl = pageRoutes[targetPageId];
-        if (targetUrl) {
-            window.location.href = targetUrl;
-        } else {
-            console.warn('Unknown page ID:', targetPageId);
-        }
-    };
+                // 全局导航函数
+                window.navigateTo = function (targetPageId) {
+                    const targetUrl = pageRoutes[targetPageId];
+                    if (targetUrl) {
+                        window.location.href = targetUrl;
+                    } else {
+                        console.warn('Unknown page ID:', targetPageId);
+                    }
+                };
 
-    // 用户认证状态管理
-    window.APP_GLOBALS.user = {
-        isLoggedIn: false,
-        userInfo: null,
+                // 用户认证状态管理
+                window.APP_GLOBALS.user = {
+                    isLoggedIn: false,
+                    userInfo: null,
 
-        login: function(userInfo) {
-            this.isLoggedIn = true;
-            this.userInfo = userInfo;
-            localStorage.setItem('userState', JSON.stringify({
-                isLoggedIn: true,
-                userInfo: userInfo
-            }));
-            this.updateUserInterface();
-        },
-
-        logout: function() {
-            this.isLoggedIn = false;
-            this.userInfo = null;
-            localStorage.removeItem('userState');
-            // 调用后端登出
-            fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-                .finally(() => {
-                    this.updateUserInterface();
-                    window.location.href = '/graph/home.html';
-                });
-        },
-
-        updateUserInterface: function() {
-            const userControls = document.querySelectorAll('[data-user-control]');
-            userControls.forEach(control => {
-                const controlType = control.getAttribute('data-user-control');
-                if (controlType === 'logged-out' && this.isLoggedIn) {
-                    control.style.display = 'none';
-                } else if (controlType === 'logged-in' && !this.isLoggedIn) {
-                    control.style.display = 'none';
-                } else {
-                    control.style.display = '';
-                }
-            });
-            
-            // 更新导航栏头像
-            if (this.isLoggedIn && this.userInfo) {
-                this.updateNavbarAvatar();
-            }
-        },
-        
-        updateNavbarAvatar: function() {
-            // 查找导航栏头像容器
-            const avatarContainers = document.querySelectorAll('[data-user-control="logged-in"] .avatar > div');
-            avatarContainers.forEach(container => {
-                if (this.userInfo.avatar) {
-                    // 有头像图片，显示图片
-                    container.innerHTML = '<img src="' + this.userInfo.avatar + '" class="w-full h-full object-cover rounded-full" alt="头像">';
-                } else if (this.userInfo.userName) {
-                    // 无头像，显示用户名首字符
-                    const avatarText = this.userInfo.userName.substring(0, 1);
-                    container.textContent = avatarText;
-                }
-            });
-        },
-
-        init: function() {
-            // 从服务端获取真实登录状态
-            fetch('/user/api/check-auth', { credentials: 'include' })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.authenticated) {
+                    login: function (userInfo) {
                         this.isLoggedIn = true;
-                        this.userInfo = data.user || { userName: data.username };
+                        this.userInfo = userInfo;
                         localStorage.setItem('userState', JSON.stringify({
                             isLoggedIn: true,
-                            userInfo: this.userInfo
+                            userInfo: userInfo
                         }));
-                    } else {
+                        this.updateUserInterface();
+                    },
+
+                    logout: function () {
                         this.isLoggedIn = false;
                         this.userInfo = null;
                         localStorage.removeItem('userState');
+                        // 调用后端登出
+                        fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+                            .finally(() => {
+                                this.updateUserInterface();
+                                window.location.href = '/graph/home.html';
+                            });
+                    },
+
+                    updateUserInterface: function () {
+                        // 前端仅负责更新非首屏的动态状态
+                        // 实际上由于使用了SSR，大部分初始状态已由HTML决定
+                        // 这里主要用于处理无刷新操作后的状态变更
+                    },
+
+                    init: function () {
+                        // 从服务端检查登录状态，主要用于同步本地状态或处理 session 过期
+                        fetch('/user/api/check-auth', { credentials: 'include' })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.authenticated) {
+                                    this.isLoggedIn = true;
+                                    this.userInfo = data.user || { userName: data.username };
+                                    localStorage.setItem('userState', JSON.stringify({
+                                        isLoggedIn: true,
+                                        userInfo: this.userInfo
+                                    }));
+                                } else {
+                                    this.isLoggedIn = false;
+                                    this.userInfo = null;
+                                    localStorage.removeItem('userState');
+                                }
+                            })
+                            .catch(() => {
+                                console.warn('Auth check failed');
+                            });
                     }
-                    this.updateUserInterface();
-                })
-                .catch(() => {
-                    // 网络错误，使用本地缓存
-                    const savedState = localStorage.getItem('userState');
-                    if (savedState) {
-                        const state = JSON.parse(savedState);
-                        this.isLoggedIn = state.isLoggedIn;
-                        this.userInfo = state.userInfo;
+                };
+
+                // 搜索功能
+                window.APP_GLOBALS.search = {
+                    history: JSON.parse(localStorage.getItem('searchHistory') || '[]'),
+                    recommendations: ['人工智能', '机器学习', '自然语言处理', '计算机视觉', '深度学习'],
+
+                    addToHistory: function (query) {
+                        if (query && !this.history.includes(query)) {
+                            this.history.unshift(query);
+                            this.history = this.history.slice(0, 10);
+                            localStorage.setItem('searchHistory', JSON.stringify(this.history));
+                        }
+                    },
+
+                    getSearchSuggestions: function () {
+                        return this.history.length > 0 ? this.history : this.recommendations;
+                    },
+
+                    performSearch: function (query, targetPage = 'graph_list_page') {
+                        this.addToHistory(query);
+                        navigateTo(targetPage);
                     }
-                    this.updateUserInterface();
-                });
-        }
-    };
+                };
 
-    // 搜索功能
-    window.APP_GLOBALS.search = {
-        history: JSON.parse(localStorage.getItem('searchHistory') || '[]'),
-        recommendations: ['人工智能', '机器学习', '自然语言处理', '计算机视觉', '深度学习'],
-
-        addToHistory: function(query) {
-            if (query && !this.history.includes(query)) {
-                this.history.unshift(query);
-                this.history = this.history.slice(0, 10);
-                localStorage.setItem('searchHistory', JSON.stringify(this.history));
-            }
-        },
-
-        getSearchSuggestions: function() {
-            return this.history.length > 0 ? this.history : this.recommendations;
-        },
-
-        performSearch: function(query, targetPage = 'graph_list_page') {
-            this.addToHistory(query);
-            navigateTo(targetPage);
-        }
-    };
-
-    // 通知功能
-    window.showNotification = function(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
-        notification.innerHTML = `
+                // 通知功能
+                window.showNotification = function (message, type = 'info') {
+                    const notification = document.createElement('div');
+                    notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
+                    notification.innerHTML = `
             <div class="flex items-center gap-2">
                 <span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
                 <span>${message}</span>
             </div>
         `;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 5000);
-    };
-
-    // 缩略图生成工具
-    window.APP_GLOBALS.thumbnail = {
-        // 节点颜色映射
-        nodeColors: {
-            '人物': '#3b82f6',
-            '组织': '#10b981',
-            '地点': '#f59e0b',
-            '事件': '#ef4444',
-            '概念': '#8b5cf6',
-            '作品': '#ec4899',
-            '时间': '#06b6d4',
-            'default': '#6b7280'
-        },
-        
-        getNodeColor: function(type) {
-            return this.nodeColors[type] || this.nodeColors['default'];
-        },
-        
-        // 生成 SVG 缩略图字符串
-        generateSVG: function(nodes, edges, width, height) {
-            width = width || 300;
-            height = height || 200;
-            
-            if (!nodes || nodes.length === 0) {
-                return '<svg viewBox="0 0 ' + width + ' ' + height + '"><text x="50%" y="50%" text-anchor="middle" fill="#9ca3af">暂无数据</text></svg>';
-            }
-            
-            var nodePositions = {};
-            var centerX = width / 2, centerY = height / 2;
-            var radius = Math.min(width, height) / 2 - 20;
-            var self = this;
-            
-            // 计算节点位置（环形布局）
-            nodes.forEach(function(n, i) {
-                var angle = (2 * Math.PI * i) / nodes.length;
-                var nodeId = n.nodeId || n.name;
-                nodePositions[nodeId] = {
-                    x: centerX + radius * Math.cos(angle),
-                    y: centerY + radius * Math.sin(angle)
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 5000);
                 };
-            });
-            
-            var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '" style="background:#f8fafc">';
-            
-            // 绘制边
-            if (edges && edges.length > 0) {
-                edges.forEach(function(e) {
-                    var sourceId = e.sourceNodeId || e.source;
-                    var targetId = e.targetNodeId || e.target;
-                    var src = nodePositions[sourceId];
-                    var tgt = nodePositions[targetId];
-                    if (src && tgt) {
-                        svg += '<line x1="' + src.x + '" y1="' + src.y + '" x2="' + tgt.x + '" y2="' + tgt.y + '" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/>';
+
+                // 缩略图生成工具
+                window.APP_GLOBALS.thumbnail = {
+                    // 节点颜色映射
+                    nodeColors: {
+                        '人物': '#3b82f6',
+                        '组织': '#10b981',
+                        '地点': '#f59e0b',
+                        '事件': '#ef4444',
+                        '概念': '#8b5cf6',
+                        '作品': '#ec4899',
+                        '时间': '#06b6d4',
+                        'default': '#6b7280'
+                    },
+
+                    getNodeColor: function (type) {
+                        return this.nodeColors[type] || this.nodeColors['default'];
+                    },
+
+                    // 生成 SVG 缩略图字符串
+                    generateSVG: function (nodes, edges, width, height) {
+                        width = width || 300;
+                        height = height || 200;
+
+                        if (!nodes || nodes.length === 0) {
+                            return '<svg viewBox="0 0 ' + width + ' ' + height + '"><text x="50%" y="50%" text-anchor="middle" fill="#9ca3af">暂无数据</text></svg>';
+                        }
+
+                        var nodePositions = {};
+                        var centerX = width / 2, centerY = height / 2;
+                        var radius = Math.min(width, height) / 2 - 20;
+                        var self = this;
+
+                        // 计算节点位置（环形布局）
+                        nodes.forEach(function (n, i) {
+                            var angle = (2 * Math.PI * i) / nodes.length;
+                            var nodeId = n.nodeId || n.name;
+                            nodePositions[nodeId] = {
+                                x: centerX + radius * Math.cos(angle),
+                                y: centerY + radius * Math.sin(angle)
+                            };
+                        });
+
+                        var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '" style="background:#f8fafc">';
+
+                        // 绘制边
+                        if (edges && edges.length > 0) {
+                            edges.forEach(function (e) {
+                                var sourceId = e.sourceNodeId || e.source;
+                                var targetId = e.targetNodeId || e.target;
+                                var src = nodePositions[sourceId];
+                                var tgt = nodePositions[targetId];
+                                if (src && tgt) {
+                                    svg += '<line x1="' + src.x + '" y1="' + src.y + '" x2="' + tgt.x + '" y2="' + tgt.y + '" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/>';
+                                }
+                            });
+                        }
+
+                        // 绘制节点
+                        nodes.forEach(function (n) {
+                            var nodeId = n.nodeId || n.name;
+                            var pos = nodePositions[nodeId];
+                            var color = self.getNodeColor(n.type || 'default');
+                            svg += '<circle cx="' + pos.x + '" cy="' + pos.y + '" r="5" fill="' + color + '"/>';
+                        });
+
+                        svg += '</svg>';
+                        return svg;
+                    },
+
+                    // 将 SVG 转换为 Blob（用于上传）
+                    svgToBlob: function (svgString) {
+                        return new Blob([svgString], { type: 'image/svg+xml' });
+                    },
+
+                    // 将 SVG 转换为 PNG Blob（通过 Canvas）
+                    svgToPngBlob: function (svgString, width, height, callback) {
+                        width = width || 300;
+                        height = height || 200;
+
+                        var canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        var ctx = canvas.getContext('2d');
+
+                        var img = new Image();
+                        var svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                        var url = URL.createObjectURL(svgBlob);
+
+                        img.onload = function () {
+                            ctx.fillStyle = '#f8fafc';
+                            ctx.fillRect(0, 0, width, height);
+                            ctx.drawImage(img, 0, 0, width, height);
+                            URL.revokeObjectURL(url);
+
+                            canvas.toBlob(function (blob) {
+                                callback(blob);
+                            }, 'image/png');
+                        };
+
+                        img.onerror = function () {
+                            URL.revokeObjectURL(url);
+                            callback(null);
+                        };
+
+                        img.src = url;
                     }
+                };
+
+                // 收藏管理
+                window.APP_GLOBALS.favorites = {
+                    items: JSON.parse(localStorage.getItem('favorites') || '[]'),
+
+                    add: function (graphId, graphData) {
+                        if (!this.items.find(item => item.id === graphId)) {
+                            this.items.push({
+                                id: graphId,
+                                data: graphData,
+                                addedAt: new Date().toISOString()
+                            });
+                            localStorage.setItem('favorites', JSON.stringify(this.items));
+                            showNotification('已添加到收藏', 'success');
+                        }
+                    },
+
+                    remove: function (graphId) {
+                        this.items = this.items.filter(item => item.id !== graphId);
+                        localStorage.setItem('favorites', JSON.stringify(this.items));
+                        showNotification('已从收藏中移除', 'info');
+                    },
+
+                    isFavorited: function (graphId) {
+                        return this.items.some(item => item.id === graphId);
+                    },
+
+                    toggle: function (graphId, graphData) {
+                        if (this.isFavorited(graphId)) {
+                            this.remove(graphId);
+                        } else {
+                            this.add(graphId, graphData);
+                        }
+                    }
+                };
+
+                // DOM 加载完成后初始化
+                document.addEventListener('DOMContentLoaded', function () {
+                    window.APP_GLOBALS.user.init();
                 });
-            }
-            
-            // 绘制节点
-            nodes.forEach(function(n) {
-                var nodeId = n.nodeId || n.name;
-                var pos = nodePositions[nodeId];
-                var color = self.getNodeColor(n.type || 'default');
-                svg += '<circle cx="' + pos.x + '" cy="' + pos.y + '" r="5" fill="' + color + '"/>';
-            });
-            
-            svg += '</svg>';
-            return svg;
-        },
-        
-        // 将 SVG 转换为 Blob（用于上传）
-        svgToBlob: function(svgString) {
-            return new Blob([svgString], { type: 'image/svg+xml' });
-        },
-        
-        // 将 SVG 转换为 PNG Blob（通过 Canvas）
-        svgToPngBlob: function(svgString, width, height, callback) {
-            width = width || 300;
-            height = height || 200;
-            
-            var canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            var ctx = canvas.getContext('2d');
-            
-            var img = new Image();
-            var svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-            var url = URL.createObjectURL(svgBlob);
-            
-            img.onload = function() {
-                ctx.fillStyle = '#f8fafc';
-                ctx.fillRect(0, 0, width, height);
-                ctx.drawImage(img, 0, 0, width, height);
-                URL.revokeObjectURL(url);
-                
-                canvas.toBlob(function(blob) {
-                    callback(blob);
-                }, 'image/png');
-            };
-            
-            img.onerror = function() {
-                URL.revokeObjectURL(url);
-                callback(null);
-            };
-            
-            img.src = url;
-        }
-    };
 
-    // 收藏管理
-    window.APP_GLOBALS.favorites = {
-        items: JSON.parse(localStorage.getItem('favorites') || '[]'),
-
-        add: function(graphId, graphData) {
-            if (!this.items.find(item => item.id === graphId)) {
-                this.items.push({
-                    id: graphId,
-                    data: graphData,
-                    addedAt: new Date().toISOString()
-                });
-                localStorage.setItem('favorites', JSON.stringify(this.items));
-                showNotification('已添加到收藏', 'success');
-            }
-        },
-
-        remove: function(graphId) {
-            this.items = this.items.filter(item => item.id !== graphId);
-            localStorage.setItem('favorites', JSON.stringify(this.items));
-            showNotification('已从收藏中移除', 'info');
-        },
-
-        isFavorited: function(graphId) {
-            return this.items.some(item => item.id === graphId);
-        },
-
-        toggle: function(graphId, graphData) {
-            if (this.isFavorited(graphId)) {
-                this.remove(graphId);
-            } else {
-                this.add(graphId, graphData);
-            }
-        }
-    };
-
-    // DOM 加载完成后初始化
-    document.addEventListener('DOMContentLoaded', function() {
-        window.APP_GLOBALS.user.init();
-    });
-
-})();
-</script>
-</th:block>
+            })();
+        </script>
+    </th:block>
 </body>
+
 </html>

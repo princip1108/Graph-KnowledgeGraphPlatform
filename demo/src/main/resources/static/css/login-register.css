@@ -1,0 +1,93 @@
+/**
+ * Login/Register Page Styles
+ * 登录注册页面样式
+ */
+
+/* Tab active state */
+.tab-active {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-content) !important;
+    border-color: var(--color-primary) !important;
+}
+
+.tab:not(.tab-active):hover {
+    background-color: var(--color-base-300);
+    color: var(--color-base-content);
+}
+
+/* Form input focus */
+.input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
+    outline: none;
+}
+
+/* Button press animation */
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* Social login button hover */
+.btn-outline:hover .iconify {
+    transform: scale(1.1);
+}
+
+/* Countdown state */
+.btn-countdown {
+    background-color: var(--color-base-300) !important;
+    color: var(--color-base-content) !important;
+    cursor: not-allowed !important;
+}
+
+/* Card shadow */
+.card {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Divider */
+.divider::before,
+.divider::after {
+    border-color: var(--color-base-300);
+}
+
+/* Link hover */
+.link-primary:hover {
+    color: var(--color-secondary);
+    text-decoration: underline;
+}
+
+/* Form validation */
+.input.error {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+}
+
+.input.success {
+    border-color: var(--color-success);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .btn {
+        height: 3rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .tabs.tabs-boxed {
+        gap: 0.25rem;
+    }
+    
+    .join .input {
+        height: 3rem;
+    }
+    
+    .join .btn {
+        height: 3rem;
+    }
+}

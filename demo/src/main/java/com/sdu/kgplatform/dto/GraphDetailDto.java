@@ -28,6 +28,7 @@ public class GraphDetailDto {
     private LocalDate uploadDate;
     private LocalDateTime lastModified;
     private String coverImage;
+    private Boolean isCustomCover;
     private String shareLink;
 
     // 统计信息
