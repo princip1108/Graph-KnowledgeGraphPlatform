@@ -3,14 +3,14 @@
  * 图谱列表页面 JavaScript 模块
  */
 
-(function() {
+(function () {
     'use strict';
 
     let currentFilter = 'all';
     let currentView = 'recommended';
     let allGraphs = [];
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         loadGraphs();
         bindEvents();
         handleUrlParams();
@@ -20,7 +20,7 @@
         // Range sliders - apply filters on change
         const rangeInputs = document.querySelectorAll('input[type="range"]');
         rangeInputs.forEach(input => {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 const valueDisplay = document.getElementById(this.id.replace('Range', 'Value'));
                 if (valueDisplay) {
                     let val = this.value;
@@ -37,10 +37,10 @@
         // Search input
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
-            searchInput.addEventListener('keypress', function(e) {
+            searchInput.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') performSearch();
             });
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', function () {
                 if (this.value.length > 0) showSearchSuggestions(this.value);
                 else hideSearchSuggestions();
             });
@@ -52,9 +52,9 @@
             keywordFilter.addEventListener('input', debounce(applyFilters, 300));
         }
     }
-    
+
     // Global function for slider value update (called from HTML oninput)
-    window.updateSliderValue = function(input, format) {
+    window.updateSliderValue = function (input, format) {
         const valueDisplay = document.getElementById(input.id.replace('Range', 'Value'));
         if (valueDisplay) {
             let val = input.value;
@@ -149,7 +149,7 @@
 
     function applyFilters() {
         const keyword = document.getElementById('keywordFilter')?.value.toLowerCase() || '';
-        
+
         // Get range filter values
         const minNodes = parseInt(document.getElementById('minNodesRange')?.value || 0);
         const maxNodes = parseInt(document.getElementById('maxNodesRange')?.value || 10000);
@@ -161,34 +161,34 @@
         const maxViewCount = parseInt(document.getElementById('maxViewCountRange')?.value || 30000);
         const minDownloadCount = parseInt(document.getElementById('minDownloadCountRange')?.value || 0);
         const maxDownloadCount = parseInt(document.getElementById('maxDownloadCountRange')?.value || 5000);
-        
+
         const filtered = allGraphs.filter(graph => {
             // Domain filter
             if (currentFilter !== 'all' && graph.domain !== currentFilter) return false;
-            
+
             // Keyword filter
             if (keyword && !graph.name?.toLowerCase().includes(keyword) && !graph.description?.toLowerCase().includes(keyword)) return false;
-            
+
             // Node count filter
             const nodeCount = graph.nodeCount || 0;
             if (nodeCount < minNodes || nodeCount > maxNodes) return false;
-            
+
             // Edge/Relation count filter
             const relationCount = graph.relationCount || 0;
             if (relationCount < minEdges || relationCount > maxEdges) return false;
-            
+
             // Density filter
             const density = graph.density || 0;
             if (density < minDensity || density > maxDensity) return false;
-            
+
             // View count filter
             const viewCount = graph.viewCount || 0;
             if (viewCount < minViewCount || viewCount > maxViewCount) return false;
-            
+
             // Download count filter
             const downloadCount = graph.downloadCount || 0;
             if (downloadCount < minDownloadCount || downloadCount > maxDownloadCount) return false;
-            
+
             return true;
         });
         renderGraphs(filtered);
@@ -217,45 +217,48 @@
 
     function debounce(func, wait) {
         let timeout;
-        return function(...args) {
+        return function (...args) {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
     }
 
     // Global functions
-    window.performSearch = function() {
+    window.performSearch = function () {
         const query = document.getElementById('searchInput')?.value.trim();
         if (!query) return;
 
-        // Save to history
-        let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-        if (!history.includes(query)) {
-            history.unshift(query);
-            history = history.slice(0, 10);
-            localStorage.setItem('searchHistory', JSON.stringify(history));
-        }
+        // Save to backend history
+        fetch('/api/history/search?type=graph&keyword=' + encodeURIComponent(query), { method: 'POST' });
+
+        // Local storage backup (optional, or remove if fully relying on backend)
+        // let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+        // if (!history.includes(query)) {
+        //    history.unshift(query);
+        //    history = history.slice(0, 10);
+        //    localStorage.setItem('searchHistory', JSON.stringify(history));
+        // }
 
         hideSearchSuggestions();
-        
+
         // Filter graphs
-        const filtered = allGraphs.filter(graph => 
-            graph.name?.toLowerCase().includes(query.toLowerCase()) || 
+        const filtered = allGraphs.filter(graph =>
+            graph.name?.toLowerCase().includes(query.toLowerCase()) ||
             graph.description?.toLowerCase().includes(query.toLowerCase())
         );
         renderGraphs(filtered);
         document.getElementById('resultCount').textContent = '搜索 "' + query + '" 找到 ' + filtered.length + ' 个图谱';
     };
 
-    window.selectSuggestion = function(query) {
+    window.selectSuggestion = function (query) {
         const searchInput = document.getElementById('searchInput');
         if (searchInput) searchInput.value = query;
         performSearch();
     };
 
-    window.filterGraphs = function(filter) {
+    window.filterGraphs = function (filter) {
         currentFilter = filter;
-        
+
         // Update button states
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
@@ -264,9 +267,9 @@
         applyFilters();
     };
 
-    window.toggleView = function(view) {
+    window.toggleView = function (view) {
         currentView = view;
-        
+
         // Update button states
         document.querySelectorAll('.view-toggle').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-view') === view);
@@ -275,14 +278,14 @@
         loadGraphs();
     };
 
-    window.resetFilters = function() {
+    window.resetFilters = function () {
         currentFilter = 'all';
         document.getElementById('searchInput').value = '';
         document.getElementById('keywordFilter').value = '';
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-filter') === 'all');
         });
-        
+
         // Reset range sliders with correct display values
         const sliderDefaults = {
             'minNodesRange': { value: 0, display: '0' },
@@ -296,7 +299,7 @@
             'minDownloadCountRange': { value: 0, display: '0' },
             'maxDownloadCountRange': { value: 5000, display: '5000' }
         };
-        
+
         Object.keys(sliderDefaults).forEach(id => {
             const input = document.getElementById(id);
             const valueDisplay = document.getElementById(id.replace('Range', 'Value'));
@@ -308,17 +311,17 @@
         showNotification('筛选条件已重置', 'info');
     };
 
-    window.viewGraph = function(graphId) {
+    window.viewGraph = function (graphId) {
         window.location.href = '/graph/graph_detail.html?id=' + graphId;
     };
 
-    window.toggleFavorite = async function(graphId, graphName, event) {
+    window.toggleFavorite = async function (graphId, graphName, event) {
         event.stopPropagation();
-        
+
         const btn = event.target.closest('.favorite-btn');
         const icon = btn.querySelector('.iconify');
         const wasFavorited = isFavorited(graphId);
-        
+
         // 立即更新UI
         if (wasFavorited) {
             btn.classList.remove('favorited');
@@ -327,7 +330,7 @@
             btn.classList.add('favorited');
             icon.setAttribute('data-icon', 'heroicons:heart-solid');
         }
-        
+
         // 后台执行API和localStorage操作
         try {
             await fetch('/api/graph/' + graphId + '/favorite', { method: 'POST', credentials: 'include' });

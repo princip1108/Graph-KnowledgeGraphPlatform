@@ -10,6 +10,7 @@ import com.sdu.kgplatform.entity.KnowledgeGraph;
 import com.sdu.kgplatform.entity.User;
 import com.sdu.kgplatform.repository.KnowledgeGraphRepository;
 import com.sdu.kgplatform.repository.NodeRepository;
+import com.sdu.kgplatform.repository.RelationshipRepository;
 import com.sdu.kgplatform.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,13 +34,23 @@ public class GraphService {
     private final KnowledgeGraphRepository graphRepository;
     private final UserRepository userRepository;
     private final NodeRepository nodeRepository;
+    private final com.sdu.kgplatform.repository.CategoryRepository categoryRepository;
+    private final FileStorageService fileStorageService;
+
+    private final RelationshipRepository relationshipRepository;
 
     public GraphService(KnowledgeGraphRepository graphRepository,
             UserRepository userRepository,
-            NodeRepository nodeRepository) {
+            NodeRepository nodeRepository,
+            RelationshipRepository relationshipRepository,
+            com.sdu.kgplatform.repository.CategoryRepository categoryRepository,
+            FileStorageService fileStorageService) {
         this.graphRepository = graphRepository;
         this.userRepository = userRepository;
         this.nodeRepository = nodeRepository;
+        this.relationshipRepository = relationshipRepository;
+        this.categoryRepository = categoryRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     // ==================== 创建图谱 ====================
@@ -100,6 +111,10 @@ public class GraphService {
         // 生成分享链接
         graph.setShareLink(generateShareLink());
 
+        if (dto.getCategoryId() != null) {
+            graph.setCategoryId(dto.getCategoryId());
+        }
+
         KnowledgeGraph saved = graphRepository.save(graph);
         return convertToDetailDto(saved, uploader.getUserName(), uploader.getAvatar());
     }
@@ -146,10 +161,21 @@ public class GraphService {
      * 获取用户特定状态的图谱
      */
     public Page<GraphListDto> getUserGraphsByStatus(Integer uploaderId, String status, int page, int size) {
+        return getUserGraphsByStatus(uploaderId, status, null, page, size);
+    }
+
+    public Page<GraphListDto> getUserGraphsByStatus(Integer uploaderId, String status, Integer categoryId, int page,
+            int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "lastModified"));
         try {
             GraphStatus graphStatus = GraphStatus.valueOf(status.toUpperCase());
-            Page<KnowledgeGraph> graphs = graphRepository.findByUploaderIdAndStatus(uploaderId, graphStatus, pageable);
+            Page<KnowledgeGraph> graphs;
+            if (categoryId != null) {
+                graphs = graphRepository.findByUploaderIdAndStatusAndCategoryId(uploaderId, graphStatus, categoryId,
+                        pageable);
+            } else {
+                graphs = graphRepository.findByUploaderIdAndStatus(uploaderId, graphStatus, pageable);
+            }
             String uploaderName = getUserName(uploaderId);
             return graphs.map(g -> convertToListDto(g, uploaderName));
         } catch (IllegalArgumentException e) {
@@ -161,18 +187,42 @@ public class GraphService {
      * 获取公开图谱列表（已发布状态）
      */
     public Page<GraphListDto> getPublicGraphs(int page, int size, String sortBy) {
+        return getPublicGraphs(page, size, sortBy, null);
+    }
+
+    public Page<GraphListDto> getPublicGraphs(int page, int size, String sortBy, Integer categoryId) {
         Pageable pageable = createPageable(page, size, sortBy);
-        Page<KnowledgeGraph> graphs = graphRepository.findByStatus(GraphStatus.PUBLISHED, pageable);
+        Page<KnowledgeGraph> graphs;
+        if (categoryId != null) {
+            graphs = graphRepository.findByStatusAndCategoryId(GraphStatus.PUBLISHED, categoryId, pageable);
+        } else {
+            graphs = graphRepository.findByStatus(GraphStatus.PUBLISHED, pageable);
+        }
         return mapToGraphListDtos(graphs);
     }
 
     /**
-     * 搜索公开图谱
+     * 搜索公开图谱 (新版)
+     */
+    public Page<GraphListDto> searchPublicGraphs(com.sdu.kgplatform.dto.GraphSearchCriteria criteria,
+            Pageable pageable) {
+        // 创建 Specification
+        org.springframework.data.jpa.domain.Specification<KnowledgeGraph> spec = com.sdu.kgplatform.repository.GraphSpecification
+                .getSpec(criteria);
+        // 执行查询
+        Page<KnowledgeGraph> graphs = graphRepository.findAll(spec, pageable);
+        return mapToGraphListDtos(graphs);
+    }
+
+    /**
+     * 搜索公开图谱 (旧版 - 保留兼容)
      */
     public Page<GraphListDto> searchPublicGraphs(String keyword, int page, int size) {
+        // 复用新版逻辑
+        com.sdu.kgplatform.dto.GraphSearchCriteria criteria = new com.sdu.kgplatform.dto.GraphSearchCriteria();
+        criteria.setKeyword(keyword);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "viewCount"));
-        Page<KnowledgeGraph> graphs = graphRepository.searchPublicGraphs(keyword, pageable);
-        return mapToGraphListDtos(graphs);
+        return searchPublicGraphs(criteria, pageable);
     }
 
     /**
@@ -196,6 +246,29 @@ public class GraphService {
         return graphs.stream()
                 .map(g -> convertToListDto(g, userNames.getOrDefault(g.getUploaderId(), "未知用户")))
                 .toList();
+    }
+
+    /**
+     * 获取图谱可视化数据（轻量级 - 阶段一优化）
+     */
+    public Map<String, Object> getGraphVisualization(Integer graphId) {
+        KnowledgeGraph graph = graphRepository.findById(graphId)
+                .orElseThrow(() -> new IllegalArgumentException("图谱不存在: " + graphId));
+
+        // 1. 获取轻量级节点
+        List<com.sdu.kgplatform.dto.LiteNodeDto> nodes = nodeRepository.findLiteNodesByGraphId(graphId);
+
+        // 2. 获取轻量级关系
+        List<com.sdu.kgplatform.dto.LiteRelationshipDto> relations = relationshipRepository
+                .findLiteRelationshipsByGraphId(graphId);
+
+        // 3. 组装返回
+        return Map.of(
+                "nodes", nodes,
+                "links", relations,
+                "count", Map.of(
+                        "nodes", nodes.size(),
+                        "links", relations.size()));
     }
 
     // ==================== 更新图谱 ====================
@@ -239,6 +312,10 @@ public class GraphService {
             }
         }
 
+        if (dto.getCategoryId() != null) {
+            graph.setCategoryId(dto.getCategoryId());
+        }
+
         graph.setLastModified(LocalDateTime.now());
         KnowledgeGraph saved = graphRepository.save(graph);
         return convertToDetailDto(saved, getUserName(saved.getUploaderId()), getUserAvatar(saved.getUploaderId()));
@@ -246,6 +323,7 @@ public class GraphService {
 
     /**
      * 更新图谱封面
+     * 
      * @param isCustomCover true=用户上传的封面，false=自动生成的缩略图
      */
     @Transactional
@@ -255,6 +333,11 @@ public class GraphService {
 
         if (!graph.getUploaderId().equals(userId)) {
             throw new IllegalArgumentException("无权修改此图谱");
+        }
+
+        // 删除旧封面
+        if (graph.getCoverImage() != null) {
+            fileStorageService.deleteFile(graph.getCoverImage());
         }
 
         graph.setCoverImage(coverUrl);
@@ -305,7 +388,10 @@ public class GraphService {
         if (graph != null) {
             long nodeCount = nodeRepository.countByGraphId(graphId);
             graph.setNodeCount((int) nodeCount);
-            // 关系数需要 RelationshipRepository，暂时跳过
+
+            long relationCount = relationshipRepository.countByGraphId(graphId);
+            graph.setRelationCount((int) relationCount);
+
             graph.setLastModified(LocalDateTime.now());
             graphRepository.save(graph);
         }
@@ -342,6 +428,11 @@ public class GraphService {
         // 删除 Neo4j 中的节点（级联删除关系）
         nodeRepository.deleteByGraphId(graphId);
 
+        // 删除封面
+        if (graph.getCoverImage() != null) {
+            fileStorageService.deleteFile(graph.getCoverImage());
+        }
+
         // 删除图谱元数据
         graphRepository.delete(graph);
     }
@@ -355,6 +446,12 @@ public class GraphService {
                 .orElseThrow(() -> new IllegalArgumentException("图谱不存在: " + graphId));
 
         nodeRepository.deleteByGraphId(graphId);
+
+        // 删除封面
+        if (graph.getCoverImage() != null) {
+            fileStorageService.deleteFile(graph.getCoverImage());
+        }
+
         graphRepository.delete(graph);
     }
 
@@ -494,7 +591,8 @@ public class GraphService {
             sort = Sort.by(Sort.Direction.DESC, "lastModified");
         } else {
             switch (sortBy.toLowerCase()) {
-                case "views" -> sort = Sort.by(Sort.Direction.DESC, "viewCount");
+                case "views", "viewCount" -> sort = Sort.by(Sort.Direction.DESC, "viewCount");
+                case "hot" -> sort = Sort.by(Sort.Direction.DESC, "hotScore");
                 case "collects" -> sort = Sort.by(Sort.Direction.DESC, "collectCount");
                 case "name" -> sort = Sort.by(Sort.Direction.ASC, "name");
                 case "date" -> sort = Sort.by(Sort.Direction.DESC, "uploadDate");
@@ -530,7 +628,17 @@ public class GraphService {
                 .cachedFileFormat(graph.getCachedFileFormat() != null ? graph.getCachedFileFormat().name() : null)
                 .cachedGenerationDatetime(graph.getCachedGenerationDatetime())
                 .isCacheValid(graph.getIsCacheValid())
+                .categoryId(graph.getCategoryId())
+                .categoryName(getCategoryName(graph.getCategoryId()))
                 .build();
+    }
+
+    private String getCategoryName(Integer categoryId) {
+        if (categoryId == null)
+            return null;
+        return categoryRepository.findById(categoryId)
+                .map(com.sdu.kgplatform.entity.Category::getName)
+                .orElse(null);
     }
 
     private GraphListDto convertToListDto(KnowledgeGraph graph, String uploaderName) {
@@ -548,6 +656,47 @@ public class GraphService {
                 .collectCount(graph.getCollectCount())
                 .nodeCount(graph.getNodeCount())
                 .relationCount(graph.getRelationCount())
+                .categoryId(graph.getCategoryId())
+                .categoryName(getCategoryName(graph.getCategoryId()))
                 .build();
+    }
+
+    /**
+     * 更新所有图谱的热度分 (Hacker News 算法)
+     */
+    @Transactional
+    public void updateAllHotScores() {
+        List<KnowledgeGraph> allGraphs = graphRepository.findAll();
+        for (KnowledgeGraph graph : allGraphs) {
+            double score = calculateHotScore(graph);
+            graph.setHotScore(score);
+        }
+        graphRepository.saveAll(allGraphs);
+    }
+
+    private double calculateHotScore(KnowledgeGraph graph) {
+        // 1. 获取互动数据
+        long views = graph.getViewCount() == null ? 0 : graph.getViewCount();
+        long collects = graph.getCollectCount() == null ? 0 : graph.getCollectCount();
+        long downloads = graph.getDownloadCount() == null ? 0 : graph.getDownloadCount();
+
+        // 2. 计算互动总分 (权重: 收藏x5, 下载x3, 浏览x1)
+        double interactions = views * 1.0 + collects * 5.0 + downloads * 3.0;
+
+        // 3. 获取时间间隔 (小时)
+        // 使用上传时间作为基准 T
+        long hoursSinceUpload = 0;
+        if (graph.getUploadDate() != null) {
+            hoursSinceUpload = java.time.Duration.between(
+                    graph.getUploadDate().atStartOfDay(),
+                    LocalDateTime.now()).toHours();
+        }
+
+        // 防止新发布的图谱分母过小，加 2 是标准做法
+        // (Interactions + 1) 防止互动为0时分数完全一致，给新发布的图谱微弱优势
+        double t = Math.max(0, hoursSinceUpload) + 2.0;
+        double gravity = 1.8; // 重力因子
+
+        return (interactions + 1) / Math.pow(t, gravity);
     }
 }

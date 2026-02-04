@@ -20,14 +20,18 @@
                     <!-- Left Resize Handle -->
                     <div id="leftResizeHandle" class="resize-handle resize-handle-left"></div>
                     <!-- Left Sidebar Toggle Button -->
-                    <button id="leftSidebarToggle" class="sidebar-toggle" onclick="toggleLeftSidebar()" title="收起/展开左侧栏">
-                        <span class="iconify text-base-content" data-icon="heroicons:chevron-left" data-width="16" id="leftToggleIcon"></span>
+                    <button id="leftSidebarToggle" class="sidebar-toggle" onclick="toggleLeftSidebar()"
+                        title="收起/展开左侧栏">
+                        <span class="iconify text-base-content" data-icon="heroicons:chevron-left" data-width="16"
+                            id="leftToggleIcon"></span>
                     </button>
                     <div class="sidebar-content flex-1 flex flex-col overflow-y-auto">
                         <!-- Return Button -->
                         <div class="p-6 border-b academic-border">
-                            <a th:href="@{/graph/graph_list.html}" class="btn btn-ghost btn-sm w-full justify-start gap-2 focus-primary">
-                                <span class="iconify text-base-content" data-icon="heroicons:arrow-left" data-width="16"></span>
+                            <a th:href="@{/graph/graph_list.html}"
+                                class="btn btn-ghost btn-sm w-full justify-start gap-2 focus-primary">
+                                <span class="iconify text-base-content" data-icon="heroicons:arrow-left"
+                                    data-width="16"></span>
                                 返回图谱列表
                             </a>
                         </div>
@@ -44,16 +48,26 @@
                             </div>
                             <!-- Uploader Info -->
                             <div id="uploaderSection" class="flex items-center gap-3 p-3 bg-base-100 rounded-lg mb-4">
-                                <a id="uploaderLink" href="#" target="_top" class="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity">
-                                    <div id="uploaderAvatar" class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold text-sm">U</div>
+                                <a id="uploaderLink" href="#" target="_top"
+                                    class="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity">
+                                    <div id="uploaderAvatar"
+                                        class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold text-sm">
+                                        U</div>
                                     <div>
                                         <div class="text-sm font-medium" id="uploaderName">上传者</div>
                                         <div class="text-xs text-base-content/50">图谱创建者</div>
                                     </div>
                                 </a>
                             </div>
+                            <!-- Private Message Button -->
+                            <button id="graphMessageBtn" class="btn btn-outline btn-sm w-full mb-2 hidden"
+                                onclick="sendGraphPrivateMessage()">
+                                <span class="iconify" data-icon="heroicons:envelope" data-width="16"></span>
+                                私信图谱作者
+                            </button>
                             <!-- Create Post Button -->
-                            <button id="createPostBtn" class="btn btn-primary btn-sm w-full gap-2" onclick="createPostForGraph()">
+                            <button id="createPostBtn" class="btn btn-primary btn-sm w-full gap-2"
+                                onclick="createPostForGraph()">
                                 <span class="iconify" data-icon="heroicons:pencil-square" data-width="16"></span>
                                 发布相关帖子
                             </button>
@@ -63,24 +77,31 @@
                             <div class="collapse collapse-arrow bg-base-200">
                                 <input type="checkbox" id="graphSearchToggle">
                                 <div class="collapse-title text-sm font-medium flex items-center gap-2 py-4 px-6">
-                                    <span class="iconify text-primary" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                                    <span class="iconify text-primary" data-icon="heroicons:magnifying-glass"
+                                        data-width="16"></span>
                                     图谱内搜索
                                 </div>
                                 <div class="collapse-content px-6 pb-4">
                                     <div class="space-y-3">
                                         <div class="join w-full">
-                                            <select id="searchTargetSelect" class="select select-bordered select-sm join-item w-20" onchange="updateSearchPlaceholder()">
+                                            <select id="searchTargetSelect"
+                                                class="select select-bordered select-sm join-item w-20"
+                                                onchange="updateSearchPlaceholder()">
                                                 <option value="node">节点</option>
                                                 <option value="relation">关系</option>
                                             </select>
-                                            <input type="text" placeholder="搜索节点名称..." id="graphSearchInput" class="input input-bordered input-sm join-item flex-1 focus-primary">
+                                            <input type="text" placeholder="搜索节点名称..." id="graphSearchInput"
+                                                class="input input-bordered input-sm join-item flex-1 focus-primary">
                                             <button class="btn btn-primary btn-sm join-item" onclick="searchInGraph()">
-                                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                                                <span class="iconify" data-icon="heroicons:magnifying-glass"
+                                                    data-width="16"></span>
                                             </button>
                                         </div>
                                         <div class="form-control">
-                                            <label class="label py-1"><span class="label-text text-xs">筛选与排序</span></label>
-                                            <select id="searchTypeFilter" class="select select-bordered select-sm" onchange="handleFilterSort(this.value)">
+                                            <label class="label py-1"><span
+                                                    class="label-text text-xs">筛选与排序</span></label>
+                                            <select id="searchTypeFilter" class="select select-bordered select-sm"
+                                                onchange="handleFilterSort(this.value)">
                                                 <option value="">全部类型</option>
                                                 <optgroup label="排序方式">
                                                     <option value="sort_degree">按度数排序</option>
@@ -88,23 +109,30 @@
                                             </select>
                                         </div>
                                         <div class="form-control">
-                                            <label class="label py-1"><span class="label-text text-xs">路径查询</span></label>
-                                            <select id="pathQuerySelect" class="select select-bordered select-sm" onchange="handlePathQuery(this.value)">
+                                            <label class="label py-1"><span
+                                                    class="label-text text-xs">路径查询</span></label>
+                                            <select id="pathQuerySelect" class="select select-bordered select-sm"
+                                                onchange="handlePathQuery(this.value)">
                                                 <option value="">选择查询方式</option>
                                                 <option value="relation">关系寻路</option>
                                                 <option value="shortest">最短路径</option>
                                             </select>
                                         </div>
                                         <div class="form-control">
-                                            <label class="label py-1"><span class="label-text text-xs">邻居深度</span></label>
-                                            <input type="range" min="1" max="5" value="2" id="depthRange" class="range range-secondary range-sm">
+                                            <label class="label py-1"><span
+                                                    class="label-text text-xs">邻居深度</span></label>
+                                            <input type="range" min="1" max="5" value="2" id="depthRange"
+                                                class="range range-secondary range-sm">
                                             <div class="w-full flex justify-between text-xs px-2 text-base-content/60">
                                                 <span>1</span><span>3</span><span>5</span>
                                             </div>
                                         </div>
                                         <div class="form-control">
-                                            <label class="label py-1"><span class="label-text text-xs">邻居方向</span></label>
-                                            <select id="neighborDirectionSelect" class="select select-bordered select-sm" onchange="handleNeighborDirectionChange()">
+                                            <label class="label py-1"><span
+                                                    class="label-text text-xs">邻居方向</span></label>
+                                            <select id="neighborDirectionSelect"
+                                                class="select select-bordered select-sm"
+                                                onchange="handleNeighborDirectionChange()">
                                                 <option value="all">所有邻居</option>
                                                 <option value="out">出边邻居</option>
                                                 <option value="in">入边邻居</option>
@@ -113,13 +141,17 @@
                                         <!-- Search Results -->
                                         <div id="searchResultsPanel" class="hidden">
                                             <div class="flex items-center justify-between mb-2">
-                                                <span class="text-xs text-base-content/60">搜索结果 (<span id="searchResultCount">0</span>)</span>
-                                                <button class="btn btn-ghost btn-xs" onclick="resetGraphView()" title="恢复完整视图">
-                                                    <span class="iconify" data-icon="heroicons:arrow-path" data-width="12"></span>
+                                                <span class="text-xs text-base-content/60">搜索结果 (<span
+                                                        id="searchResultCount">0</span>)</span>
+                                                <button class="btn btn-ghost btn-xs" onclick="resetGraphView()"
+                                                    title="恢复完整视图">
+                                                    <span class="iconify" data-icon="heroicons:arrow-path"
+                                                        data-width="12"></span>
                                                     恢复
                                                 </button>
                                             </div>
-                                            <div id="searchResultList" class="max-h-40 overflow-y-auto space-y-1 bg-base-100 rounded-lg p-2 border academic-border">
+                                            <div id="searchResultList"
+                                                class="max-h-40 overflow-y-auto space-y-1 bg-base-100 rounded-lg p-2 border academic-border">
                                             </div>
                                         </div>
                                     </div>
@@ -131,7 +163,8 @@
                             <div class="collapse collapse-arrow bg-base-200">
                                 <input type="checkbox" id="entityTypeToggle">
                                 <div class="collapse-title text-sm font-medium flex items-center gap-2 py-4 px-6">
-                                    <span class="iconify text-primary" data-icon="heroicons:cube" data-width="16"></span>
+                                    <span class="iconify text-primary" data-icon="heroicons:cube"
+                                        data-width="16"></span>
                                     实体类型
                                 </div>
                                 <div class="collapse-content px-6 pb-4">
@@ -146,7 +179,8 @@
                             <div class="collapse collapse-arrow bg-base-200">
                                 <input type="checkbox" id="relationTypeToggle">
                                 <div class="collapse-title text-sm font-medium flex items-center gap-2 py-4 px-6">
-                                    <span class="iconify text-primary" data-icon="heroicons:arrow-right-circle" data-width="16"></span>
+                                    <span class="iconify text-primary" data-icon="heroicons:arrow-right-circle"
+                                        data-width="16"></span>
                                     关系类型
                                 </div>
                                 <div class="collapse-content px-6 pb-4">
@@ -161,31 +195,38 @@
                             <div class="collapse collapse-arrow bg-base-200">
                                 <input type="checkbox" id="nodeManagementToggle">
                                 <div class="collapse-title text-sm font-medium flex items-center gap-2 py-4 px-6">
-                                    <span class="iconify text-primary" data-icon="heroicons:cog-6-tooth" data-width="16"></span>
+                                    <span class="iconify text-primary" data-icon="heroicons:cog-6-tooth"
+                                        data-width="16"></span>
                                     图谱编辑
                                 </div>
                                 <div class="collapse-content px-6 pb-4">
                                     <div class="space-y-2">
                                         <div class="text-xs text-base-content/60 mb-3">节点操作</div>
-                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2" onclick="openBatchImportModal()">
-                                            <span class="iconify" data-icon="heroicons:arrow-up-tray" data-width="16"></span>
+                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2"
+                                            onclick="openBatchImportModal()">
+                                            <span class="iconify" data-icon="heroicons:arrow-up-tray"
+                                                data-width="16"></span>
                                             导入节点
                                         </button>
-                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2" onclick="openBatchDeleteModal()">
+                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2"
+                                            onclick="openBatchDeleteModal()">
                                             <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
                                             删除节点
                                         </button>
-                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2" onclick="openNeighborQueryModal()">
+                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2"
+                                            onclick="openNeighborQueryModal()">
                                             <span class="iconify" data-icon="heroicons:share" data-width="16"></span>
                                             邻居节点查询
                                         </button>
                                         <div class="divider my-2"></div>
                                         <div class="text-xs text-base-content/60 mb-3">关系操作</div>
-                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2" onclick="openAddRelationModal()">
+                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2"
+                                            onclick="openAddRelationModal()">
                                             <span class="iconify" data-icon="heroicons:link" data-width="16"></span>
                                             添加关系
                                         </button>
-                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2" onclick="openDeleteRelationModal()">
+                                        <button class="btn btn-outline btn-sm w-full justify-start gap-2"
+                                            onclick="openDeleteRelationModal()">
                                             <span class="iconify" data-icon="heroicons:scissors" data-width="16"></span>
                                             删除关系
                                         </button>
@@ -214,18 +255,24 @@
                         <!-- Graph Controls Overlay -->
                         <div class="absolute top-6 left-6 flex flex-col gap-3">
                             <div data-tip="放大" class="tooltip tooltip-right">
-                                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift" onclick="zoomIn()">
-                                    <span class="iconify text-base-content" data-icon="heroicons:plus" data-width="16"></span>
+                                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift"
+                                    onclick="zoomIn()">
+                                    <span class="iconify text-base-content" data-icon="heroicons:plus"
+                                        data-width="16"></span>
                                 </button>
                             </div>
                             <div data-tip="缩小" class="tooltip tooltip-right">
-                                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift" onclick="zoomOut()">
-                                    <span class="iconify text-base-content" data-icon="heroicons:minus" data-width="16"></span>
+                                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift"
+                                    onclick="zoomOut()">
+                                    <span class="iconify text-base-content" data-icon="heroicons:minus"
+                                        data-width="16"></span>
                                 </button>
                             </div>
                             <div data-tip="重置视图" class="tooltip tooltip-right">
-                                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift" onclick="resetView()">
-                                    <span class="iconify text-base-content" data-icon="heroicons:arrow-path" data-width="16"></span>
+                                <button class="btn btn-circle btn-sm bg-base-100/90 border academic-border hover-lift"
+                                    onclick="resetView()">
+                                    <span class="iconify text-base-content" data-icon="heroicons:arrow-path"
+                                        data-width="16"></span>
                                 </button>
                             </div>
                         </div>
@@ -236,21 +283,25 @@
                     <!-- Right Resize Handle -->
                     <div id="rightResizeHandle" class="resize-handle resize-handle-right"></div>
                     <!-- Right Sidebar Toggle Button -->
-                    <button id="rightSidebarToggle" class="sidebar-toggle" onclick="toggleRightSidebar()" title="收起/展开右侧栏">
-                        <span class="iconify text-base-content" data-icon="heroicons:chevron-right" data-width="16" id="rightToggleIcon"></span>
+                    <button id="rightSidebarToggle" class="sidebar-toggle" onclick="toggleRightSidebar()"
+                        title="收起/展开右侧栏">
+                        <span class="iconify text-base-content" data-icon="heroicons:chevron-right" data-width="16"
+                            id="rightToggleIcon"></span>
                     </button>
                     <div class="sidebar-content">
                         <!-- Header -->
                         <div class="p-4 border-b academic-border">
                             <h3 class="text-sm font-semibold text-base-content flex items-center gap-2">
-                                <span class="iconify text-primary" data-icon="heroicons:information-circle" data-width="18"></span>
+                                <span class="iconify text-primary" data-icon="heroicons:information-circle"
+                                    data-width="18"></span>
                                 节点详情
                             </h3>
                         </div>
                         <!-- Node Info Content -->
                         <div id="nodeDetailContent" class="p-4 flex-1 overflow-y-auto">
                             <div class="text-center text-base-content/50 py-8">
-                                <span class="iconify mx-auto mb-3" data-icon="heroicons:cursor-arrow-rays" data-width="32"></span>
+                                <span class="iconify mx-auto mb-3" data-icon="heroicons:cursor-arrow-rays"
+                                    data-width="32"></span>
                                 <p class="text-sm">点击图谱中的节点</p>
                                 <p class="text-xs mt-1">查看详细信息</p>
                             </div>
@@ -260,7 +311,8 @@
                 <!-- Right Action Panel -->
                 <div class="w-16 bg-base-200 border-l academic-border flex flex-col items-center py-6 gap-4">
                     <div data-tip="收藏图谱" class="tooltip tooltip-left">
-                        <button id="favoriteBtn" class="btn btn-circle btn-sm hover-lift focus-primary" onclick="toggleFavorite()">
+                        <button id="favoriteBtn" class="btn btn-circle btn-sm hover-lift focus-primary"
+                            onclick="toggleFavorite()">
                             <span class="iconify text-base-content" data-icon="heroicons:heart" data-width="20"></span>
                         </button>
                     </div>
@@ -271,12 +323,14 @@
                     </div>
                     <div data-tip="下载图谱" class="tooltip tooltip-left">
                         <button class="btn btn-circle btn-sm hover-lift focus-primary" onclick="downloadGraph()">
-                            <span class="iconify text-base-content" data-icon="heroicons:arrow-down-tray" data-width="20"></span>
+                            <span class="iconify text-base-content" data-icon="heroicons:arrow-down-tray"
+                                data-width="20"></span>
                         </button>
                     </div>
                     <div data-tip="全屏显示" class="tooltip tooltip-left">
                         <button class="btn btn-circle btn-sm hover-lift focus-primary" onclick="toggleFullscreen()">
-                            <span class="iconify text-base-content" data-icon="heroicons:arrows-pointing-out" data-width="20"></span>
+                            <span class="iconify text-base-content" data-icon="heroicons:arrows-pointing-out"
+                                data-width="20"></span>
                         </button>
                     </div>
                 </div>
@@ -286,7 +340,8 @@
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-lg font-semibold text-base-content">图谱统计概览</h2>
                     <button class="btn btn-ghost btn-sm" onclick="toggleStatistics()">
-                        <span class="iconify" data-icon="heroicons:chevron-up" data-width="16" id="statsToggleIcon"></span>
+                        <span class="iconify" data-icon="heroicons:chevron-up" data-width="16"
+                            id="statsToggleIcon"></span>
                     </button>
                 </div>
                 <div id="statisticsContent" class="space-y-6">
@@ -318,7 +373,8 @@
                                     <span id="selectedChartType">节点类型分布饼状图</span>
                                     <span class="iconify" data-icon="heroicons:chevron-down" data-width="16"></span>
                                 </button>
-                                <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-64 mt-2">
+                                <ul tabindex="0"
+                                    class="dropdown-content z-50 menu p-2 shadow bg-base-100 rounded-box w-64 mt-2">
                                     <li><a onclick="selectChart('nodeTypePie')">节点类型分布饼状图</a></li>
                                     <li><a onclick="selectChart('relationTypePie')">关系类型分布饼状图</a></li>
                                     <li><a onclick="selectChart('coreNodes')">核心节点排行榜</a></li>
@@ -328,7 +384,8 @@
                             </div>
                         </div>
                         <div id="chartContainer" class="h-64 bg-base-100 rounded flex items-center justify-center">
-                            <img alt="节点类型分布饼状图" class="rounded" data-src="placehold.co/400x240.png?text=Node+Type+Distribution+Pie+Chart">
+                            <img alt="节点类型分布饼状图" class="rounded"
+                                data-src="placehold.co/400x240.png?text=Node+Type+Distribution+Pie+Chart">
                         </div>
                     </div>
                 </div>
@@ -355,7 +412,8 @@
                     <div>
                         <label class="label"><span class="label-text">分享链接</span></label>
                         <div class="join w-full">
-                            <input type="text" id="shareLink" readonly="" value="" class="input input-bordered join-item flex-1">
+                            <input type="text" id="shareLink" readonly="" value=""
+                                class="input input-bordered join-item flex-1">
                             <button id="copyShareBtn" class="btn btn-primary join-item" onclick="copyShareLink()">
                                 <span class="iconify" data-icon="heroicons:clipboard-document" data-width="16"></span>
                                 复制
@@ -423,11 +481,13 @@
                         </div>
                         <div class="form-control">
                             <label class="label"><span class="label-text">节点类型</span></label>
-                            <input type="text" id="singleNodeType" class="input input-bordered" placeholder="输入节点类型（如：概念、算法等）">
+                            <input type="text" id="singleNodeType" class="input input-bordered"
+                                placeholder="输入节点类型（如：概念、算法等）">
                         </div>
                         <div class="form-control">
                             <label class="label"><span class="label-text">节点简介（可选）</span></label>
-                            <textarea id="singleNodeDescription" class="textarea textarea-bordered h-20" placeholder="输入节点的简介描述..."></textarea>
+                            <textarea id="singleNodeDescription" class="textarea textarea-bordered h-20"
+                                placeholder="输入节点的简介描述..."></textarea>
                         </div>
                     </div>
                     <div id="batchImportForm" class="space-y-3 hidden">
@@ -435,10 +495,12 @@
                             <span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>
                             <span>每行一个节点，格式: 节点名称,类型,简介</span>
                         </div>
-                        <textarea id="batchImportInput" class="textarea textarea-bordered w-full h-40" placeholder="节点1,概念,这是节点1的简介&#10;节点2,算法,这是节点2的简介"></textarea>
+                        <textarea id="batchImportInput" class="textarea textarea-bordered w-full h-40"
+                            placeholder="节点1,概念,这是节点1的简介&#10;节点2,算法,这是节点2的简介"></textarea>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button class="btn btn-ghost" onclick="document.getElementById('batchImportModal').close()">取消</button>
+                        <button class="btn btn-ghost"
+                            onclick="document.getElementById('batchImportModal').close()">取消</button>
                         <button class="btn btn-primary" onclick="executeImportNodes()">
                             <span class="iconify" data-icon="heroicons:plus" data-width="16"></span>
                             添加
@@ -468,7 +530,8 @@
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">搜索节点</span></label>
-                        <input type="text" id="deleteSearchInput" class="input input-bordered" placeholder="输入关键词筛选..." oninput="filterDeleteNodes()">
+                        <input type="text" id="deleteSearchInput" class="input input-bordered" placeholder="输入关键词筛选..."
+                            oninput="filterDeleteNodes()">
                     </div>
                     <div class="border rounded-lg p-3 max-h-60 overflow-y-auto">
                         <div id="deleteNodeList" class="space-y-2">
@@ -483,7 +546,8 @@
                         <span id="selectedDeleteCount" class="text-sm text-base-content/70">已选择 0 个节点</span>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button class="btn btn-ghost" onclick="document.getElementById('batchDeleteModal').close()">取消</button>
+                        <button class="btn btn-ghost"
+                            onclick="document.getElementById('batchDeleteModal').close()">取消</button>
                         <button class="btn btn-error" onclick="executeBatchDelete()">
                             <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
                             删除选中
@@ -507,7 +571,8 @@
                 <div class="space-y-4">
                     <div class="form-control">
                         <label class="label"><span class="label-text">选择目标节点</span></label>
-                        <input type="text" id="neighborTargetNodeInput" list="neighborTargetNodeList" class="input input-bordered w-full" placeholder="输入或选择节点...">
+                        <input type="text" id="neighborTargetNodeInput" list="neighborTargetNodeList"
+                            class="input input-bordered w-full" placeholder="输入或选择节点...">
                         <datalist id="neighborTargetNodeList"></datalist>
                     </div>
                     <div class="form-control">
@@ -519,7 +584,8 @@
                         </select>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button class="btn btn-ghost" onclick="document.getElementById('neighborQueryModal').close()">取消</button>
+                        <button class="btn btn-ghost"
+                            onclick="document.getElementById('neighborQueryModal').close()">取消</button>
                         <button class="btn btn-primary" onclick="executeNeighborQuery()">
                             <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
                             查询
@@ -551,20 +617,24 @@
                 <div id="singleRelationForm" class="space-y-4">
                     <div class="form-control">
                         <label class="label"><span class="label-text">源节点 *</span></label>
-                        <input type="text" id="newRelationSourceInput" list="newRelationSourceList" class="input input-bordered w-full" placeholder="输入或选择源节点..." required>
+                        <input type="text" id="newRelationSourceInput" list="newRelationSourceList"
+                            class="input input-bordered w-full" placeholder="输入或选择源节点..." required>
                         <datalist id="newRelationSourceList"></datalist>
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">目标节点 *</span></label>
-                        <input type="text" id="newRelationTargetInput" list="newRelationTargetList" class="input input-bordered w-full" placeholder="输入或选择目标节点..." required>
+                        <input type="text" id="newRelationTargetInput" list="newRelationTargetList"
+                            class="input input-bordered w-full" placeholder="输入或选择目标节点..." required>
                         <datalist id="newRelationTargetList"></datalist>
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">关系类型</span></label>
-                        <input type="text" id="newRelationType" class="input input-bordered" placeholder="输入关系类型（如：包含、依赖等）" value="关联">
+                        <input type="text" id="newRelationType" class="input input-bordered"
+                            placeholder="输入关系类型（如：包含、依赖等）" value="关联">
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button class="btn btn-ghost" onclick="document.getElementById('addRelationModal').close()">取消</button>
+                        <button class="btn btn-ghost"
+                            onclick="document.getElementById('addRelationModal').close()">取消</button>
                         <button class="btn btn-primary" onclick="executeAddRelation()">
                             <span class="iconify" data-icon="heroicons:link" data-width="16"></span>
                             添加
@@ -578,7 +648,8 @@
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">批量关系数据</span></label>
-                        <textarea id="batchRelationInput" class="textarea textarea-bordered h-40 font-mono text-sm" placeholder="示例：&#10;张三,李四,朋友&#10;北京,中国,属于"></textarea>
+                        <textarea id="batchRelationInput" class="textarea textarea-bordered h-40 font-mono text-sm"
+                            placeholder="示例：&#10;张三,李四,朋友&#10;北京,中国,属于"></textarea>
                     </div>
                     <div id="batchRelationPreview" class="border rounded-lg p-3 max-h-40 overflow-y-auto hidden">
                         <div class="text-xs text-base-content/60 mb-2">预览（将添加以下关系）：</div>
@@ -590,7 +661,8 @@
                             预览
                         </button>
                         <div class="flex gap-2">
-                            <button class="btn btn-ghost" onclick="document.getElementById('addRelationModal').close()">取消</button>
+                            <button class="btn btn-ghost"
+                                onclick="document.getElementById('addRelationModal').close()">取消</button>
                             <button class="btn btn-primary" onclick="executeBatchAddRelations()">
                                 <span class="iconify" data-icon="heroicons:plus-circle" data-width="16"></span>
                                 批量添加
@@ -615,13 +687,15 @@
                 <div class="space-y-4">
                     <div class="form-control">
                         <label class="label"><span class="label-text">按关系类型筛选</span></label>
-                        <select id="deleteRelationTypeFilter" class="select select-bordered" onchange="filterDeleteRelations()">
+                        <select id="deleteRelationTypeFilter" class="select select-bordered"
+                            onchange="filterDeleteRelations()">
                             <option value="">全部类型</option>
                         </select>
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">搜索关系</span></label>
-                        <input type="text" id="deleteRelationSearchInput" class="input input-bordered" placeholder="输入节点名称筛选..." oninput="filterDeleteRelations()">
+                        <input type="text" id="deleteRelationSearchInput" class="input input-bordered"
+                            placeholder="输入节点名称筛选..." oninput="filterDeleteRelations()">
                     </div>
                     <div class="border rounded-lg p-3 max-h-60 overflow-y-auto">
                         <div id="deleteRelationList" class="space-y-2">
@@ -636,10 +710,43 @@
                         <span id="selectedDeleteRelationCount" class="text-sm text-base-content/70">已选择 0 个关系</span>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button class="btn btn-ghost" onclick="document.getElementById('deleteRelationModal').close()">取消</button>
+                        <button class="btn btn-ghost"
+                            onclick="document.getElementById('deleteRelationModal').close()">取消</button>
                         <button class="btn btn-error" onclick="executeBatchDeleteRelations()">
                             <span class="iconify" data-icon="heroicons:trash" data-width="16"></span>
                             删除选中
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
+        <!-- Send Message Modal -->
+        <dialog id="sendMessageModal" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg mb-4">
+                    <span class="iconify inline-block mr-2" data-icon="heroicons:paper-airplane" data-width="20"></span>
+                    发送私信
+                </h3>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">收信人</span></label>
+                        <input type="text" id="msgRecipientName" class="input input-bordered bg-base-200" readonly>
+                        <input type="hidden" id="msgRecipientId">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">消息内容</span></label>
+                        <textarea id="msgContent" class="textarea textarea-bordered h-32"
+                            placeholder="写下你想说的话..."></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button class="btn btn-primary" onclick="executeSendMessage()">
+                            <span class="iconify" data-icon="heroicons:paper-airplane" data-width="16"></span>
+                            发送
                         </button>
                     </div>
                 </div>
@@ -669,10 +776,12 @@
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">节点简介</span></label>
-                        <textarea id="editNodeDescription" class="textarea textarea-bordered h-24" placeholder="输入节点的简介描述..."></textarea>
+                        <textarea id="editNodeDescription" class="textarea textarea-bordered h-24"
+                            placeholder="输入节点的简介描述..."></textarea>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button class="btn btn-ghost" onclick="document.getElementById('editNodeModal').close()">取消</button>
+                        <button class="btn btn-ghost"
+                            onclick="document.getElementById('editNodeModal').close()">取消</button>
                         <button class="btn btn-primary" onclick="executeEditNode()">
                             <span class="iconify" data-icon="heroicons:check" data-width="16"></span>
                             保存
@@ -692,7 +801,7 @@
         <script th:src="@{/js/graph/graph-detail-search.js}"></script>
         <script th:src="@{/js/graph/graph-detail-query.js}"></script>
         <script th:src="@{/js/graph/graph-detail-edit.js}"></script>
-        
+
         <!-- Page-specific JS will be loaded from external file -->
         <script th:src="@{/js/graph-detail-page.js}"></script>
     </th:block>

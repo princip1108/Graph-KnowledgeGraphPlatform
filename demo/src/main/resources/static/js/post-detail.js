@@ -443,8 +443,22 @@ async function toggleFollow() {
     } catch (e) { showToast('操作失败', 'error'); }
 }
 
+window.sendPrivateMessage = function () {
+    if (!currentUser) { showToast('请先登录', 'warning'); return; }
+    if (!authorId) return;
+    const authorName = document.getElementById('sidebarAuthorName').textContent;
+    window.location.href = `/user/profile.html?section=messages&targetUserId=${authorId}&targetUserName=${encodeURIComponent(authorName)}`;
+}
+
 async function checkFollowStatus(userId) {
     if (!userId || !currentUser) return;
+
+    // Show Message Button if not self
+    if (currentUser.userId !== userId) {
+        const msgBtn = document.getElementById('messageBtn');
+        if (msgBtn) msgBtn.style.display = '';
+    }
+
     try {
         const res = await fetch('/api/users/' + userId + '/follow/status', { credentials: 'include' });
         const data = await res.json();

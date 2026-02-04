@@ -76,6 +76,13 @@ public interface NodeRepository extends Neo4jRepository<NodeEntity, Long> {
      * 查找两个节点之间的最短路径
      */
     @Query("MATCH path = shortestPath((a:Entity)-[:RELATES_TO*]-(b:Entity)) " +
-           "WHERE a.nodeId = $startNodeId AND b.nodeId = $endNodeId RETURN path")
+            "WHERE a.nodeId = $startNodeId AND b.nodeId = $endNodeId RETURN path")
     List<NodeEntity> findShortestPath(String startNodeId, String endNodeId);
+
+    /**
+     * 获取轻量级节点列表 (可视化专用)
+     */
+    @Query("MATCH (n:Entity) WHERE n.graphId = $graphId " +
+            "RETURN n.nodeId as nodeId, n.name as name, n.type as type")
+    List<com.sdu.kgplatform.dto.LiteNodeDto> findLiteNodesByGraphId(Integer graphId);
 }

@@ -20,12 +20,18 @@
                     <div class="mb-8">
                         <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">用户管理</h3>
                         <nav class="space-y-2 sidebar-nav">
-                            <a data-section="graph-batch" class="nav-item active flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('graph-batch')">
-                                <span class="iconify text-primary" data-icon="heroicons:squares-2x2" data-width="20"></span>
+                            <a data-section="graph-batch"
+                                class="nav-item active flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
+                                onclick="showSection('graph-batch')">
+                                <span class="iconify text-primary" data-icon="heroicons:squares-2x2"
+                                    data-width="20"></span>
                                 <span>图谱批量管理</span>
                             </a>
-                            <a data-section="post-batch" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('post-batch')">
-                                <span class="iconify text-primary" data-icon="heroicons:document-text" data-width="20"></span>
+                            <a data-section="post-batch"
+                                class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
+                                onclick="showSection('post-batch')">
+                                <span class="iconify text-primary" data-icon="heroicons:document-text"
+                                    data-width="20"></span>
                                 <span>帖子批量管理</span>
                             </a>
                         </nav>
@@ -33,19 +39,25 @@
                     <div id="admin-section" class="mb-8" style="display: none;">
                         <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">管理员管理</h3>
                         <nav class="space-y-2 sidebar-nav">
-                            <a data-section="user-permission" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('user-permission')">
-                                <span class="iconify text-primary" data-icon="heroicons:user-group" data-width="20"></span>
+                            <a data-section="user-permission"
+                                class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
+                                onclick="showSection('user-permission')">
+                                <span class="iconify text-primary" data-icon="heroicons:user-group"
+                                    data-width="20"></span>
                                 <span>用户权限管理</span>
                             </a>
-                            <a data-section="forum-management" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer" onclick="showSection('forum-management')">
-                                <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right" data-width="20"></span>
+                            <a data-section="forum-management"
+                                class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
+                                onclick="showSection('forum-management')">
+                                <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right"
+                                    data-width="20"></span>
                                 <span>论坛管理</span>
                             </a>
                         </nav>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Content Area -->
             <div class="flex-1 p-8">
                 <!-- Graph Batch Section -->
@@ -70,12 +82,15 @@
                     </div>
                     <div class="flex gap-4 mb-6">
                         <div class="join flex-1">
-                            <input id="searchInput" type="text" placeholder="搜索图谱名称..." class="input input-bordered join-item flex-1" onkeypress="if(event.key==='Enter') performSearch()">
+                            <input id="searchInput" type="text" placeholder="搜索图谱名称..."
+                                class="input input-bordered join-item flex-1"
+                                onkeypress="if(event.key==='Enter') performSearch()">
                             <button class="btn join-item btn-primary" onclick="performSearch()">
                                 <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
                             </button>
                         </div>
-                        <select id="statusFilter" class="select select-bordered w-48" onchange="filterByStatus(this.value)">
+                        <select id="statusFilter" class="select select-bordered w-48"
+                            onchange="filterByStatus(this.value)">
                             <option value="all">全部状态</option>
                             <option value="PUBLISHED">已上线</option>
                             <option value="DRAFT">草稿</option>
@@ -86,7 +101,8 @@
                         <table class="table">
                             <thead>
                                 <tr class="bg-base-200">
-                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="selectAll"
+                                            onchange="toggleSelectAll(this)"></th>
                                     <th>图谱信息</th>
                                     <th>状态</th>
                                     <th>上传日期</th>
@@ -95,7 +111,11 @@
                                 </tr>
                             </thead>
                             <tbody id="graphTableBody">
-                                <tr><td colspan="6" class="text-center py-8 text-base-content/60"><span class="loading loading-spinner loading-md"></span><span class="ml-2">加载中...</span></td></tr>
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-base-content/60"><span
+                                            class="loading loading-spinner loading-md"></span><span
+                                            class="ml-2">加载中...</span></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -104,7 +124,7 @@
                         <div id="paginationButtons" class="join"></div>
                     </div>
                 </div>
-                
+
                 <!-- Post Batch Section -->
                 <div id="post-batch-section" class="content-section">
                     <div class="mb-6">
@@ -127,12 +147,15 @@
                     </div>
                     <div class="flex gap-4 mb-6">
                         <div class="join flex-1">
-                            <input id="postSearchInput" type="text" placeholder="搜索帖子标题..." class="input input-bordered join-item flex-1" onkeypress="if(event.key==='Enter') performPostSearch()">
+                            <input id="postSearchInput" type="text" placeholder="搜索帖子标题..."
+                                class="input input-bordered join-item flex-1"
+                                onkeypress="if(event.key==='Enter') performPostSearch()">
                             <button class="btn join-item btn-primary" onclick="performPostSearch()">
                                 <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
                             </button>
                         </div>
-                        <select id="postStatusFilter" class="select select-bordered w-48" onchange="filterPostsByStatus(this.value)">
+                        <select id="postStatusFilter" class="select select-bordered w-48"
+                            onchange="filterPostsByStatus(this.value)">
                             <option value="all">全部状态</option>
                             <option value="已发布">已发布</option>
                             <option value="草稿">草稿</option>
@@ -142,7 +165,8 @@
                         <table class="table">
                             <thead>
                                 <tr class="bg-base-200">
-                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="postSelectAll" onchange="togglePostSelectAll(this)"></th>
+                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="postSelectAll"
+                                            onchange="togglePostSelectAll(this)"></th>
                                     <th>帖子信息</th>
                                     <th>状态</th>
                                     <th>发布日期</th>
@@ -151,40 +175,46 @@
                                 </tr>
                             </thead>
                             <tbody id="postTableBody">
-                                <tr><td colspan="6" class="text-center py-8 text-base-content/60">加载中...</td></tr>
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-base-content/60">加载中...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-                
+
                 <!-- User Permission Section -->
                 <div id="user-permission-section" class="content-section">
                     <div class="mb-6">
                         <h1 class="text-2xl font-bold text-base-content mb-2">用户权限管理</h1>
                         <p class="text-base-content/70">管理用户角色和权限</p>
                     </div>
-                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>此功能仅管理员可用</div>
+                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle"
+                            data-width="20"></span>此功能仅管理员可用</div>
                 </div>
-                
+
                 <!-- Forum Management Section -->
                 <div id="forum-management-section" class="content-section">
                     <div class="mb-6">
                         <h1 class="text-2xl font-bold text-base-content mb-2">论坛管理</h1>
                         <p class="text-base-content/70">管理论坛帖子和评论</p>
                     </div>
-                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle" data-width="20"></span>此功能仅管理员可用</div>
+                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle"
+                            data-width="20"></span>此功能仅管理员可用</div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Upload Modal -->
         <dialog id="uploadModal" class="modal">
             <div class="modal-box">
                 <h3 class="font-bold text-lg mb-4">上传图谱</h3>
                 <form id="uploadForm" class="space-y-4">
                     <div class="form-control">
-                        <label class="label"><span class="label-text">图谱文件 <span class="text-error">*</span></span></label>
-                        <input type="file" id="graphFile" accept=".json" class="file-input file-input-bordered w-full" required>
+                        <label class="label"><span class="label-text">图谱文件 <span
+                                    class="text-error">*</span></span></label>
+                        <input type="file" id="graphFile" accept=".json" class="file-input file-input-bordered w-full"
+                            required>
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">图谱名称</span></label>
@@ -192,7 +222,8 @@
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">描述</span></label>
-                        <textarea id="graphDescription" placeholder="输入图谱描述" class="textarea textarea-bordered h-24"></textarea>
+                        <textarea id="graphDescription" placeholder="输入图谱描述"
+                            class="textarea textarea-bordered h-24"></textarea>
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">状态</span></label>
@@ -204,8 +235,10 @@
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">封面图片</span></label>
-                        <input type="file" id="graphCover" accept="image/*" class="file-input file-input-bordered w-full" onchange="previewCover(this)">
-                        <div id="coverPreview" class="hidden mt-2"><img id="coverPreviewImg" class="cover-preview" alt="封面预览"></div>
+                        <input type="file" id="graphCover" accept="image/*"
+                            class="file-input file-input-bordered w-full" onchange="previewCover(this)">
+                        <div id="coverPreview" class="hidden mt-2"><img id="coverPreviewImg" class="cover-preview"
+                                alt="封面预览"></div>
                     </div>
                 </form>
                 <div class="modal-action">
@@ -215,7 +248,7 @@
             </div>
             <form method="dialog" class="modal-backdrop"><button>close</button></form>
         </dialog>
-        
+
         <!-- Edit Post Modal -->
         <dialog id="editPostModal" class="modal">
             <div class="modal-box">
@@ -223,7 +256,8 @@
                 <form id="editPostForm" class="space-y-4">
                     <input type="hidden" id="editPostId">
                     <div class="form-control">
-                        <label class="label"><span class="label-text">帖子标题 <span class="text-error">*</span></span></label>
+                        <label class="label"><span class="label-text">帖子标题 <span
+                                    class="text-error">*</span></span></label>
                         <input type="text" id="editPostTitle" class="input input-bordered" required>
                     </div>
                     <div class="form-control">
@@ -245,7 +279,7 @@
             </div>
             <form method="dialog" class="modal-backdrop"><button>close</button></form>
         </dialog>
-        
+
         <!-- Edit Modal -->
         <dialog id="editModal" class="modal">
             <div class="modal-box">
@@ -253,7 +287,8 @@
                 <form id="editForm" class="space-y-4">
                     <input type="hidden" id="editGraphId">
                     <div class="form-control">
-                        <label class="label"><span class="label-text">图谱名称 <span class="text-error">*</span></span></label>
+                        <label class="label"><span class="label-text">图谱名称 <span
+                                    class="text-error">*</span></span></label>
                         <input type="text" id="editGraphName" class="input input-bordered" required>
                     </div>
                     <div class="form-control">
@@ -271,9 +306,11 @@
                     <div class="form-control">
                         <label class="label"><span class="label-text">封面图片</span></label>
                         <div id="editCoverPreview" class="mb-2">
-                            <img id="editCoverPreviewImg" class="w-full max-w-xs h-32 object-cover rounded-lg border" alt="当前封面">
+                            <img id="editCoverPreviewImg" class="w-full max-w-xs h-32 object-cover rounded-lg border"
+                                alt="当前封面">
                         </div>
-                        <input type="file" id="editGraphCover" accept="image/*" class="file-input file-input-bordered w-full" onchange="previewEditCover(this)">
+                        <input type="file" id="editGraphCover" accept="image/*"
+                            class="file-input file-input-bordered w-full" onchange="previewEditCover(this)">
                         <p class="text-xs text-base-content/60 mt-1">上传新封面将覆盖当前封面，且不会被自动缩略图替换</p>
                     </div>
                 </form>

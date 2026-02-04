@@ -3,7 +3,7 @@
  * 图谱详情页核心模块 - 初始化、数据加载、状态管理
  */
 
-(function() {
+(function () {
     'use strict';
 
     // Graph state management - 全局变量供外部JS访问
@@ -29,25 +29,25 @@
             if (window.parent && window.parent.location) {
                 url = window.parent.location.href;
             }
-        } catch(e) { /* cross-origin, use current */ }
-        
+        } catch (e) { /* cross-origin, use current */ }
+
         const urlParams = new URLSearchParams(url.split('?')[1] || '');
         return {
             id: urlParams.get('id'),
             share: urlParams.get('share')
         };
     }
-    
+
     // 兼容旧函数
     function getGraphIdFromUrl() {
         return getGraphParamsFromUrl().id;
     }
-    
+
     // 获取当前图谱ID（优先从 currentGraphData，否则从 URL）
-    window.getCurrentGraphId = function() {
+    window.getCurrentGraphId = function () {
         return window.currentGraphData.id || getGraphIdFromUrl();
     };
-    
+
     // 根据分享链接加载图谱
     async function loadGraphByShareLink(shareLink) {
         try {
@@ -69,7 +69,7 @@
         if (!graphId) {
             return null;
         }
-        
+
         try {
             // Load graph metadata
             const graphResponse = await fetch(`/api/graph/${graphId}?incrementView=true`);
@@ -77,15 +77,14 @@
                 throw new Error('Failed to load graph');
             }
             const graphInfo = await graphResponse.json();
-            
-            // Load nodes
-            const nodesResponse = await fetch(`/api/graph/${graphId}/nodes`);
-            const nodesData = nodesResponse.ok ? await nodesResponse.json() : { nodes: [] };
-            
-            // Load relations
-            const relationsResponse = await fetch(`/api/graph/${graphId}/relations`);
-            const relationsData = relationsResponse.ok ? await relationsResponse.json() : { relations: [] };
-            
+
+            // Load nodes and relations via optimized visualization endpoint
+            const vizResponse = await fetch(`/api/graph/${graphId}/visualization`);
+            const vizData = vizResponse.ok ? await vizResponse.json() : { nodes: [], links: [] };
+
+            const nodesData = { nodes: vizData.nodes || [] };
+            const relationsData = { relations: vizData.links || [] };
+
             // Check edit permission
             let canEdit = false;
             try {
@@ -97,7 +96,7 @@
             } catch (e) {
                 // Permission check failed, defaulting to no edit
             }
-            
+
             return {
                 id: graphId,
                 name: graphInfo.name || '未命名图谱',
@@ -125,55 +124,55 @@
     // Update page UI with graph data
     function updatePageWithGraphData(data) {
         if (!data) return;
-        
+
         Object.assign(window.currentGraphData, data);
-        
+
         // Update title
         const titleEl = document.getElementById('graphTitle');
         if (titleEl) titleEl.textContent = data.name || '未命名图谱';
-        
+
         // Update description
         const descEl = document.getElementById('graphDescription');
         if (descEl) descEl.textContent = data.description || '暂无描述';
-        
+
         // Update tags container
         updateGraphTags(data);
-        
+
         // Update entity type filters from actual data
         updateEntityTypeFiltersFromData(data.nodes || []);
-        
+
         // Update relationship type filters from actual data
         updateRelationshipTypeFiltersFromData(data.edges || []);
-        
+
         // Update search type filter options
         if (window.updateSearchTypeFilter) {
             window.updateSearchTypeFilter(data.nodes || []);
         }
-        
+
         // Update statistics
         updateStatistics(data);
-        
+
         // Show/hide node management section based on edit permission
         const nodeManagementSection = document.getElementById('nodeManagementSection');
         if (nodeManagementSection) {
             nodeManagementSection.style.display = data.canEdit ? 'block' : 'none';
         }
-        
+
         // Update uploader info
         updateUploaderInfo(data);
     }
     window.updatePageWithGraphData = updatePageWithGraphData;
-    
+
     // Update uploader info
     function updateUploaderInfo(data) {
         const uploaderNameEl = document.getElementById('uploaderName');
         const uploaderAvatarEl = document.getElementById('uploaderAvatar');
         const uploaderLink = document.getElementById('uploaderLink');
-        
+
         if (data.uploaderName) {
             if (uploaderNameEl) uploaderNameEl.textContent = data.uploaderName;
         }
-        
+
         if (uploaderAvatarEl) {
             if (data.uploaderAvatar) {
                 uploaderAvatarEl.innerHTML = '<img src="' + data.uploaderAvatar + '" class="w-full h-full rounded-full object-cover" alt="" />';
@@ -181,34 +180,34 @@
                 uploaderAvatarEl.textContent = data.uploaderName.charAt(0).toUpperCase();
             }
         }
-        
+
         if (data.uploaderId && uploaderLink) {
             uploaderLink.href = '/user/profile.html?id=' + data.uploaderId;
         }
     }
-    
+
     // Create post for this graph
-    window.createPostForGraph = function() {
+    window.createPostForGraph = function () {
         const graphId = getCurrentGraphId();
         const graphName = document.getElementById('graphTitle')?.textContent || '';
         window.top.location.href = '/community/post_edit.html?graphId=' + graphId + '&graphName=' + encodeURIComponent(graphName);
     };
-    
+
     // Update graph tags dynamically
     function updateGraphTags(data) {
         const tagsContainer = document.getElementById('graphTags');
         if (!tagsContainer) return;
-        
+
         const nodeTypes = new Set();
         (data.nodes || []).forEach(node => {
             if (node.type) nodeTypes.add(node.type);
         });
-        
+
         if (nodeTypes.size === 0) {
             tagsContainer.innerHTML = '<div class="badge badge-ghost badge-sm">暂无标签</div>';
             return;
         }
-        
+
         const colors = ['primary', 'secondary', 'accent', 'info'];
         let html = '';
         let colorIndex = 0;
@@ -218,23 +217,23 @@
         });
         tagsContainer.innerHTML = html;
     }
-    
+
     // Update entity type filters from actual node data
     function updateEntityTypeFiltersFromData(nodes) {
         const container = document.getElementById('entityTypeFilters');
         if (!container) return;
-        
+
         const typeCounts = {};
         nodes.forEach(node => {
             const type = node.type || '未分类';
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
-        
+
         if (Object.keys(typeCounts).length === 0) {
             container.innerHTML = '<div class="text-sm text-base-content/50">暂无节点类型数据</div>';
             return;
         }
-        
+
         let html = '';
         Object.entries(typeCounts).forEach(([type, count]) => {
             html += `<label class="label cursor-pointer justify-start gap-3 py-1">
@@ -243,28 +242,28 @@
             </label>`;
         });
         container.innerHTML = html;
-        
+
         container.querySelectorAll('.entity-type-checkbox').forEach(cb => {
             cb.addEventListener('change', updateNodeVisibilityByType);
         });
     }
-    
+
     // Update relationship type filters from actual edge data
     function updateRelationshipTypeFiltersFromData(edges) {
         const container = document.getElementById('relationTypeFilters');
         if (!container) return;
-        
+
         const typeCounts = {};
         edges.forEach(edge => {
             const type = edge.type || '关联';
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
-        
+
         if (Object.keys(typeCounts).length === 0) {
             container.innerHTML = '<div class="text-sm text-base-content/50">暂无关系类型数据</div>';
             return;
         }
-        
+
         let html = '';
         Object.entries(typeCounts).forEach(([type, count]) => {
             html += `<label class="label cursor-pointer justify-start gap-3 py-1">
@@ -273,39 +272,39 @@
             </label>`;
         });
         container.innerHTML = html;
-        
+
         container.querySelectorAll('.relation-type-checkbox').forEach(cb => {
             cb.addEventListener('change', updateEdgeVisibilityByType);
         });
     }
-    
+
     // Update node visibility based on type filters
     function updateNodeVisibilityByType() {
         const checkedTypes = [];
         document.querySelectorAll('.entity-type-checkbox:checked').forEach(cb => {
             checkedTypes.push(cb.getAttribute('data-entity-type'));
         });
-        
+
         document.querySelectorAll('.graph-node').forEach(node => {
             const nodeType = node.getAttribute('data-node-type') || '未分类';
             node.style.opacity = checkedTypes.includes(nodeType) ? '1' : '0.2';
         });
     }
-    
+
     // Update edge visibility based on type filters
     function updateEdgeVisibilityByType() {
         const checkedTypes = [];
         document.querySelectorAll('.relation-type-checkbox:checked').forEach(cb => {
             checkedTypes.push(cb.getAttribute('data-relation-type'));
         });
-        
+
         const highlightedNodeIds = new Set();
-        
+
         document.querySelectorAll('.graph-edge').forEach(edge => {
             const edgeType = edge.getAttribute('data-edge-type') || '关联';
             const isVisible = checkedTypes.includes(edgeType);
             edge.style.opacity = isVisible ? '0.7' : '0.1';
-            
+
             if (isVisible) {
                 const sourceId = edge.getAttribute('data-edge-source');
                 const targetId = edge.getAttribute('data-edge-target');
@@ -313,7 +312,7 @@
                 if (targetId) highlightedNodeIds.add(targetId);
             }
         });
-        
+
         document.querySelectorAll('.edge-label').forEach(label => {
             const sourceId = label.getAttribute('data-label-source');
             const targetId = label.getAttribute('data-label-target');
@@ -323,12 +322,12 @@
                 label.style.opacity = checkedTypes.includes(edgeType) ? '1' : '0.1';
             }
         });
-        
+
         document.querySelectorAll('.graph-node').forEach(node => {
             const nodeId = node.getAttribute('data-node-id');
             node.style.opacity = highlightedNodeIds.has(nodeId) ? '1' : '0.2';
         });
-        
+
         document.querySelectorAll('[data-label-for]').forEach(label => {
             const nodeId = label.getAttribute('data-label-for');
             label.style.opacity = highlightedNodeIds.has(nodeId) ? '1' : '0.2';
@@ -353,7 +352,7 @@
     function initializeGraph() {
         setTimeout(() => {
             const canvas = document.getElementById('graphCanvas');
-            
+
             if (window.currentGraphData.nodes && window.currentGraphData.nodes.length > 0) {
                 if (window.bindaoRenderGraph) {
                     window.bindaoRenderGraph();
@@ -388,22 +387,22 @@
     }
 
     // Initialize page
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', async function () {
         const params = getGraphParamsFromUrl();
         let data = null;
-        
+
         if (params.share) {
             data = await loadGraphByShareLink(params.share);
         } else if (params.id) {
             data = await loadGraphData(params.id);
         }
-        
+
         if (data) {
             updatePageWithGraphData(data);
         }
-        
+
         initializeGraph();
-        
+
         // Initialize other modules if available
         if (window.updateFavoriteButton) window.updateFavoriteButton();
         if (window.setupSearchFunctionality) window.setupSearchFunctionality();

@@ -22,4 +22,11 @@ public interface FileStorageService {
      * 获取上传根目录
      */
     Path getUploadPath();
+
+    /**
+     * 删除文件
+     * 
+     * @param fileUrl 文件的访问URL
+     */
+    void deleteFile(String fileUrl);
 }

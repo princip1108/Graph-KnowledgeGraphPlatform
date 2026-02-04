@@ -3,7 +3,7 @@
  * 管理中心页面 JavaScript 模块
  */
 
-(function() {
+(function () {
     'use strict';
 
     // State
@@ -12,7 +12,7 @@
     let statusFilter = 'all', postStatusFilter = 'all';
     let searchQuery = '', postSearchQuery = '';
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         checkAdminAccess();
         showSection('graph-batch');
         loadUserGraphs();
@@ -30,7 +30,7 @@
             });
     }
 
-    window.showSection = function(sectionName) {
+    window.showSection = function (sectionName) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
 
@@ -42,6 +42,7 @@
 
         if (sectionName === 'graph-batch') loadUserGraphs();
         else if (sectionName === 'post-batch') loadUserPosts();
+        else if (sectionName === 'message-management') loadAllMessages();
     };
 
     // Graph Management
@@ -67,12 +68,12 @@
         renderGraphTable();
     }
 
-    window.performSearch = function() {
+    window.performSearch = function () {
         searchQuery = document.getElementById('searchInput').value.trim();
         applyFilters();
     };
 
-    window.filterByStatus = function(status) {
+    window.filterByStatus = function (status) {
         statusFilter = status;
         applyFilters();
     };
@@ -119,14 +120,14 @@
         container.innerHTML = html;
     }
 
-    window.goToPage = function(page) {
+    window.goToPage = function (page) {
         const totalPages = Math.ceil(filteredGraphs.length / pageSize);
         if (page < 1 || page > totalPages) return;
         currentPage = page;
         renderGraphTable();
     };
 
-    window.toggleSelectAll = function(checkbox) {
+    window.toggleSelectAll = function (checkbox) {
         document.querySelectorAll('.graph-checkbox').forEach(cb => cb.checked = checkbox.checked);
     };
 
@@ -134,11 +135,11 @@
         return Array.from(document.querySelectorAll('.graph-checkbox:checked')).map(cb => parseInt(cb.dataset.id)).filter(id => !isNaN(id));
     }
 
-    window.viewGraph = function(graphId) {
+    window.viewGraph = function (graphId) {
         window.location.href = '/graph/graph_detail.html?id=' + graphId;
     };
 
-    window.editGraph = async function(graphId) {
+    window.editGraph = async function (graphId) {
         try {
             const response = await fetch('/api/graph/' + graphId, { credentials: 'include' });
             if (!response.ok) throw new Error('获取失败');
@@ -168,10 +169,10 @@
         }
     };
 
-    window.previewEditCover = function(input) {
+    window.previewEditCover = function (input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const img = document.getElementById('editCoverPreviewImg');
                 img.src = e.target.result;
                 img.style.display = 'block';
@@ -180,12 +181,12 @@
         }
     };
 
-    window.closeEditModal = function() {
+    window.closeEditModal = function () {
         document.getElementById('editModal').close();
         document.getElementById('editGraphCover').value = '';
     };
 
-    window.submitEditForm = async function() {
+    window.submitEditForm = async function () {
         const graphId = document.getElementById('editGraphId').value;
         const data = {
             name: document.getElementById('editGraphName').value.trim(),
@@ -239,7 +240,7 @@
         }
     };
 
-    window.deleteGraph = async function(graphId, graphName) {
+    window.deleteGraph = async function (graphId, graphName) {
         if (!confirm('确定删除"' + graphName + '"吗？')) return;
         try {
             const response = await fetch('/api/graph/' + graphId, { method: 'DELETE', credentials: 'include' });
@@ -254,7 +255,7 @@
         }
     };
 
-    window.handleBatchOperation = async function(operation) {
+    window.handleBatchOperation = async function (operation) {
         const ids = getSelectedIds();
         if (ids.length === 0) { showNotification('请先选择图谱', 'warning'); return; }
 
@@ -283,16 +284,16 @@
     };
 
     // Upload
-    window.openUploadModal = function() {
+    window.openUploadModal = function () {
         document.getElementById('uploadModal').showModal();
     };
 
-    window.closeUploadModal = function() {
+    window.closeUploadModal = function () {
         document.getElementById('uploadModal').close();
         document.getElementById('uploadForm').reset();
     };
 
-    window.previewCover = function(input) {
+    window.previewCover = function (input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = e => {
@@ -303,7 +304,7 @@
         }
     };
 
-    window.submitUploadForm = async function() {
+    window.submitUploadForm = async function () {
         const fileInput = document.getElementById('graphFile');
         if (!fileInput.files || !fileInput.files[0]) { showNotification('请选择文件', 'warning'); return; }
 
@@ -360,12 +361,12 @@
         renderPostTable();
     }
 
-    window.performPostSearch = function() {
+    window.performPostSearch = function () {
         postSearchQuery = document.getElementById('postSearchInput').value.trim();
         applyPostFilters();
     };
 
-    window.filterPostsByStatus = function(status) {
+    window.filterPostsByStatus = function (status) {
         postStatusFilter = status;
         applyPostFilters();
     };
@@ -396,11 +397,11 @@
         }).join('');
     }
 
-    window.viewPost = function(postId) {
+    window.viewPost = function (postId) {
         window.location.href = '/community/post_detail.html?id=' + postId;
     };
 
-    window.deletePost = async function(postId, postTitle) {
+    window.deletePost = async function (postId, postTitle) {
         if (!confirm('确定删除"' + (postTitle || '') + '"吗？')) return;
         try {
             await fetch('/api/posts/' + postId, { method: 'DELETE', credentials: 'include' });
@@ -411,7 +412,7 @@
         }
     };
 
-    window.editPost = async function(postId) {
+    window.editPost = async function (postId) {
         try {
             const response = await fetch('/api/posts/' + postId, { credentials: 'include' });
             if (!response.ok) { showNotification('获取帖子信息失败', 'error'); return; }
@@ -429,11 +430,11 @@
         }
     };
 
-    window.closeEditPostModal = function() {
+    window.closeEditPostModal = function () {
         document.getElementById('editPostModal').close();
     };
 
-    window.submitEditPost = async function() {
+    window.submitEditPost = async function () {
         const postId = document.getElementById('editPostId').value;
         const data = {
             title: document.getElementById('editPostTitle').value.trim(),
@@ -463,11 +464,11 @@
         }
     };
 
-    window.goToCreatePost = function() {
+    window.goToCreatePost = function () {
         window.location.href = '/community/post_edit.html';
     };
 
-    window.togglePostSelectAll = function(checkbox) {
+    window.togglePostSelectAll = function (checkbox) {
         document.querySelectorAll('.post-checkbox').forEach(cb => cb.checked = checkbox.checked);
     };
 
@@ -475,7 +476,7 @@
         return Array.from(document.querySelectorAll('.post-checkbox:checked')).map(cb => parseInt(cb.dataset.id)).filter(id => !isNaN(id));
     }
 
-    window.handlePostBatchOnline = async function() {
+    window.handlePostBatchOnline = async function () {
         const ids = getSelectedPostIds();
         if (ids.length === 0) { showNotification('请先选择要上线的帖子', 'warning'); return; }
         if (!confirm('确定要上线 ' + ids.length + ' 个帖子吗？')) return;
@@ -496,7 +497,7 @@
         } catch (e) { showNotification('操作失败，请检查网络连接', 'error'); }
     };
 
-    window.handlePostBatchOffline = async function() {
+    window.handlePostBatchOffline = async function () {
         const ids = getSelectedPostIds();
         if (ids.length === 0) { showNotification('请先选择要下线的帖子', 'warning'); return; }
         if (!confirm('确定要下线 ' + ids.length + ' 个帖子吗？\n下线后帖子将变为仅自己可见')) return;
@@ -517,7 +518,7 @@
         } catch (e) { showNotification('操作失败，请检查网络连接', 'error'); }
     };
 
-    window.handlePostBatchDelete = async function() {
+    window.handlePostBatchDelete = async function () {
         const ids = getSelectedPostIds();
         if (ids.length === 0) { showNotification('请先选择要删除的帖子', 'warning'); return; }
         if (!confirm('确定要删除 ' + ids.length + ' 个帖子吗？\n\n警告：此操作不可恢复！')) return;

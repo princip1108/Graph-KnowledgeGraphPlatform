@@ -27,6 +27,9 @@ public class SearchHistory {
     @Column(name = "query_text", length = 255)
     private String queryText;
 
+    @Column(name = "search_type", length = 20)
+    private String searchType; // graph, forum
+
     @Column(name = "search_time")
     private LocalDateTime searchTime;
 }

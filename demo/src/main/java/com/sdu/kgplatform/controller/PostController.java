@@ -27,19 +27,22 @@ public class PostController {
     private final PostFavoriteRepository postFavoriteRepository;
     private final UserFollowRepository userFollowRepository;
     private final PostRepository postRepository;
+    private final com.sdu.kgplatform.service.HistoryService historyService;
 
-    public PostController(PostService postService, 
-                         UserRepository userRepository,
-                         PostFavoriteRepository postFavoriteRepository,
-                         UserFollowRepository userFollowRepository,
-                         PostRepository postRepository) {
+    public PostController(PostService postService,
+            UserRepository userRepository,
+            PostFavoriteRepository postFavoriteRepository,
+            UserFollowRepository userFollowRepository,
+            PostRepository postRepository,
+            com.sdu.kgplatform.service.HistoryService historyService) {
         this.postService = postService;
         this.userRepository = userRepository;
         this.postFavoriteRepository = postFavoriteRepository;
         this.userFollowRepository = userFollowRepository;
         this.postRepository = postRepository;
+        this.historyService = historyService;
     }
-    
+
     private User getCurrentUser() {
         return SecurityUtils.getCurrentUser(userRepository);
     }
@@ -48,17 +51,24 @@ public class PostController {
     public ResponseEntity<Map<String, Object>> getPostList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+
             @RequestParam(defaultValue = "latest") String sort,
-            @RequestParam(required = false) String keyword) {
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer categoryId) {
         Map<String, Object> response = new HashMap<>();
         try {
             Page<Post> postPage;
             if (keyword != null && !keyword.trim().isEmpty()) {
-                postPage = postService.searchPosts(keyword.trim(), page, size);
+                // 记录搜索历史 (仅登录用户)
+                User currentUser = getCurrentUser();
+                if (currentUser != null) {
+                    historyService.recordSearch(currentUser.getUserId(), keyword.trim(), "forum");
+                }
+                postPage = postService.searchPosts(keyword.trim(), page, size, categoryId);
             } else {
-                postPage = postService.getPostList(page, size, sort);
+                postPage = postService.getPostList(page, size, sort, categoryId);
             }
-            
+
             // 为每个帖子添加作者信息
             List<Map<String, Object>> postsWithAuthor = new ArrayList<>();
             for (Post post : postPage.getContent()) {
@@ -70,17 +80,19 @@ public class PostController {
                 postMap.put("uploadTime", post.getUploadTime());
                 postMap.put("likeCount", post.getLikeCount());
                 postMap.put("authorId", post.getAuthorId());
+                postMap.put("authorId", post.getAuthorId());
                 postMap.put("isPinned", post.getIsPinned());
-                
+                postMap.put("categoryId", post.getCategoryId());
+
                 // 获取作者信息
                 userRepository.findById(post.getAuthorId()).ifPresent(author -> {
                     postMap.put("authorName", author.getUserName());
                     postMap.put("authorAvatar", author.getAvatar());
                 });
-                
+
                 postsWithAuthor.add(postMap);
             }
-            
+
             response.put("success", true);
             response.put("posts", postsWithAuthor);
             response.put("totalPages", postPage.getTotalPages());
@@ -112,6 +124,12 @@ public class PostController {
             }
             response.put("success", true);
             response.putAll(detail);
+
+            // 记录浏览历史 (仅登录用户)
+            if (currentUserId != null) {
+                historyService.recordBrowsing(currentUserId, com.sdu.kgplatform.entity.ResourceType.post, id);
+            }
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
@@ -145,6 +163,16 @@ public class PostController {
                     graphId = Integer.parseInt((String) graphIdObj);
                 }
             }
+            Integer categoryId = null;
+            Object categoryIdObj = request.get("categoryId");
+            if (categoryIdObj != null) {
+                if (categoryIdObj instanceof Integer) {
+                    categoryId = (Integer) categoryIdObj;
+                } else if (categoryIdObj instanceof String && !((String) categoryIdObj).isEmpty()) {
+                    categoryId = Integer.parseInt((String) categoryIdObj);
+                }
+            }
+
             if (title == null || title.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("error", "标题不能为空");
@@ -155,12 +183,15 @@ public class PostController {
                 response.put("error", "内容不能为空");
                 return ResponseEntity.badRequest().body(response);
             }
-            Post post = postService.createPost(user.getUserId(), title.trim(), postAbstract != null ? postAbstract.trim() : "", content.trim(), tags, graphId);
+            Post post = postService.createPost(user.getUserId(), title.trim(),
+                    postAbstract != null ? postAbstract.trim() : "", content.trim(), tags, graphId, categoryId);
             response.put("success", true);
             response.put("post", post);
             response.put("message", "发布成功");
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             response.put("success", false);
             response.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(response);
@@ -168,7 +199,8 @@ public class PostController {
     }
 
     @PutMapping("/posts/{id}")
-    public ResponseEntity<Map<String, Object>> updatePost(@PathVariable Integer id, @RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, Object>> updatePost(@PathVariable Integer id,
+            @RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
         try {
             User user = getCurrentUser();
@@ -193,13 +225,13 @@ public class PostController {
                     graphId = Integer.parseInt((String) graphIdObj);
                 }
             }
-            
+
             Post post = postService.updatePost(id, user.getUserId(), title, postAbstract, content, tags);
-            
+
             // 处理关联图谱
             post.setGraphId(graphId);
             postRepository.save(post);
-            
+
             // 处理状态修改
             if (status != null && !status.isEmpty()) {
                 try {
@@ -210,7 +242,7 @@ public class PostController {
                     // 忽略无效的状态值
                 }
             }
-            
+
             response.put("success", true);
             response.put("post", post);
             response.put("message", "更新成功");
@@ -293,7 +325,8 @@ public class PostController {
     }
 
     @GetMapping("/posts/user/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserPosts(@PathVariable Integer userId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<Map<String, Object>> getUserPosts(@PathVariable Integer userId,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         Map<String, Object> response = new HashMap<>();
         try {
             Page<Post> postPage = postService.getUserPosts(userId, page, size);
@@ -587,7 +620,7 @@ public class PostController {
                 response.put("error", "请先登录");
                 return ResponseEntity.status(401).body(response);
             }
-            
+
             @SuppressWarnings("unchecked")
             List<Integer> postIds = (List<Integer>) request.get("postIds");
             if (postIds == null || postIds.isEmpty()) {
@@ -595,7 +628,7 @@ public class PostController {
                 response.put("error", "请选择要上线的帖子");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             int successCount = 0;
             for (Integer postId : postIds) {
                 try {
@@ -609,7 +642,7 @@ public class PostController {
                     System.err.println("上线帖子失败，postId=" + postId + ": " + e.getMessage());
                 }
             }
-            
+
             response.put("success", true);
             response.put("message", "成功上线 " + successCount + " 个帖子");
             return ResponseEntity.ok(response);
@@ -633,7 +666,7 @@ public class PostController {
                 response.put("error", "请先登录");
                 return ResponseEntity.status(401).body(response);
             }
-            
+
             @SuppressWarnings("unchecked")
             List<Integer> postIds = (List<Integer>) request.get("postIds");
             if (postIds == null || postIds.isEmpty()) {
@@ -641,7 +674,7 @@ public class PostController {
                 response.put("error", "请选择要下线的帖子");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             int successCount = 0;
             for (Integer postId : postIds) {
                 try {
@@ -655,7 +688,7 @@ public class PostController {
                     System.err.println("下线帖子失败，postId=" + postId + ": " + e.getMessage());
                 }
             }
-            
+
             response.put("success", true);
             response.put("message", "成功下线 " + successCount + " 个帖子");
             return ResponseEntity.ok(response);
@@ -679,7 +712,7 @@ public class PostController {
                 response.put("error", "请先登录");
                 return ResponseEntity.status(401).body(response);
             }
-            
+
             @SuppressWarnings("unchecked")
             List<Integer> postIds = (List<Integer>) request.get("postIds");
             if (postIds == null || postIds.isEmpty()) {
@@ -687,7 +720,7 @@ public class PostController {
                 response.put("error", "请选择要删除的帖子");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             int successCount = 0;
             for (Integer postId : postIds) {
                 try {
@@ -698,7 +731,7 @@ public class PostController {
                     System.err.println("删除帖子失败，postId=" + postId + ": " + e.getMessage());
                 }
             }
-            
+
             response.put("success", true);
             response.put("message", "成功删除 " + successCount + " 个帖子");
             response.put("deletedCount", successCount);

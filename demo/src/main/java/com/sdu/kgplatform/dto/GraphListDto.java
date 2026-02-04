@@ -23,7 +23,7 @@ public class GraphListDto {
     private String coverImage;
     private Boolean isCustomCover;
     private LocalDate uploadDate;
-    
+
     // 上传者信息
     private Integer uploaderId;
     private String uploaderName;
@@ -33,4 +33,8 @@ public class GraphListDto {
     private Integer collectCount;
     private Integer nodeCount;
     private Integer relationCount;
+
+    // 分类信息
+    private Integer categoryId;
+    private String categoryName;
 }

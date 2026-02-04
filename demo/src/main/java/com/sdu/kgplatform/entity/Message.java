@@ -37,4 +37,7 @@ public class Message {
     @Lob
     @Column(name = "message_text")
     private String messageText;
+
+    @Column(name = "is_read")
+    private Boolean isRead = false;
 }

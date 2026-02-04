@@ -55,4 +55,7 @@ public class Post {
 
     @Column(name = "favorite_count")
     private Integer favoriteCount = 0;
+
+    @Column(name = "category_id")
+    private Integer categoryId;
 }

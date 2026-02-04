@@ -66,4 +66,23 @@ public class FileStorageServiceImpl implements FileStorageService {
     public Path getUploadPath() {
         return this.rootLocation;
     }
+
+    @Override
+    public void deleteFile(String fileUrl) {
+        if (fileUrl == null || fileUrl.isEmpty()) {
+            return;
+        }
+
+        // expected url format: /uploads/subDir/filename
+        if (fileUrl.startsWith("/uploads/")) {
+            String relativePath = fileUrl.substring("/uploads/".length());
+            try {
+                Path filePath = this.rootLocation.resolve(relativePath);
+                Files.deleteIfExists(filePath);
+            } catch (IOException e) {
+                // Log error but don't throw exception to avoid breaking the main flow
+                System.err.println("Could not delete file: " + fileUrl + ". Error: " + e.getMessage());
+            }
+        }
+    }
 }

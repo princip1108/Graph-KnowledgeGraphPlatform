@@ -42,6 +42,9 @@ public class PostService {
     @Autowired
     private KnowledgeGraphRepository knowledgeGraphRepository;
 
+    @Autowired
+    private com.sdu.kgplatform.repository.CategoryRepository categoryRepository;
+
     /**
      * 获取置顶帖子
      */
@@ -53,6 +56,10 @@ public class PostService {
      * 获取帖子列表（分页）
      */
     public Page<Post> getPostList(int page, int size, String sortBy) {
+        return getPostList(page, size, sortBy, null);
+    }
+
+    public Page<Post> getPostList(int page, int size, String sortBy, Integer categoryId) {
         Sort sort;
         switch (sortBy) {
             case "popular":
@@ -64,15 +71,28 @@ public class PostService {
                 break;
         }
         Pageable pageable = PageRequest.of(page, size, sort);
-        return postRepository.findByPostStatus(PostStatus.已发布, pageable);
+
+        if (categoryId != null) {
+            return postRepository.findByPostStatusAndCategoryId(PostStatus.已发布, categoryId, pageable);
+        } else {
+            return postRepository.findByPostStatus(PostStatus.已发布, pageable);
+        }
     }
 
     /**
      * 搜索帖子
      */
     public Page<Post> searchPosts(String keyword, int page, int size) {
+        return searchPosts(keyword, page, size, null);
+    }
+
+    public Page<Post> searchPosts(String keyword, int page, int size, Integer categoryId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadTime"));
-        return postRepository.searchByKeyword(PostStatus.已发布, keyword, pageable);
+        if (categoryId != null) {
+            return postRepository.searchByKeywordAndCategory(PostStatus.已发布, keyword, categoryId, pageable);
+        } else {
+            return postRepository.searchByKeyword(PostStatus.已发布, keyword, pageable);
+        }
     }
 
     /**
@@ -124,10 +144,18 @@ public class PostService {
             result.put("tags", Collections.emptyList());
         }
 
-        // 获取关联图谱名称
         if (post.getGraphId() != null) {
             knowledgeGraphRepository.findById(post.getGraphId()).ifPresent(graph -> {
                 result.put("graphName", graph.getName());
+            });
+        }
+
+        // 获取分类名称
+        if (post.getCategoryId() != null)
+
+        {
+            categoryRepository.findById(post.getCategoryId()).ifPresent(category -> {
+                result.put("categoryName", category.getName());
             });
         }
 
@@ -139,14 +167,15 @@ public class PostService {
      */
     @Transactional
     public Post createPost(Integer authorId, String title, String postAbstract, String content, List<String> tagNames) {
-        return createPost(authorId, title, postAbstract, content, tagNames, null);
+        return createPost(authorId, title, postAbstract, content, tagNames, null, null);
     }
 
     /**
-     * 发布帖子（支持关联图谱）
+     * 发布帖子（支持关联图谱和分类）
      */
     @Transactional
-    public Post createPost(Integer authorId, String title, String postAbstract, String content, List<String> tagNames, Integer graphId) {
+    public Post createPost(Integer authorId, String title, String postAbstract, String content, List<String> tagNames,
+            Integer graphId, Integer categoryId) {
         Post post = new Post();
         post.setAuthorId(authorId);
         post.setPostTitle(title);
@@ -156,6 +185,7 @@ public class PostService {
         post.setLikeCount(0);
         post.setUploadTime(LocalDateTime.now());
         post.setGraphId(graphId);
+        post.setCategoryId(categoryId);
 
         Post savedPost = postRepository.save(post);
 
@@ -192,7 +222,14 @@ public class PostService {
      * 编辑帖子
      */
     @Transactional
-    public Post updatePost(Integer postId, Integer userId, String title, String postAbstract, String content, List<String> tagNames) {
+    public Post updatePost(Integer postId, Integer userId, String title, String postAbstract, String content,
+            List<String> tagNames) {
+        return updatePost(postId, userId, title, postAbstract, content, tagNames, null);
+    }
+
+    @Transactional
+    public Post updatePost(Integer postId, Integer userId, String title, String postAbstract, String content,
+            List<String> tagNames, Integer categoryId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("帖子不存在"));
 
@@ -203,12 +240,12 @@ public class PostService {
         post.setPostTitle(title);
         post.setPostAbstract(postAbstract);
         post.setPostText(content);
-        
+
         // 更新标签
         if (tagNames != null) {
             // 删除旧标签关联
             postTagRepository.deleteByPostId(postId);
-            
+
             // 添加新标签
             for (String tagName : tagNames) {
                 Tag tag = tagRepository.findByTagName(tagName)

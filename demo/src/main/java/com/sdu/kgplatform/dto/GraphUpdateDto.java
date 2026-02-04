@@ -30,4 +30,9 @@ public class GraphUpdateDto {
      * 状态：DRAFT(草稿), PUBLISHED(已发布), PRIVATE(私有)
      */
     private String status;
+
+    /**
+     * 分类ID
+     */
+    private Integer categoryId;
 }

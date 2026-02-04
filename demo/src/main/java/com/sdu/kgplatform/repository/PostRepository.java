@@ -18,70 +18,80 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
 
-    /**
-     * 根据作者ID查询帖子
-     */
-    List<Post> findByAuthorId(Integer authorId);
+       /**
+        * 根据作者ID查询帖子
+        */
+       List<Post> findByAuthorId(Integer authorId);
 
-    /**
-     * 根据状态查询帖子（分页）
-     */
-    Page<Post> findByPostStatus(PostStatus status, Pageable pageable);
+       /**
+        * 根据状态查询帖子（分页）
+        */
+       Page<Post> findByPostStatus(PostStatus status, Pageable pageable);
 
-    /**
-     * 查询已发布的帖子（分页）
-     */
-    Page<Post> findByPostStatusOrderByUploadTimeDesc(PostStatus status, Pageable pageable);
+       Page<Post> findByPostStatusAndCategoryId(PostStatus status, Integer categoryId, Pageable pageable);
 
-    /**
-     * 根据标题模糊搜索（已发布的帖子）
-     */
-    @Query("SELECT p FROM Post p WHERE p.postStatus = :status AND " +
-           "(LOWER(p.postTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(p.postAbstract) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<Post> searchByKeyword(@Param("status") PostStatus status, 
-                                @Param("keyword") String keyword, 
-                                Pageable pageable);
+       /**
+        * 查询已发布的帖子（分页）
+        */
+       Page<Post> findByPostStatusOrderByUploadTimeDesc(PostStatus status, Pageable pageable);
 
-    /**
-     * 按点赞数排序查询（已发布的帖子）
-     */
-    Page<Post> findByPostStatusOrderByLikeCountDesc(PostStatus status, Pageable pageable);
+       /**
+        * 根据标题模糊搜索（已发布的帖子）
+        */
+       @Query("SELECT p FROM Post p WHERE p.postStatus = :status AND " +
+                     "(LOWER(p.postTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                     "LOWER(p.postAbstract) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+       Page<Post> searchByKeyword(@Param("status") PostStatus status,
+                     @Param("keyword") String keyword,
+                     Pageable pageable);
 
-    /**
-     * 按时间范围查询（已发布的帖子）
-     */
-    @Query("SELECT p FROM Post p WHERE p.postStatus = :status AND " +
-           "p.uploadTime >= :startTime AND p.uploadTime <= :endTime " +
-           "ORDER BY p.uploadTime DESC")
-    Page<Post> findByDateRange(@Param("status") PostStatus status,
-                                @Param("startTime") LocalDateTime startTime,
-                                @Param("endTime") LocalDateTime endTime,
-                                Pageable pageable);
+       @Query("SELECT p FROM Post p WHERE p.postStatus = :status AND p.categoryId = :categoryId AND " +
+                     "(LOWER(p.postTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                     "LOWER(p.postAbstract) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+       Page<Post> searchByKeywordAndCategory(@Param("status") PostStatus status,
+                     @Param("keyword") String keyword,
+                     @Param("categoryId") Integer categoryId,
+                     Pageable pageable);
 
-    /**
-     * 统计已发布帖子总数
-     */
-    long countByPostStatus(PostStatus status);
+       /**
+        * 按点赞数排序查询（已发布的帖子）
+        */
+       Page<Post> findByPostStatusOrderByLikeCountDesc(PostStatus status, Pageable pageable);
 
-    /**
-     * 统计今日新帖数
-     */
-    @Query("SELECT COUNT(p) FROM Post p WHERE p.postStatus = :status AND p.uploadTime >= :startOfDay")
-    long countTodayPosts(@Param("status") PostStatus status, @Param("startOfDay") LocalDateTime startOfDay);
+       /**
+        * 按时间范围查询（已发布的帖子）
+        */
+       @Query("SELECT p FROM Post p WHERE p.postStatus = :status AND " +
+                     "p.uploadTime >= :startTime AND p.uploadTime <= :endTime " +
+                     "ORDER BY p.uploadTime DESC")
+       Page<Post> findByDateRange(@Param("status") PostStatus status,
+                     @Param("startTime") LocalDateTime startTime,
+                     @Param("endTime") LocalDateTime endTime,
+                     Pageable pageable);
 
-    /**
-     * 查询用户的帖子（分页）
-     */
-    Page<Post> findByAuthorIdOrderByUploadTimeDesc(Integer authorId, Pageable pageable);
+       /**
+        * 统计已发布帖子总数
+        */
+       long countByPostStatus(PostStatus status);
 
-    /**
-     * 查询置顶帖子
-     */
-    List<Post> findByPostStatusAndIsPinnedOrderByUploadTimeDesc(PostStatus status, Boolean isPinned);
+       /**
+        * 统计今日新帖数
+        */
+       @Query("SELECT COUNT(p) FROM Post p WHERE p.postStatus = :status AND p.uploadTime >= :startOfDay")
+       long countTodayPosts(@Param("status") PostStatus status, @Param("startOfDay") LocalDateTime startOfDay);
 
-    /**
-     * 查询用户草稿帖子
-     */
-    List<Post> findByAuthorIdAndPostStatus(Integer authorId, PostStatus status);
+       /**
+        * 查询用户的帖子（分页）
+        */
+       Page<Post> findByAuthorIdOrderByUploadTimeDesc(Integer authorId, Pageable pageable);
+
+       /**
+        * 查询置顶帖子
+        */
+       List<Post> findByPostStatusAndIsPinnedOrderByUploadTimeDesc(PostStatus status, Boolean isPinned);
+
+       /**
+        * 查询用户草稿帖子
+        */
+       List<Post> findByAuthorIdAndPostStatus(Integer authorId, PostStatus status);
 }

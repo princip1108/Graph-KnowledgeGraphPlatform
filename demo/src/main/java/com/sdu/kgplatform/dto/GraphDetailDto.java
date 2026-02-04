@@ -48,4 +48,8 @@ public class GraphDetailDto {
     private String cachedFileFormat;
     private LocalDateTime cachedGenerationDatetime;
     private Boolean isCacheValid;
+
+    // 分类信息
+    private Integer categoryId;
+    private String categoryName;
 }

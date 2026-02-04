@@ -3,7 +3,7 @@
  * 论坛列表页面 JavaScript 模块
  */
 
-(function() {
+(function () {
     'use strict';
 
     let currentPage = 0;
@@ -13,10 +13,21 @@
     let isLoading = false;
     let currentPostId = null;
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         initForum();
         bindEvents();
+        handleUrlParams();
     });
+
+    function handleUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('q');
+        if (q) {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = q;
+            performSearch();
+        }
+    }
 
     async function initForum() {
         await loadForumStats();
@@ -26,7 +37,7 @@
     function bindEvents() {
         const sortFilter = document.getElementById('sortFilter');
         if (sortFilter) {
-            sortFilter.addEventListener('change', function() {
+            sortFilter.addEventListener('change', function () {
                 currentSort = this.value;
                 currentPage = 0;
                 loadPosts(true);
@@ -35,7 +46,7 @@
 
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
-            searchInput.addEventListener('keypress', function(e) {
+            searchInput.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') performSearch();
             });
         }
@@ -43,14 +54,14 @@
         // Modal character counters
         const messageContent = document.getElementById('messageContent');
         if (messageContent) {
-            messageContent.addEventListener('input', function() {
+            messageContent.addEventListener('input', function () {
                 document.getElementById('charCount').textContent = this.value.length;
             });
         }
 
         const quickCommentContent = document.getElementById('quickCommentContent');
         if (quickCommentContent) {
-            quickCommentContent.addEventListener('input', function() {
+            quickCommentContent.addEventListener('input', function () {
                 document.getElementById('quickCommentCharCount').textContent = this.value.length;
             });
         }
@@ -162,18 +173,21 @@
     }
 
     // Global functions
-    window.loadMorePosts = function() {
+    window.loadMorePosts = function () {
         currentPage++;
         loadPosts(false);
     };
 
-    window.performSearch = function() {
+    window.performSearch = function () {
         currentKeyword = document.getElementById('searchInput').value.trim();
+        if (currentKeyword) {
+            fetch('/api/history/search?type=forum&keyword=' + encodeURIComponent(currentKeyword), { method: 'POST' });
+        }
         currentPage = 0;
         loadPosts(true);
     };
 
-    window.resetFilters = function() {
+    window.resetFilters = function () {
         document.getElementById('searchInput').value = '';
         document.getElementById('sortFilter').value = 'latest';
         document.getElementById('domainFilter').value = '';
@@ -183,7 +197,7 @@
         loadPosts(true);
     };
 
-    window.toggleLike = async function(postId, btn) {
+    window.toggleLike = async function (postId, btn) {
         try {
             const response = await fetch('/api/posts/' + postId + '/like', { method: 'POST', credentials: 'include' });
             const data = await response.json();
@@ -197,18 +211,18 @@
         }
     };
 
-    window.openQuickComment = function(postId) {
+    window.openQuickComment = function (postId) {
         currentPostId = postId;
         document.getElementById('quickCommentContent').value = '';
         document.getElementById('quickCommentCharCount').textContent = '0';
         document.getElementById('quickCommentModal').showModal();
     };
 
-    window.closeQuickCommentModal = function() {
+    window.closeQuickCommentModal = function () {
         document.getElementById('quickCommentModal').close();
     };
 
-    window.submitQuickComment = async function() {
+    window.submitQuickComment = async function () {
         const content = document.getElementById('quickCommentContent').value.trim();
         if (!content) {
             showNotification('请输入评论内容', 'warning');
@@ -235,17 +249,17 @@
         }
     };
 
-    window.openShareModal = function(postId) {
+    window.openShareModal = function (postId) {
         currentPostId = postId;
         document.getElementById('shareLink').value = window.location.origin + '/community/post_detail.html?id=' + postId;
         document.getElementById('shareModal').showModal();
     };
 
-    window.closeShareModal = function() {
+    window.closeShareModal = function () {
         document.getElementById('shareModal').close();
     };
 
-    window.copyShareLink = function() {
+    window.copyShareLink = function () {
         const input = document.getElementById('shareLink');
         input.select();
         document.execCommand('copy');
@@ -258,22 +272,22 @@
         }, 2000);
     };
 
-    window.shareToWeChat = function() { showNotification('请使用微信扫一扫分享', 'info'); };
-    window.shareToWeibo = function() { window.open('https://service.weibo.com/share/share.php?url=' + encodeURIComponent(document.getElementById('shareLink').value)); };
-    window.shareToQQ = function() { showNotification('请使用QQ分享', 'info'); };
+    window.shareToWeChat = function () { showNotification('请使用微信扫一扫分享', 'info'); };
+    window.shareToWeibo = function () { window.open('https://service.weibo.com/share/share.php?url=' + encodeURIComponent(document.getElementById('shareLink').value)); };
+    window.shareToQQ = function () { showNotification('请使用QQ分享', 'info'); };
 
-    window.openPrivateMessage = function(userName) {
+    window.openPrivateMessage = function (userName) {
         document.getElementById('recipientName').value = userName;
         document.getElementById('messageContent').value = '';
         document.getElementById('charCount').textContent = '0';
         document.getElementById('privateMessageModal').showModal();
     };
 
-    window.closePrivateMessageModal = function() {
+    window.closePrivateMessageModal = function () {
         document.getElementById('privateMessageModal').close();
     };
 
-    window.sendPrivateMessage = async function() {
+    window.sendPrivateMessage = async function () {
         const content = document.getElementById('messageContent').value.trim();
         const recipient = document.getElementById('recipientName').value;
         if (!content) {

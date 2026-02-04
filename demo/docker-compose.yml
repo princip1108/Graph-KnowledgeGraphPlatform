@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080" # Map host 8080 to container 8080
+    depends_on:
+      - mysql
+      - neo4j
+    environment:
+      # Override localhost with service names
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/graph_db?serverTimezone=UTC&useSSL=false
+      SPRING_NEO4J_URI: neo4j://neo4j:7687
+      # Pass database credentials (matching what's in application.yaml or defined below)
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:-Princip-1108}"
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: "${NEO4J_PASSWORD:-princip1108}"
+      # File upload path mapped to volume
+      APP_UPLOAD_BASE_PATH: /uploads
+    volumes:
+      - ./uploads:/uploads
+      - ./logs:/logs
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-Princip-1108}"
+      MYSQL_DATABASE: graph_db
+    ports:
+      - "3306:3306" # Expose for local tools if needed
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  neo4j:
+    image: neo4j:5
+    restart: always
+    environment:
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD:-princip1108}"
+    ports:
+      - "7474:7474" # HTTP
+      - "7687:7687" # Bolt
+    volumes:
+      - neo4j_data:/data
+
+volumes:
+  mysql_data:
+  neo4j_data:

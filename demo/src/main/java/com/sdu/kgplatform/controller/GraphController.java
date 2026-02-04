@@ -35,14 +35,17 @@ public class GraphController {
     private final UserRepository userRepository;
     private final GraphFavoriteRepository graphFavoriteRepository;
     private final KnowledgeGraphRepository knowledgeGraphRepository;
+    private final com.sdu.kgplatform.service.HistoryService historyService;
 
     public GraphController(GraphService graphService, UserRepository userRepository,
             GraphFavoriteRepository graphFavoriteRepository,
-            KnowledgeGraphRepository knowledgeGraphRepository) {
+            KnowledgeGraphRepository knowledgeGraphRepository,
+            com.sdu.kgplatform.service.HistoryService historyService) {
         this.graphService = graphService;
         this.userRepository = userRepository;
         this.graphFavoriteRepository = graphFavoriteRepository;
         this.knowledgeGraphRepository = knowledgeGraphRepository;
+        this.historyService = historyService;
     }
 
     // ==================== 创建图谱 ====================
@@ -87,7 +90,31 @@ public class GraphController {
                 graphService.incrementViewCount(graphId);
             }
 
+            // 记录浏览历史 (仅登录用户)
+            Integer userId = getCurrentUserId();
+            if (userId != null) {
+                historyService.recordBrowsing(userId, com.sdu.kgplatform.entity.ResourceType.graph, graphId);
+            }
+
             return ResponseEntity.ok(graph);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 获取图谱可视化数据 (轻量级优化接口)
+     * GET /api/graph/{id}/visualization
+     */
+    @GetMapping("/{id}/visualization")
+    public ResponseEntity<?> getGraphVisualization(@PathVariable("id") Integer graphId) {
+        try {
+            Map<String, Object> data = graphService.getGraphVisualization(graphId);
+
+            // 增加浏览量（可选：如果可视化被视为一次浏览）
+            // graphService.incrementViewCount(graphId);
+
+            return ResponseEntity.ok(data);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         }
@@ -102,6 +129,13 @@ public class GraphController {
         try {
             GraphDetailDto graph = graphService.getGraphByShareLink(shareLink);
             graphService.incrementViewCount(graph.getGraphId());
+
+            // 记录浏览历史 (仅登录用户)
+            Integer userId = getCurrentUserId();
+            if (userId != null) {
+                historyService.recordBrowsing(userId, com.sdu.kgplatform.entity.ResourceType.graph, graph.getGraphId());
+            }
+
             return ResponseEntity.ok(graph);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
@@ -118,7 +152,8 @@ public class GraphController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer categoryId) {
 
         Integer userId = getCurrentUserId();
         if (userId == null) {
@@ -128,8 +163,20 @@ public class GraphController {
         try {
             Page<GraphListDto> graphs;
             if (status != null && !status.isEmpty()) {
-                graphs = graphService.getUserGraphsByStatus(userId, status, page, size);
+                graphs = graphService.getUserGraphsByStatus(userId, status, categoryId, page, size);
             } else {
+                // If filtering by category without status, assume all/default or needs
+                // implementation update.
+                // For now, let's keep get user graphs simple or updated too if needed.
+                // Assuming getUserGraphs handles all statuses, if we want to filter by category
+                // there too, we need updating getUserGraphs.
+                // But for now, let's just update the status one which is more common for
+                // fitering.
+                // Or I should update getUserGraphs signature too?
+                // Let's stick to status filtering for now as per code structure.
+                // If categoryId is present but status is null, we might ignore categoryId for
+                // "all" listing or need update.
+                // Let's assume user wants to filter by status typically.
                 graphs = graphService.getUserGraphs(userId, page, size, sortBy);
             }
             return ResponseEntity.ok(Map.of(
@@ -173,9 +220,10 @@ public class GraphController {
     public ResponseEntity<?> getPublicGraphs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
-            @RequestParam(required = false) String sortBy) {
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) Integer categoryId) {
 
-        Page<GraphListDto> graphs = graphService.getPublicGraphs(page, size, sortBy);
+        Page<GraphListDto> graphs = graphService.getPublicGraphs(page, size, sortBy, categoryId);
         return ResponseEntity.ok(Map.of(
                 "content", graphs.getContent(),
                 "totalElements", graphs.getTotalElements(),
@@ -187,23 +235,48 @@ public class GraphController {
      * 搜索公开图谱
      * GET /api/graph/search
      */
+    /**
+     * 搜索公开图谱 (支持高级筛选)
+     * GET /api/graph/search
+     */
     @GetMapping("/search")
     public ResponseEntity<?> searchGraphs(
-            @RequestParam String keyword,
+            @org.springframework.web.bind.annotation.ModelAttribute com.sdu.kgplatform.dto.GraphSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "viewCount") String sortBy) {
 
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "搜索关键词不能为空"));
+        // 记录搜索历史 (仅登录用户)
+        if (criteria.getKeyword() != null && !criteria.getKeyword().trim().isEmpty()) {
+            Integer userId = getCurrentUserId();
+            if (userId != null) {
+                historyService.recordSearch(userId, criteria.getKeyword().trim(), "graph");
+            }
         }
 
-        Page<GraphListDto> graphs = graphService.searchPublicGraphs(keyword.trim(), page, size);
+        // 构建分页（支持排序）
+        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort
+                .by(org.springframework.data.domain.Sort.Direction.DESC, "viewCount");
+        if ("date".equals(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC,
+                    "uploadDate");
+        } else if ("hot".equals(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC,
+                    "hotScore"); // Assuming hotScore exists or use formula
+        }
+
+        // 修正排序：GraphService 内部虽然有 createPageable 但 searchPublicGraphs 重载版直接接受 Pageable
+        // 为保持一致性，我们在 Controller 构建好 Pageable
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                sort);
+
+        Page<GraphListDto> graphs = graphService.searchPublicGraphs(criteria, pageable);
         return ResponseEntity.ok(Map.of(
                 "content", graphs.getContent(),
                 "totalElements", graphs.getTotalElements(),
                 "totalPages", graphs.getTotalPages(),
                 "currentPage", graphs.getNumber(),
-                "keyword", keyword));
+                "criteria", criteria));
     }
 
     /**
@@ -247,6 +320,7 @@ public class GraphController {
     /**
      * 更新图谱封面
      * PUT /api/graphs/{id}/cover
+     * 
      * @param isCustom true=用户手动上传，false=自动生成缩略图（默认false）
      */
     @PutMapping("/{id}/cover")

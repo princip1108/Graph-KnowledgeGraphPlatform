@@ -1,109 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
 
-                <!DOCTYPE html>
-                <html lang="zh">
-                <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>图谱列表页</title>
-                  <style>
-                    *,
-                    *::before,
-                    *::after {
-                      box-sizing: border-box;
-                      margin: 0;
-                    }
-                    .iframe-outer {
-                      position: fixed;
-                      top: 0;
-                      left: 0;
-                      bottom: 0;
-                      right: 0;
-                      display: flex;
-                      justify-content: center;
-                      background-color: #E0E0E0;
-                    }
-                    .iframe-wrapper {
-                      width: 100%;
-                      height: 100%;
-                      margin: 0 auto;
-                      transform-origin: center top;
-                      flex-shrink: 0;
-                    }
-                    #dynamicIframe {
-                      border: none;
-                      width: 100%;
-                      height: 100%;
-                    }
-                  </style>
-                  <script>
-                const width = 1920
-                const height = 1080
-                const resolutionRatio = width && height ? width / height : 1
-                const pageNameMap = {
-                  'home_page': '首页',
-    'login_register_page': '登录/注册',
-    'registration_success_page': '注册成功',
-    'password_reset_page': '找回密码',
-    'graph_list_page': '图谱列表页',
-    'graph_detail_page': '图谱详情页',
-    'user_profile_page': '个人中心',
-    'documentation_page': '文档',
-    'about_page': '关于我们',
-    'feedback_page': '用户反馈',
-    'page_998124': '管理',
-    'page_998125': '论坛'
-                }
-                function setIframeSize(w, h) {
-                  const currentContainerRadio = w / h
-                  let widthValue = w
-                  let heightValue = h
-                  let zoom = 1
-                  if (currentContainerRadio > resolutionRatio) {
-                    widthValue = h * resolutionRatio
-                    heightValue = h
-                  } else {
-                    widthValue = w
-                    heightValue = w / resolutionRatio
-                  }
-                  zoom = width ? widthValue / width : 1
-                  return {
-                    width: widthValue / zoom + 'px',
-                    height: heightValue / zoom + 'px',
-                    zoom,
-                  }
-                }
-                function adjustIframeSize() {
-                  const iframeWrapper = document.querySelector(".iframe-wrapper")
-                  if (!iframeWrapper) return
-                  iframeWrapper.style.width = '100%'
-                  iframeWrapper.style.height = window.innerHeight + 'px'
-                  iframeWrapper.style.transform = ''
-                }
-                function sanitizeFilename(name) {
-                  return name.replace(/[\/:*?"<>|]/g, '_')
-                }
-                function handlePostMessage(event) {
-                  if (!event.data) {
-                    return
-                  }
-                  const { type, targetPageId } = event.data
-                  const targetPageName = pageNameMap[targetPageId]
-                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
-                    window.location.href = targetPageName + '.html'
-                  }
-                }
-                window.addEventListener('message', handlePostMessage)
-                window.onload = adjustIframeSize
-                window.onresize = adjustIframeSize
-                window.onunload = () => {
-                  window.removeEventListener('message', handlePostMessage)
-                }
-              </script>
-                </head>
-                <body>
-                  <div class="iframe-outer">
-                    <div class="iframe-wrapper">
-                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图谱列表页</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    .iframe-outer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      background-color: #E0E0E0;
+    }
+
+    .iframe-wrapper {
+      width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      transform-origin: center top;
+      flex-shrink: 0;
+    }
+
+    #dynamicIframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script>
+    const width = 1920
+    const height = 1080
+    const resolutionRatio = width && height ? width / height : 1
+    const pageNameMap = {
+      'home_page': '首页',
+      'login_register_page': '登录/注册',
+      'registration_success_page': '注册成功',
+      'password_reset_page': '找回密码',
+      'graph_list_page': '图谱列表页',
+      'graph_detail_page': '图谱详情页',
+      'user_profile_page': '个人中心',
+      'documentation_page': '文档',
+      'about_page': '关于我们',
+      'feedback_page': '用户反馈',
+      'page_998124': '管理',
+      'page_998125': '论坛'
+    }
+    function setIframeSize(w, h) {
+      const currentContainerRadio = w / h
+      let widthValue = w
+      let heightValue = h
+      let zoom = 1
+      if (currentContainerRadio > resolutionRatio) {
+        widthValue = h * resolutionRatio
+        heightValue = h
+      } else {
+        widthValue = w
+        heightValue = w / resolutionRatio
+      }
+      zoom = width ? widthValue / width : 1
+      return {
+        width: widthValue / zoom + 'px',
+        height: heightValue / zoom + 'px',
+        zoom,
+      }
+    }
+    function adjustIframeSize() {
+      const iframeWrapper = document.querySelector(".iframe-wrapper")
+      if (!iframeWrapper) return
+      iframeWrapper.style.width = '100%'
+      iframeWrapper.style.height = window.innerHeight + 'px'
+      iframeWrapper.style.transform = ''
+    }
+    function sanitizeFilename(name) {
+      return name.replace(/[\/:*?"<>|]/g, '_')
+    }
+    function handlePostMessage(event) {
+      if (!event.data) {
+        return
+      }
+      const { type, targetPageId } = event.data
+      const targetPageName = pageNameMap[targetPageId]
+      if (type === "iframeNavigation" && targetPageId && targetPageName) {
+        window.location.href = targetPageName + '.html'
+      }
+    }
+    window.addEventListener('message', handlePostMessage)
+    window.onload = adjustIframeSize
+    window.onresize = adjustIframeSize
+    window.onunload = () => {
+      window.removeEventListener('message', handlePostMessage)
+    }
+  </script>
+</head>
+
+<body>
+  <div class="iframe-outer">
+    <div class="iframe-wrapper">
+      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>知识图谱探索 - Graph+知识图谱平台</title>
@@ -638,23 +642,9 @@ border-width: var(--border);
                               <span class="iconify" data-icon="heroicons:squares-2x2" data-width="16"></span>
                               领域分类
                             </h4>
-                            <div class="grid grid-cols-2 gap-1">
-                              <button data-filter="all" data-type="button" class="btn btn-ghost btn-xs justify-start filter-btn active" onclick="filterGraphs(&#39;all&#39;)">
-                                <span class="iconify" data-icon="heroicons:squares-2x2" data-width="12"></span>
-                                全部</button><button data-filter="humanities" data-type="button" class="btn btn-ghost btn-xs justify-start filter-btn" onclick="filterGraphs(&#39;humanities&#39;)">
-                                <span class="iconify" data-icon="heroicons:book-open" data-width="12"></span>
-                                人文</button><button data-filter="history" data-type="button" class="btn btn-ghost btn-xs justify-start filter-btn" onclick="filterGraphs(&#39;history&#39;)">
-                                <span class="iconify" data-icon="heroicons:clock" data-width="12"></span>
-                                历史</button><button data-filter="science" data-type="button" class="btn btn-ghost btn-xs justify-start filter-btn" onclick="filterGraphs(&#39;science&#39;)">
-                                <span class="iconify" data-icon="heroicons:beaker" data-width="12"></span>
-                                科学</button><button data-filter="technology" data-type="button" class="btn btn-ghost btn-xs justify-start filter-btn" onclick="filterGraphs(&#39;technology&#39;)">
-                                <span class="iconify" data-icon="heroicons:cpu-chip" data-width="12"></span>
-                                技术</button><button data-filter="medicine" data-type="button" class="btn btn-ghost btn-xs justify-start filter-btn" onclick="filterGraphs(&#39;medicine&#39;)">
-                                <span class="iconify" data-icon="heroicons:heart" data-width="12"></span>
-                                医学</button><button data-filter="economics" data-type="button" class="btn btn-ghost btn-xs justify-start filter-btn" onclick="filterGraphs(&#39;economics&#39;)">
-                                <span class="iconify" data-icon="heroicons:chart-bar" data-width="12"></span>
-                                经济
-                              </button>
+                            <div id="domainFilterContainer" class="grid grid-cols-2 gap-1">
+                              <!-- Categories will be loaded here -->
+                              <button class="btn btn-ghost btn-xs loading">加载中...</button>
                             </div>
                           </div>
                           <!-- 关键词筛选 -->
@@ -1045,750 +1035,604 @@ window.APP_GLOBALS.user.init();
 })();
 </script><script>
 // 模拟图谱数据，增加提供人、浏览次数、下载次数等信息
-const mockGraphData = {
-  recommended: [
-    {
-      id: &#39;graph_1&#39;,
-      title: &#39;人工智能知识图谱&#39;,
-      domain: &#39;技术&#39;,
-      domainKey: &#39;technology&#39;,
-      description: &#39;涵盖机器学习、深度学习、自然语言处理等AI核心概念的综合性知识图谱，为研究人员和开发者提供系统性的知识结构。&#39;,
-      nodes: 1250,
-      edges: 3400,
-      provider: &#39;张教授&#39;,
-      viewCount: 15420,
-      downloadCount: 2340,
-      createDate: &#39;2024-03-15&#39;,
-      density: 4.35,
-      entityRichness: 8.7,
-      relationRichness: 9.2,
-      image: &#39;https://placehold.co/400x200.png?text=AI+Knowledge+Graph&#39;
-    },
-{
-      id: &#39;graph_2&#39;,
-      title: &#39;中国古代历史图谱&#39;,
-      domain: &#39;历史&#39;,
-      domainKey: &#39;history&#39;,
-      description: &#39;从夏商周到明清的中国古代历史脉络，包含朝代更替、重要人物、历史事件的完整知识网络。&#39;,
-      nodes: 2100,
-      edges: 5600,
-      provider: &#39;历史研究院&#39;,
-      viewCount: 8920,
-      downloadCount: 1560,
-      createDate: &#39;2024-02-20&#39;,
-      density: 2.54,
-      entityRichness: 7.8,
-      relationRichness: 6.9,
-      image: &#39;https://placehold.co/400x200.png?text=Chinese+History&#39;
-    },
-{
-      id: &#39;graph_3&#39;,
-      title: &#39;生物医学研究网络&#39;,
-      domain: &#39;医学&#39;,
-      domainKey: &#39;medicine&#39;,
-      description: &#39;整合基因、蛋白质、疾病、药物之间的复杂关系，支持精准医疗研究和药物发现。&#39;,
-      nodes: 8900,
-      edges: 15200,
-      provider: &#39;李博士&#39;,
-      viewCount: 12300,
-      downloadCount: 890,
-      createDate: &#39;2024-04-10&#39;,
-      density: 1.92,
-      entityRichness: 9.5,
-      relationRichness: 8.8,
-      image: &#39;https://placehold.co/400x200.png?text=Biomedical+Network&#39;
-    },
-{
-      id: &#39;graph_4&#39;,
-      title: &#39;世界文学作品关系图&#39;,
-      domain: &#39;人文&#39;,
-      domainKey: &#39;humanities&#39;,
-      description: &#39;连接世界各国文学作品、作家、文学流派和历史背景的知识网络，展现文学发展脉络。&#39;,
-      nodes: 3200,
-      edges: 7800,
-      provider: &#39;文学研究所&#39;,
-      viewCount: 6780,
-      downloadCount: 1120,
-      createDate: &#39;2024-01-25&#39;,
-      density: 1.52,
-      entityRichness: 6.8,
-      relationRichness: 7.3,
-      image: &#39;https://placehold.co/400x200.png?text=World+Literature&#39;
-    },
-{
-      id: &#39;graph_5&#39;,
-      title: &#39;量子物理概念图谱&#39;,
-      domain: &#39;科学&#39;,
-      domainKey: &#39;science&#39;,
-      description: &#39;量子力学基础理论、实验现象和应用技术的系统性知识结构，适合物理学研究。&#39;,
-      nodes: 680,
-      edges: 1450,
-      provider: &#39;王研究员&#39;,
-      viewCount: 4560,
-      downloadCount: 670,
-      createDate: &#39;2024-03-08&#39;,
-      density: 6.28,
-      entityRichness: 8.9,
-      relationRichness: 9.1,
-      image: &#39;https://placehold.co/400x200.png?text=Quantum+Physics&#39;
-    },
-{
-      id: &#39;graph_6&#39;,
-      title: &#39;全球经济贸易网络&#39;,
-      domain: &#39;经济&#39;,
-      domainKey: &#39;economics&#39;,
-      description: &#39;国际贸易关系、经济指标、金融市场和政策影响的综合分析图谱，支持经济研究。&#39;,
-      nodes: 1800,
-      edges: 4200,
-      provider: &#39;经济学院&#39;,
-      viewCount: 9340,
-      downloadCount: 1890,
-      createDate: &#39;2024-02-12&#39;,
-      density: 2.59,
-      entityRichness: 7.2,
-      relationRichness: 6.8,
-      image: &#39;https://placehold.co/400x200.png?text=Global+Economy&#39;
-    }
-  ],
-  popular: [
-{
-      id: &#39;graph_7&#39;,
-      title: &#39;新冠病毒研究图谱&#39;,
-      domain: &#39;医学&#39;,
-      domainKey: &#39;medicine&#39;,
-      description: &#39;COVID-19病毒特性、传播机制、治疗方案和疫苗研发的最新研究成果整合。&#39;,
-      nodes: 2400,
-      edges: 6100,
-      provider: &#39;疫情研究组&#39;,
-      viewCount: 25600,
-      downloadCount: 4200,
-      createDate: &#39;2024-01-15&#39;,
-      density: 2.12,
-      entityRichness: 8.3,
-      relationRichness: 7.9,
-      image: &#39;https://placehold.co/400x200.png?text=COVID+Research&#39;
-    },
-{
-      id: &#39;graph_8&#39;,
-      title: &#39;区块链技术生态&#39;,
-      domain: &#39;技术&#39;,
-      domainKey: &#39;technology&#39;,
-      description: &#39;区块链核心技术、应用场景、加密货币和去中心化应用的完整生态图谱。&#39;,
-      nodes: 950,
-      edges: 2300,
-      provider: &#39;区块链实验室&#39;,
-      viewCount: 18900,
-      downloadCount: 3100,
-      createDate: &#39;2024-03-22&#39;,
-      density: 5.09,
-      entityRichness: 7.6,
-      relationRichness: 8.4,
-      image: &#39;https://placehold.co/400x200.png?text=Blockchain+Tech&#39;
-    },
-{
-      id: &#39;graph_9&#39;,
-      title: &#39;气候变化影响网络&#39;,
-      domain: &#39;科学&#39;,
-      domainKey: &#39;science&#39;,
-      description: &#39;全球气候变化对生态系统、经济社会和人类生活的多维度影响分析网络。&#39;,
-      nodes: 1600,
-      edges: 3900,
-      provider: &#39;环境科学中心&#39;,
-      viewCount: 14200,
-      downloadCount: 2100,
-      createDate: &#39;2024-02-28&#39;,
-      density: 3.05,
-      entityRichness: 7.4,
-      relationRichness: 6.7,
-      image: &#39;https://placehold.co/400x200.png?text=Climate+Change&#39;
-    },
-{
-      id: &#39;graph_10&#39;,
-      title: &#39;数字化转型知识库&#39;,
-      domain: &#39;经济&#39;,
-      domainKey: &#39;economics&#39;,
-      description: &#39;企业数字化转型策略、技术选型、组织变革和商业模式创新的完整指南。&#39;,
-      nodes: 1100,
-      edges: 2800,
-      provider: &#39;数字化研究院&#39;,
-      viewCount: 11800,
-      downloadCount: 1950,
-      createDate: &#39;2024-04-05&#39;,
-      density: 4.63,
-      entityRichness: 6.9,
-      relationRichness: 7.5,
-      image: &#39;https://placehold.co/400x200.png?text=Digital+Transform&#39;
-    },
-{
-      id: &#39;graph_11&#39;,
-      title: &#39;古希腊哲学思想图谱&#39;,
-      domain: &#39;人文&#39;,
-      domainKey: &#39;humanities&#39;,
-      description: &#39;从苏格拉底到亚里士多德的古希腊哲学家思想体系和影响关系的深度解析。&#39;,
-      nodes: 420,
-      edges: 890,
-      provider: &#39;哲学系&#39;,
-      viewCount: 7600,
-      downloadCount: 980,
-      createDate: &#39;2024-01-30&#39;,
-      density: 10.08,
-      entityRichness: 9.3,
-      relationRichness: 8.7,
-      image: &#39;https://placehold.co/400x200.png?text=Greek+Philosophy&#39;
-    },
-{
-      id: &#39;graph_12&#39;,
-      title: &#39;世界战争史图谱&#39;,
-      domain: &#39;历史&#39;,
-      domainKey: &#39;history&#39;,
-      description: &#39;重大战争事件、参战国家、军事策略和历史影响的综合性历史知识图谱。&#39;,
-      nodes: 2800,
-      edges: 7200,
-      provider: &#39;军事史研究所&#39;,
-      viewCount: 13400,
-      downloadCount: 2600,
-      createDate: &#39;2024-03-01&#39;,
-      density: 1.84,
-      entityRichness: 6.5,
-      relationRichness: 7.1,
-      image: &#39;https://placehold.co/400x200.png?text=War+History&#39;
-    }
-  ]
-};
+// Mock data removed.
+const mockGraphData = null; // Prevent errors if referenced elsewhere before full cleanup
 
-let currentView = &#39;recommended&#39;;
-let currentFilter = &#39;all&#39;;
-let currentData = mockGraphData.recommended;
-let filteredData = currentData;
+let currentView = ' recommended'; let currentCategoryId=null; let currentPage=0; let pageSize=12; let
+        currentGraphsList=[]; // 页面初始化 document.addEventListener('DOMContentLoaded', function() {
+        window.APP_GLOBALS.user.init(); initializeSearchComponent(); initializeRangeSliders(); initializeFilters(); //
+        加载分类并初始化 if(typeof loadCategories==='function' ) { loadCategories().then(()=> {
+        // 检查URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const keyword = urlParams.get('keyword');
+        if(keyword) {
+        const input = document.getElementById('searchInput');
+        if(input) input.value = keyword;
+        }
+        fetchGraphs();
+        });
+        } else {
+        console.error("Critical: loadCategories function not found");
+        }
+        });
 
-// 页面初始化
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-  window.APP_GLOBALS.user.init();
-  initializeSearchComponent();
-  initializeRangeSliders();
-  initializeFilters();
-  renderGraphGrid();
-  updateResultCount();
-});
+        // 初始化搜索组件
+        function initializeSearchComponent() {
+        const searchInput = document.getElementById(&#39;searchInput&#39;);
+        const searchContainer = searchInput.closest(&#39;.search-container&#39;);
 
-// 初始化搜索组件
-function initializeSearchComponent() {
-  const searchInput = document.getElementById(&#39;searchInput&#39;);
-  const searchContainer = searchInput.closest(&#39;.search-container&#39;);
-  
-  // 创建搜索建议容器
-  const suggestionsContainer = document.createElement(&#39;div&#39;);
-  suggestionsContainer.className = &#39;search-suggestions hidden&#39;;
-  suggestionsContainer.id = &#39;searchSuggestions&#39;;
-  searchContainer.appendChild(suggestionsContainer);
-  
-  // 添加清除按钮
-  const clearBtn = document.createElement(&#39;button&#39;);
-  clearBtn.className = &#39;clear-search-btn hidden&#39;;
-  clearBtn.innerHTML = &#39;<span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>&#39;;
-  clearBtn.onclick = clearSearch;
-  searchContainer.appendChild(clearBtn);
-  
-  // 搜索输入事件
-  searchInput.addEventListener(&#39;input&#39;, function(e) {
-    const query = e.target.value.trim();
-    if (query.length > 0) {
-      clearBtn.classList.remove(&#39;hidden&#39;);
-      showSearchSuggestions(query);
-    } else {
-      clearBtn.classList.add(&#39;hidden&#39;);
-      hideSearchSuggestions();
-    }
-    applyFilters();
-  });
-  
-  // 点击外部隐藏建议
-  document.addEventListener(&#39;click&#39;, function(e) {
-    if (!searchContainer.contains(e.target)) {
-      hideSearchSuggestions();
-    }
-  });
-  
-  // 回车搜索
-  searchInput.addEventListener(&#39;keydown&#39;, function(e) {
-    if (e.key === &#39;Enter&#39;) {
-      performSearch();
-    }
-  });
-}
+        // 创建搜索建议容器
+        const suggestionsContainer = document.createElement(&#39;div&#39;);
+        suggestionsContainer.className = &#39;search-suggestions hidden&#39;;
+        suggestionsContainer.id = &#39;searchSuggestions&#39;;
+        searchContainer.appendChild(suggestionsContainer);
 
-// 初始化范围滑块
-function initializeRangeSliders() {
-  const sliders = [
-    { range: &#39;minNodesRange&#39;, value: &#39;minNodesValue&#39; },
-    { range: &#39;maxNodesRange&#39;, value: &#39;maxNodesValue&#39; },
-    { range: &#39;minEdgesRange&#39;, value: &#39;minEdgesValue&#39; },
-    { range: &#39;maxEdgesRange&#39;, value: &#39;maxEdgesValue&#39; },
-    { range: &#39;minDensityRange&#39;, value: &#39;minDensityValue&#39;, format: &#39;decimal&#39; },
-    { range: &#39;maxDensityRange&#39;, value: &#39;maxDensityValue&#39;, format: &#39;decimal&#39; },
-    { range: &#39;minEntityRichnessRange&#39;, value: &#39;minEntityRichnessValue&#39;, format: &#39;decimal&#39; },
-    { range: &#39;maxEntityRichnessRange&#39;, value: &#39;maxEntityRichnessValue&#39;, format: &#39;decimal&#39; },
-    { range: &#39;minRelationRichnessRange&#39;, value: &#39;minRelationRichnessValue&#39;, format: &#39;decimal&#39; },
-    { range: &#39;maxRelationRichnessRange&#39;, value: &#39;maxRelationRichnessValue&#39;, format: &#39;decimal&#39; },
-    { range: &#39;minViewCountRange&#39;, value: &#39;minViewCountValue&#39; },
-    { range: &#39;maxViewCountRange&#39;, value: &#39;maxViewCountValue&#39; },
-    { range: &#39;minDownloadCountRange&#39;, value: &#39;minDownloadCountValue&#39; },
-    { range: &#39;maxDownloadCountRange&#39;, value: &#39;maxDownloadCountValue&#39; }
-  ];
-  
-  sliders.forEach(slider => {
-    const rangeElement = document.getElementById(slider.range);
-    const valueElement = document.getElementById(slider.value);
-    
-    if (rangeElement &amp;&amp; valueElement) {
-      rangeElement.addEventListener(&#39;input&#39;, function() {
+        // 添加清除按钮
+        const clearBtn = document.createElement(&#39;button&#39;);
+        clearBtn.className = &#39;clear-search-btn hidden&#39;;
+        clearBtn.innerHTML = &#39;<span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>&#39;;
+        clearBtn.onclick = clearSearch;
+        searchContainer.appendChild(clearBtn);
+
+        // 搜索输入事件
+        searchInput.addEventListener(&#39;input&#39;, function(e) {
+        const query = e.target.value.trim();
+        if (query.length > 0) {
+        clearBtn.classList.remove(&#39;hidden&#39;);
+        showSearchSuggestions(query);
+        } else {
+        clearBtn.classList.add(&#39;hidden&#39;);
+        hideSearchSuggestions();
+        }
+        applyFilters();
+        });
+
+        // 点击外部隐藏建议
+        document.addEventListener(&#39;click&#39;, function(e) {
+        if (!searchContainer.contains(e.target)) {
+        hideSearchSuggestions();
+        }
+        });
+
+        // 回车搜索
+        searchInput.addEventListener(&#39;keydown&#39;, function(e) {
+        if (e.key === &#39;Enter&#39;) {
+        performSearch();
+        }
+        });
+        }
+
+        // 初始化范围滑块
+        function initializeRangeSliders() {
+        const sliders = [
+        { range: &#39;minNodesRange&#39;, value: &#39;minNodesValue&#39; },
+        { range: &#39;maxNodesRange&#39;, value: &#39;maxNodesValue&#39; },
+        { range: &#39;minEdgesRange&#39;, value: &#39;minEdgesValue&#39; },
+        { range: &#39;maxEdgesRange&#39;, value: &#39;maxEdgesValue&#39; },
+        { range: &#39;minDensityRange&#39;, value: &#39;minDensityValue&#39;, format: &#39;decimal&#39; },
+        { range: &#39;maxDensityRange&#39;, value: &#39;maxDensityValue&#39;, format: &#39;decimal&#39; },
+        { range: &#39;minEntityRichnessRange&#39;, value: &#39;minEntityRichnessValue&#39;, format: &#39;decimal&#39; },
+        { range: &#39;maxEntityRichnessRange&#39;, value: &#39;maxEntityRichnessValue&#39;, format: &#39;decimal&#39; },
+        { range: &#39;minRelationRichnessRange&#39;, value: &#39;minRelationRichnessValue&#39;, format:
+        &#39;decimal&#39; },
+        { range: &#39;maxRelationRichnessRange&#39;, value: &#39;maxRelationRichnessValue&#39;, format:
+        &#39;decimal&#39; },
+        { range: &#39;minViewCountRange&#39;, value: &#39;minViewCountValue&#39; },
+        { range: &#39;maxViewCountRange&#39;, value: &#39;maxViewCountValue&#39; },
+        { range: &#39;minDownloadCountRange&#39;, value: &#39;minDownloadCountValue&#39; },
+        { range: &#39;maxDownloadCountRange&#39;, value: &#39;maxDownloadCountValue&#39; }
+        ];
+
+        sliders.forEach(slider => {
+        const rangeElement = document.getElementById(slider.range);
+        const valueElement = document.getElementById(slider.value);
+
+        if (rangeElement &amp;&amp; valueElement) {
+        rangeElement.addEventListener(&#39;input&#39;, function() {
         let displayValue = this.value;
         if (slider.format === &#39;decimal&#39;) {
-          displayValue = (this.value / 10).toFixed(1);
+        displayValue = (this.value / 10).toFixed(1);
         }
         valueElement.textContent = displayValue;
         applyFilters();
-      });
-    }
-  });
-}
+        });
+        }
+        });
+        }
 
-// 初始化其他筛选器
-function initializeFilters() {
-  const keywordFilter = document.getElementById(&#39;keywordFilter&#39;);
-  const startDate = document.getElementById(&#39;startDate&#39;);
-  const endDate = document.getElementById(&#39;endDate&#39;);
-  
-  keywordFilter.addEventListener(&#39;input&#39;, applyFilters);
-  startDate.addEventListener(&#39;change&#39;, applyFilters);
-  endDate.addEventListener(&#39;change&#39;, applyFilters);
-}
+        // 初始化其他筛选器
+        function initializeFilters() {
+        const keywordFilter = document.getElementById(&#39;keywordFilter&#39;);
+        const startDate = document.getElementById(&#39;startDate&#39;);
+        const endDate = document.getElementById(&#39;endDate&#39;);
 
-// 显示搜索建议
-function showSearchSuggestions(query) {
-  const suggestions = window.APP_GLOBALS.search.getSearchSuggestions();
-  const filtered = suggestions.filter(item => 
-    item.toLowerCase().includes(query.toLowerCase())
-  );
-  
-  const container = document.getElementById(&#39;searchSuggestions&#39;);
-  container.innerHTML = &#39;&#39;;
-  
-  if (filtered.length > 0) {
-    filtered.forEach(suggestion => {
-      const item = document.createElement(&#39;div&#39;);
-      item.className = &#39;suggestion-item&#39;;
-      item.innerHTML = `
+        keywordFilter.addEventListener(&#39;input&#39;, applyFilters);
+        startDate.addEventListener(&#39;change&#39;, applyFilters);
+        endDate.addEventListener(&#39;change&#39;, applyFilters);
+        }
+
+        // 显示搜索建议
+        function showSearchSuggestions(query) {
+        const suggestions = window.APP_GLOBALS.search.getSearchSuggestions();
+        const filtered = suggestions.filter(item =>
+        item.toLowerCase().includes(query.toLowerCase())
+        );
+
+        const container = document.getElementById(&#39;searchSuggestions&#39;);
+        container.innerHTML = &#39;&#39;;
+
+        if (filtered.length > 0) {
+        filtered.forEach(suggestion => {
+        const item = document.createElement(&#39;div&#39;);
+        item.className = &#39;suggestion-item&#39;;
+        item.innerHTML = `
         <div class="flex items-center gap-2">
           <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
           <span>${suggestion}</span>
         </div>
-      `;
-      item.onclick = () => selectSuggestion(suggestion);
-      container.appendChild(item);
-    });
-    container.classList.remove(&#39;hidden&#39;);
-  } else {
-    container.classList.add(&#39;hidden&#39;);
-  }
-}
+        `;
+        item.onclick = () => selectSuggestion(suggestion);
+        container.appendChild(item);
+        });
+        container.classList.remove(&#39;hidden&#39;);
+        } else {
+        container.classList.add(&#39;hidden&#39;);
+        }
+        }
 
-// 隐藏搜索建议
-function hideSearchSuggestions() {
-  const container = document.getElementById(&#39;searchSuggestions&#39;);
-  container.classList.add(&#39;hidden&#39;);
-}
+        // 隐藏搜索建议
+        function hideSearchSuggestions() {
+        const container = document.getElementById(&#39;searchSuggestions&#39;);
+        container.classList.add(&#39;hidden&#39;);
+        }
 
-// 选择搜索建议
-function selectSuggestion(suggestion) {
-  const searchInput = document.getElementById(&#39;searchInput&#39;);
-  searchInput.value = suggestion;
-  hideSearchSuggestions();
-  applyFilters();
-}
+        // 页面初始化
+        document.addEventListener(' DOMContentLoaded', function() { window.APP_GLOBALS.user.init();
+        initializeSearchComponent(); initializeRangeSliders(); initializeFilters(); // 加载分类并执行首次搜索 loadCategories(); //
+        检查URL参数 const urlParams=new URLSearchParams(window.location.search); const keyword=urlParams.get('keyword');
+        if(keyword) { document.getElementById('searchInput').value=keyword; } // 初始搜索 fetchGraphs(); }); let
+        currentCategoryId=null; // null represents 'all' let currentPage=0; let pageSize=12; // 加载分类 async function
+        loadCategories() { try { const res=await fetch('/api/category/graph'); const json=await res.json();
+        if(json.success) { renderCategoryButtons(json.data); } } catch(e) { console.error("加载分类失败", e);
+        document.getElementById('domainFilterContainer').innerHTML='<span class="text-error text-xs">加载失败</span>' ; } }
+        function renderCategoryButtons(categories) { const container=document.getElementById('domainFilterContainer');
+        let html=`<button data-category-id="all" class="btn btn-ghost btn-xs justify-start filter-btn active"
+          onclick="selectCategory('all')">
+          <span class="iconify" data-icon="heroicons:squares-2x2" data-width="12"></span>
+          全部
+        </button>`;
 
-// 清除搜索
-function clearSearch() {
-  const searchInput = document.getElementById(&#39;searchInput&#39;);
-  const clearBtn = document.querySelector(&#39;.clear-search-btn&#39;);
-  searchInput.value = &#39;&#39;;
-  clearBtn.classList.add(&#39;hidden&#39;);
-  hideSearchSuggestions();
-  applyFilters();
-}
+        categories.forEach(cat => {
+        html += `<button data-category-id="${cat.categoryId}" class="btn btn-ghost btn-xs justify-start filter-btn"
+          onclick="selectCategory(${cat.categoryId})">
+          <span class="iconify" data-icon="heroicons:tag" data-width="12"></span>
+          ${cat.name}
+        </button>`;
+        });
+        container.innerHTML = html;
+        }
 
-// 执行搜索
-function performSearch() {
-  const searchInput = document.getElementById(&#39;searchInput&#39;);
-  const query = searchInput.value.trim();
-  
-  if (query) {
-    window.APP_GLOBALS.search.performSearch(query, &#39;graph_list_page&#39;);
-    hideSearchSuggestions();
-    window.showNotification(`正在搜索"${query}"...`, &#39;info&#39;);
-  }
-}
+        function selectCategory(id) {
+        currentCategoryId = id === 'all' ? null : id;
 
-// 切换视图（推荐/热门）
-function toggleView(view) {
-  if (view === currentView) return;
-  
-  currentView = view;
-  currentData = mockGraphData[view];
-  
-  // 更新按钮状态
-  document.querySelectorAll(&#39;.view-toggle&#39;).forEach(btn => {
-    btn.classList.remove(&#39;active&#39;);
-    btn.classList.add(&#39;btn-ghost&#39;);
-    btn.classList.remove(&#39;btn-primary&#39;);
-  });
-  
-  const activeBtn = document.querySelector(`[data-view="${view}"]`);
-  activeBtn.classList.add(&#39;active&#39;);
-  activeBtn.classList.remove(&#39;btn-ghost&#39;);
-  activeBtn.classList.add(&#39;btn-primary&#39;);
-  
-  // 重新应用筛选
-  applyFilters();
-}
+        // 更新UI状态
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        const selector = id === 'all' ? '[data-category-id="all"]' : `[data-category-id="${id}"]`;
+        const btn = document.querySelector(selector);
+        if(btn) btn.classList.add('active');
 
-// 筛选图谱
-function filterGraphs(filter) {
-  if (filter === currentFilter) return;
-  
-  currentFilter = filter;
-  
-  // 更新筛选按钮状态
-  document.querySelectorAll(&#39;.filter-btn&#39;).forEach(btn => {
-    btn.classList.remove(&#39;active&#39;);
-  });
-  
-  const activeBtn = document.querySelector(`[data-filter="${filter}"]`);
-  activeBtn.classList.add(&#39;active&#39;);
-  
-  // 重新应用筛选
-  applyFilters();
-}
+        currentPage = 0;
+        fetchGraphs();
+        }
 
-// 应用所有筛选条件
-function applyFilters() {
-  let data = [...currentData];
-  
-  // 领域筛选
-  if (currentFilter !== &#39;all&#39;) {
-    data = data.filter(graph => graph.domainKey === currentFilter);
-  }
-  
-  // 关键词筛选
-  const keyword = document.getElementById(&#39;keywordFilter&#39;).value.trim().toLowerCase();
-  if (keyword) {
-    data = data.filter(graph => 
-      graph.title.toLowerCase().includes(keyword) ||
-      graph.description.toLowerCase().includes(keyword) ||
-      graph.provider.toLowerCase().includes(keyword)
-    );
-  }
-  
-  // 搜索框筛选
-  const searchQuery = document.getElementById(&#39;searchInput&#39;).value.trim().toLowerCase();
-  if (searchQuery) {
-    data = data.filter(graph => 
-      graph.title.toLowerCase().includes(searchQuery) ||
-      graph.description.toLowerCase().includes(searchQuery) ||
-      graph.provider.toLowerCase().includes(searchQuery)
-    );
-  }
-  
-  // 日期筛选
-  const startDate = document.getElementById(&#39;startDate&#39;).value;
-  const endDate = document.getElementById(&#39;endDate&#39;).value;
-  if (startDate) {
-    data = data.filter(graph => graph.createDate >= startDate);
-  }
-  if (endDate) {
-    data = data.filter(graph => graph.createDate <= endDate);
-  }
-  
-// 节点数量筛选
-  const minNodes = parseInt(document.getElementById(&#39;minNodesRange&#39;).value);
-  const maxNodes = parseInt(document.getElementById(&#39;maxNodesRange&#39;).value);
-  data = data.filter(graph => graph.nodes >= minNodes &amp;&amp; graph.nodes <= maxNodes);
-  
-  // 关系数筛选
-  const minEdges = parseInt(document.getElementById(&#39;minEdgesRange&#39;).value);
-  const maxEdges = parseInt(document.getElementById(&#39;maxEdgesRange&#39;).value);
-  data = data.filter(graph => graph.edges >= minEdges &amp;&amp; graph.edges <= maxEdges);
-  
-  // 图谱密度筛选
-  const minDensity = parseFloat(document.getElementById(&#39;minDensityRange&#39;).value) / 10;
-  const maxDensity = parseFloat(document.getElementById(&#39;maxDensityRange&#39;).value) / 10;
-  data = data.filter(graph => graph.density >= minDensity &amp;&amp; graph.density <= maxDensity);
-  
-  // 实体丰富度筛选
-  const minEntityRichness = parseFloat(document.getElementById(&#39;minEntityRichnessRange&#39;).value) / 10;
-  const maxEntityRichness = parseFloat(document.getElementById(&#39;maxEntityRichnessRange&#39;).value) / 10;
-  data = data.filter(graph => graph.entityRichness >= minEntityRichness &amp;&amp; graph.entityRichness <= maxEntityRichness);
-  
-  // 关系丰富度筛选
-  const minRelationRichness = parseFloat(document.getElementById(&#39;minRelationRichnessRange&#39;).value) / 10;
-  const maxRelationRichness = parseFloat(document.getElementById(&#39;maxRelationRichnessRange&#39;).value) / 10;
-  data = data.filter(graph => graph.relationRichness >= minRelationRichness &amp;&amp; graph.relationRichness <= maxRelationRichness);
-  
-  // 浏览次数筛选
-  const minViewCount = parseInt(document.getElementById(&#39;minViewCountRange&#39;).value);
-  const maxViewCount = parseInt(document.getElementById(&#39;maxViewCountRange&#39;).value);
-  data = data.filter(graph => graph.viewCount >= minViewCount &amp;&amp; graph.viewCount <= maxViewCount);
-  
-  // 下载次数筛选
-  const minDownloadCount = parseInt(document.getElementById(&#39;minDownloadCountRange&#39;).value);
-  const maxDownloadCount = parseInt(document.getElementById(&#39;maxDownloadCountRange&#39;).value);
-  data = data.filter(graph => graph.downloadCount >= minDownloadCount &amp;&amp; graph.downloadCount <= maxDownloadCount);
-  
-  filteredData = data;
-  renderGraphGrid();
-  updateResultCount();
-}
+        // 获取图谱数据
+        async function fetchGraphs() {
+        const params = new URLSearchParams();
 
-// 重置筛选
-function resetFilters() {
-  // 重置领域筛选
-  currentFilter = &#39;all&#39;;
-  document.querySelectorAll(&#39;.filter-btn&#39;).forEach(btn => btn.classList.remove(&#39;active&#39;));
-  document.querySelector(&#39;[data-filter="all"]&#39;).classList.add(&#39;active&#39;);
-  
-  // 重置其他筛选器
-  document.getElementById(&#39;keywordFilter&#39;).value = &#39;&#39;;
-  document.getElementById(&#39;searchInput&#39;).value = &#39;&#39;;
-  document.getElementById(&#39;startDate&#39;).value = &#39;&#39;;
-  document.getElementById(&#39;endDate&#39;).value = &#39;&#39;;
-  
-// 重置范围滑块
-  const resetSliders = [
-    { range: &#39;minNodesRange&#39;, value: &#39;minNodesValue&#39;, defaultVal: 0, displayVal: &#39;0&#39; },
-    { range: &#39;maxNodesRange&#39;, value: &#39;maxNodesValue&#39;, defaultVal: 10000, displayVal: &#39;10000&#39; },
-    { range: &#39;minEdgesRange&#39;, value: &#39;minEdgesValue&#39;, defaultVal: 0, displayVal: &#39;0&#39; },
-    { range: &#39;maxEdgesRange&#39;, value: &#39;maxEdgesValue&#39;, defaultVal: 20000, displayVal: &#39;20000&#39; },
-    { range: &#39;minDensityRange&#39;, value: &#39;minDensityValue&#39;, defaultVal: 0, displayVal: &#39;0.0&#39; },
-    { range: &#39;maxDensityRange&#39;, value: &#39;maxDensityValue&#39;, defaultVal: 100, displayVal: &#39;10.0&#39; },
-    { range: &#39;minEntityRichnessRange&#39;, value: &#39;minEntityRichnessValue&#39;, defaultVal: 0, displayVal: &#39;0.0&#39; },
-    { range: &#39;maxEntityRichnessRange&#39;, value: &#39;maxEntityRichnessValue&#39;, defaultVal: 100, displayVal: &#39;10.0&#39; },
-    { range: &#39;minRelationRichnessRange&#39;, value: &#39;minRelationRichnessValue&#39;, defaultVal: 0, displayVal: &#39;0.0&#39; },
-    { range: &#39;maxRelationRichnessRange&#39;, value: &#39;maxRelationRichnessValue&#39;, defaultVal: 100, displayVal: &#39;10.0&#39; },
-    { range: &#39;minViewCountRange&#39;, value: &#39;minViewCountValue&#39;, defaultVal: 0, displayVal: &#39;0&#39; },
-    { range: &#39;maxViewCountRange&#39;, value: &#39;maxViewCountValue&#39;, defaultVal: 30000, displayVal: &#39;30000&#39; },
-    { range: &#39;minDownloadCountRange&#39;, value: &#39;minDownloadCountValue&#39;, defaultVal: 0, displayVal: &#39;0&#39; },
-    { range: &#39;maxDownloadCountRange&#39;, value: &#39;maxDownloadCountValue&#39;, defaultVal: 5000, displayVal: &#39;5000&#39; }
-  ];
-  
-  resetSliders.forEach(slider => {
-    const rangeElement = document.getElementById(slider.range);
-    const valueElement = document.getElementById(slider.value);
-    if (rangeElement &amp;&amp; valueElement) {
-      rangeElement.value = slider.defaultVal;
-      valueElement.textContent = slider.displayVal;
-    }
-  });
-  
-  // 隐藏清除按钮
-  const clearBtn = document.querySelector(&#39;.clear-search-btn&#39;);
-  if (clearBtn) clearBtn.classList.add(&#39;hidden&#39;);
-  
-  // 重新应用筛选
-  applyFilters();
-  
-  window.showNotification(&#39;筛选条件已重置&#39;, &#39;info&#39;);
-}
+        // 关键词
+        const keyword = document.getElementById('searchInput').value.trim();
+        if(keyword) params.append('keyword', keyword);
 
-// 渲染图谱网格
-function renderGraphGrid() {
-  const container = document.getElementById(&#39;graphGrid&#39;);
-  container.innerHTML = &#39;&#39;;
-  
-  filteredData.forEach((graph, index) => {
-    const card = createGraphCard(graph);
-    card.style.animationDelay = `${index * 0.1}s`;
-    container.appendChild(card);
-  });
-}
+        // 分类
+        if(currentCategoryId) params.append('categoryId', currentCategoryId);
 
-// 创建图谱卡片
-function createGraphCard(graph) {
-  const card = document.createElement(&#39;div&#39;);
-  card.className = &#39;card bg-base-100 shadow-soft graph-card fade-in&#39;;
-  card.setAttribute(&#39;data-repeatable&#39;, &#39;true&#39;);
-  card.setAttribute(&#39;data-type&#39;, &#39;card&#39;);
-  
-  const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graph.id);
-  
-  card.innerHTML = `
-    <figure class="relative">
-      <img src="${graph.image}" alt="${graph.title}" class="graph-card-image w-full" />
-      <div class="absolute top-4 right-4">
-        <div class="badge badge-primary domain-badge">${graph.domain}</div>
-      </div>
-    </figure>
-    <div class="card-body p-6">
-      <div class="card-title-section">
-        <h3 class="card-title text-lg font-semibold" data-type="text">${graph.title}</h3>
-      </div>
-      
-      <div class="card-description">
-        <p class="text-base-content/70 text-sm line-clamp-3" data-type="text">${graph.description}</p>
-      </div>
-      
-      <div class="card-meta-section">
-        <div class="provider-info">
-          <span class="iconify" data-icon="heroicons:user" data-width="14"></span>
-          <span>${graph.provider}</span>
-        </div>
-      </div>
-      
-      <div class="card-stats-section">
-        <div class="stats-info">
-          <span class="flex items-center gap-1">
-            <span class="iconify" data-icon="heroicons:circle" data-width="12"></span>
-            ${graph.nodes}
-          </span>
-          <span class="flex items-center gap-1">
-            <span class="iconify" data-icon="heroicons:arrow-right" data-width="12"></span>
-            ${graph.edges}
-          </span>
-          <span class="flex items-center gap-1">
-            <span class="iconify" data-icon="heroicons:eye" data-width="12"></span>
-            ${graph.viewCount}
-          </span>
-          <span class="flex items-center gap-1">
-            <span class="iconify" data-icon="heroicons:arrow-down-tray" data-width="12"></span>
-            ${graph.downloadCount}
-          </span>
-        </div>
-        <button class="btn btn-ghost btn-xs favorite-btn ${isFavorited ? &#39;favorited&#39; : &#39;&#39;}" onclick="toggleFavorite(&#39;${graph.id}&#39;, event)" data-type="button">
-          <span class="iconify" data-icon="${isFavorited ? &#39;heroicons:heart-solid&#39; : &#39;heroicons:heart&#39;}" data-width="16"></span>
-        </button>
-      </div>
-    </div>
-  `;
-  
-  // 添加点击事件
-  card.addEventListener(&#39;click&#39;, function(e) {
-    if (!e.target.closest(&#39;.btn&#39;)) {
-      navigateTo(&#39;graph_detail_page&#39;);
-    }
-  });
-  
-  // 添加悬停预览
-  card.addEventListener(&#39;mouseenter&#39;, function(e) {
-    showGraphPreview(graph, e);
-  });
-  
-  card.addEventListener(&#39;mouseleave&#39;, function() {
-    hideGraphPreview();
-  });
-  
-  return card;
-}
+        // 分页
+        params.append('page', currentPage);
+        params.append('size', pageSize);
 
-// 显示图谱预览
-function showGraphPreview(graph, event) {
-  const tooltip = document.createElement(&#39;div&#39;);
-  tooltip.className = &#39;graph-preview-tooltip&#39;;
-  tooltip.id = &#39;graphPreviewTooltip&#39;;
-  
-  tooltip.innerHTML = `
-    <h4 class="font-semibold mb-2">${graph.title}</h4>
-    <p class="text-sm text-base-content/70 mb-3">${graph.description}</p>
-    <div class="space-y-2 text-xs">
-      <div class="flex justify-between">
-        <span>提供者:</span>
-        <span class="font-medium">${graph.provider}</span>
-      </div>
-      <div class="flex justify-between">
-        <span>创建日期:</span>
-        <span class="font-medium">${graph.createDate}</span>
-      </div>
-      <div class="flex justify-between">
-        <span>浏览次数:</span>
-        <span class="font-medium">${graph.viewCount}</span>
-      </div>
-      <div class="flex justify-between">
-        <span>下载次数:</span>
-        <span class="font-medium">${graph.downloadCount}</span>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(tooltip);
-  
-  // 定位tooltip
-  const rect = event.currentTarget.getBoundingClientRect();
-  tooltip.style.left = `${rect.right + 10}px`;
-  tooltip.style.top = `${rect.top}px`;
-  
-  // 检查是否超出视窗
-  const tooltipRect = tooltip.getBoundingClientRect();
-  if (tooltipRect.right > window.innerWidth) {
-    tooltip.style.left = `${rect.left - tooltipRect.width - 10}px`;
-  }
-  if (tooltipRect.bottom > window.innerHeight) {
-    tooltip.style.top = `${rect.bottom - tooltipRect.height}px`;
-  }
-  
-  setTimeout(() => {
-    tooltip.classList.add(&#39;show&#39;);
-  }, 50);
-}
+        // 排序
+        if(currentView === 'popular') params.append('sortBy', 'hot');
+        else params.append('sortBy', 'viewCount');
 
-// 隐藏图谱预览
-function hideGraphPreview() {
-  const tooltip = document.getElementById(&#39;graphPreviewTooltip&#39;);
-  if (tooltip) {
-    tooltip.remove();
-  }
-}
+        // 日期筛选
+        const startDate = document.getElementById('startDate').value;
+        if(startDate) params.append('startDate', startDate);
+        const endDate = document.getElementById('endDate').value;
+        if(endDate) params.append('endDate', endDate);
 
-// 切换收藏状态
-function toggleFavorite(graphId, event) {
-  event.stopPropagation();
-  
-  const graph = [...mockGraphData.recommended, ...mockGraphData.popular]
-    .find(g => g.id === graphId);
-  
-  if (graph) {
-    window.APP_GLOBALS.favorites.toggle(graphId, graph);
-    
-    // 更新心形图标状态
-    const btn = event.target.closest(&#39;.favorite-btn&#39;);
-    const heartIcon = btn.querySelector(&#39;.iconify&#39;);
-    const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
-    
-    if (isFavorited) {
-      heartIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart-solid&#39;);
-      btn.classList.add(&#39;favorited&#39;);
-    } else {
-      heartIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart&#39;);
-      btn.classList.remove(&#39;favorited&#39;);
-    }
-  }
-}
+        // 范围筛选助手
+        const appendRange = (key, id) => {
+        const val = document.getElementById(id).value;
+        params.append(key, val);
+        };
 
-// 更新结果计数
-function updateResultCount() {
-  const countElement = document.getElementById(&#39;resultCount&#39;);
-  countElement.textContent = `共找到 ${filteredData.length} 个图谱`;
-}
-</script>
-  
+        appendRange('minNodes', 'minNodesRange');
+        appendRange('maxNodes', 'maxNodesRange');
+        appendRange('minEdges', 'minEdgesRange');
+        appendRange('maxEdges', 'maxEdgesRange');
 
-<script>
-    setTimeout(() => {
-      Holder.run({
-        domain: "placehold.co"
-      })
-    }, 100)
-  </script></body></html>'></iframe>
-                    </div>
-                  </div>
+        // 小数处理 (/10)
+        const appendDecimalRange = (key, id) => {
+        const val = document.getElementById(id).value;
+        params.append(key, val / 10.0);
+        };
 
-                </body>
-                </html>
-            
+        appendDecimalRange('minDensity', 'minDensityRange');
+        appendDecimalRange('maxDensity', 'maxDensityRange');
+        appendDecimalRange('minEntityRichness', 'minEntityRichnessRange');
+        appendDecimalRange('maxEntityRichness', 'maxEntityRichnessRange');
+        appendDecimalRange('minRelationRichness', 'minRelationRichnessRange');
+        appendDecimalRange('maxRelationRichness', 'maxRelationRichnessRange');
+
+        appendRange('minViewCount', 'minViewCountRange');
+        appendRange('maxViewCount', 'maxViewCountRange');
+        appendRange('minDownloadCount', 'minDownloadCountRange');
+        appendRange('maxDownloadCount', 'maxDownloadCountRange');
+
+        try {
+        // 显示加载状态...
+        const res = await fetch(`/api/graph/search?${params.toString()}`);
+        if(!res.ok) throw new Error("Search failed");
+
+        const data = await res.json();
+
+        // 渲染图谱
+        renderGraphGridResults(data.content);
+        // 更新分页
+        updatePagination(data);
+        // 更新计数
+        updateResultCountText(data.totalElements);
+
+        } catch(e) {
+        console.error("搜索请求失败", e);
+        window.showNotification("搜索失败，请稍后重试", "error");
+        }
+        }
+
+        // 渲染图谱网格 (API数据版)
+        function renderGraphGridResults(graphs) {
+        currentGraphsList = graphs || [];
+        const container = document.getElementById('graphGrid');
+        container.innerHTML = '';
+
+        if(!graphs || graphs.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-10 opacity-70">没有找到相关图谱</div>';
+        return;
+        }
+
+        graphs.forEach((graph, index) => {
+        const card = createGraphCard(graph);
+        card.style.animationDelay = `${index * 0.1}s`;
+        container.appendChild(card);
+        });
+        }
+
+        function updateResultCountText(total) {
+        const countElement = document.getElementById('resultCount');
+        countElement.textContent = `共找到 ${total} 个图谱`;
+        }
+
+        // 分页逻辑
+        function updatePagination(data) {
+        const totalPages = data.totalPages;
+        const current = data.currentPage + 1; // Backend is 0-indexed
+
+        // 简单实现：仅显示上一页/下一页和当前页
+        // 实际项目中可能需要更复杂的分页条
+        const joinContainer = document.querySelector('.join');
+        if(!joinContainer) return;
+
+        let html = '';
+
+        // Prev
+        const prevDisabled = data.first ? 'btn-disabled' : '';
+        html += `<button type="button" class="join-item btn btn-sm ${prevDisabled}"
+          onclick="changePage(${data.currentPage - 1})">«</button>`;
+
+        // Current
+        html += `<button type="button" class="join-item btn btn-sm btn-active">第 ${current} / ${totalPages} 页</button>`;
+
+        // Next
+        const nextDisabled = data.last ? 'btn-disabled' : '';
+        html += `<button type="button" class="join-item btn btn-sm ${nextDisabled}"
+          onclick="changePage(${data.currentPage + 1})">»</button>`;
+
+        joinContainer.innerHTML = html;
+        }
+
+        function changePage(page) {
+        if(page < 0) return; currentPage=page; fetchGraphs(); } // 选择搜索建议 function selectSuggestion(suggestion) { const
+          searchInput=document.getElementById('searchInput'); searchInput.value=suggestion; hideSearchSuggestions();
+          currentPage=0; fetchGraphs(); } // 清除搜索 function clearSearch() { const
+          searchInput=document.getElementById('searchInput'); const
+          clearBtn=document.querySelector('.clear-search-btn'); searchInput.value='' ; clearBtn.classList.add('hidden');
+          hideSearchSuggestions(); currentPage=0; fetchGraphs(); } // 执行搜索 function performSearch() { currentPage=0;
+          fetchGraphs(); hideSearchSuggestions(); } // 切换视图（推荐/热门） function toggleView(view) { if (view===currentView)
+          return; currentView=view; // 更新按钮状态 document.querySelectorAll('.view-toggle').forEach(btn=> {
+          btn.classList.remove('active');
+          btn.classList.add('btn-ghost');
+          btn.classList.remove('btn-primary');
+          });
+
+          const activeBtn = document.querySelector(`[data-view="${view}"]`);
+          activeBtn.classList.add('active');
+          activeBtn.classList.remove('btn-ghost');
+          activeBtn.classList.add('btn-primary');
+
+          // 重新加载
+          currentPage = 0;
+          fetchGraphs();
+          }
+
+          // 筛选图谱 (旧逻辑不需要了，保留函数名兼容HTML调用但重定向到selectCategory)
+          function filterGraphs(filter) {
+          // HTML中可能还有onclick="filterGraphs"
+          // 这里我们假设HTML已经更新了onclick="selectCategory"或者我们忽略它
+          // 但为了安全，如果传入的是字符串，我们不做处理，因为我们已经重写了HTML
+          }
+
+          // 应用筛选 (被事件监听器调用)
+          function applyFilters() {
+          currentPage = 0;
+          fetchGraphs();
+          }
+
+          // 重置筛选
+          function resetFilters() {
+          // 重置分类 (调用selectCategory('all')会重置currentCategoryId并刷新)
+          selectCategory('all');
+
+          // 重置其他筛选器
+          document.getElementById('keywordFilter').value = '';
+          document.getElementById('searchInput').value = '';
+          document.getElementById('startDate').value = '';
+          document.getElementById('endDate').value = '';
+
+          // 重置范围滑块
+          const resetSliders = [
+          { range: 'minNodesRange', value: 'minNodesValue', defaultVal: 0, displayVal: '0' },
+          { range: 'maxNodesRange', value: 'maxNodesValue', defaultVal: 10000, displayVal: '10000' },
+          { range: 'minEdgesRange', value: 'minEdgesValue', defaultVal: 0, displayVal: '0' },
+          { range: 'maxEdgesRange', value: 'maxEdgesValue', defaultVal: 20000, displayVal: '20000' },
+          { range: 'minDensityRange', value: 'minDensityValue', defaultVal: 0, displayVal: '0.0' },
+          { range: 'maxDensityRange', value: 'maxDensityValue', defaultVal: 100, displayVal: '10.0' },
+          { range: 'minEntityRichnessRange', value: 'minEntityRichnessValue', defaultVal: 0, displayVal: '0.0' },
+          { range: 'maxEntityRichnessRange', value: 'maxEntityRichnessValue', defaultVal: 100, displayVal: '10.0' },
+          { range: 'minRelationRichnessRange', value: 'minRelationRichnessValue', defaultVal: 0, displayVal: '0.0' },
+          { range: 'maxRelationRichnessRange', value: 'maxRelationRichnessValue', defaultVal: 100, displayVal: '10.0' },
+          { range: 'minViewCountRange', value: 'minViewCountValue', defaultVal: 0, displayVal: '0' },
+          { range: 'maxViewCountRange', value: 'maxViewCountValue', defaultVal: 30000, displayVal: '30000' },
+          { range: 'minDownloadCountRange', value: 'minDownloadCountValue', defaultVal: 0, displayVal: '0' },
+          { range: 'maxDownloadCountRange', value: 'maxDownloadCountValue', defaultVal: 5000, displayVal: '5000' }
+          ];
+
+          resetSliders.forEach(slider => {
+          const rangeElement = document.getElementById(slider.range);
+          const valueElement = document.getElementById(slider.value);
+          if (rangeElement && valueElement) {
+          rangeElement.value = slider.defaultVal;
+          valueElement.textContent = slider.displayVal;
+          }
+          });
+
+          // 隐藏清除按钮
+          const clearBtn = document.querySelector('.clear-search-btn');
+          if (clearBtn) clearBtn.classList.add('hidden');
+
+          window.showNotification('筛选条件已重置', 'info');
+
+          // fetchGraphs has been called by selectCategory('all') above
+          }
+
+          // 渲染图谱网格 (Moved to new logic inside fetchGraphs)
+          // But to prevent errors from other calls, keep simple shim if needed
+          function renderGraphGrid() {
+          // Now handled by renderGraphGridResults
+          }
+
+          // 创建图谱卡片 (更新匹配后端DTO字段)
+          function createGraphCard(graph) {
+          const card = document.createElement('div');
+          card.className = 'card bg-base-100 shadow-soft graph-card fade-in';
+          card.setAttribute('data-repeatable', 'true');
+          card.setAttribute('data-type', 'card');
+
+          const isFavorited = window.APP_GLOBALS.favorites && window.APP_GLOBALS.favorites.isFavorited(graph.graphId);
+
+          // DTO field mapping:
+          // image -> coverImage
+          // title -> name
+          // provider -> uploaderName
+          // domain -> categoryName
+          // nodes -> nodeCount
+          // edges -> relationCount
+
+          const coverImage = graph.coverImage || 'https://placehold.co/400x200.png?text=No+Image';
+          const categoryName = graph.categoryName || '未知分类';
+
+          card.innerHTML = `
+          <figure class="relative">
+            <img src="${coverImage}" alt="${graph.name}" class="graph-card-image w-full h-48 object-cover" />
+            <div class="absolute top-4 right-4">
+              <div class="badge badge-primary domain-badge">${categoryName}</div>
+            </div>
+          </figure>
+          <div class="card-body p-6">
+            <div class="card-title-section">
+              <h3 class="card-title text-lg font-semibold" data-type="text">${graph.name}</h3>
+            </div>
+
+            <div class="card-description">
+              <p class="text-base-content/70 text-sm line-clamp-3" data-type="text">${graph.description || '暂无描述'}</p>
+            </div>
+
+            <div class="card-meta-section">
+              <div class="provider-info flex items-center gap-2 text-sm text-base-content/60">
+                <span class="iconify" data-icon="heroicons:user" data-width="14"></span>
+                <span>${graph.uploaderName || '未知用户'}</span>
+              </div>
+            </div>
+
+            <div class="card-stats-section mt-4 pt-4 border-t border-base-200">
+              <div class="stats-info flex gap-3 text-xs text-base-content/60">
+                <span class="flex items-center gap-1" title="节点数">
+                  <span class="iconify" data-icon="heroicons:circle" data-width="12"></span>
+                  ${graph.nodeCount}
+                </span>
+                <span class="flex items-center gap-1" title="关系数">
+                  <span class="iconify" data-icon="heroicons:arrow-right" data-width="12"></span>
+                  ${graph.relationCount}
+                </span>
+                <span class="flex items-center gap-1" title="浏览量">
+                  <span class="iconify" data-icon="heroicons:eye" data-width="12"></span>
+                  ${graph.viewCount}
+                </span>
+                <span class="flex items-center gap-1" title="下载量">
+                  <span class="iconify" data-icon="heroicons:arrow-down-tray" data-width="12"></span>
+                  ${graph.downloadCount}
+                </span>
+              </div>
+              <button class="btn btn-ghost btn-xs favorite-btn ${isFavorited ? 'favorited' : ''}"
+                onclick="toggleFavorite('${graph.graphId}', event)" data-type="button">
+                <span class="iconify" data-icon="${isFavorited ? 'heroicons:heart-solid' : 'heroicons:heart'}"
+                  data-width="16"></span>
+              </button>
+            </div>
+          </div>
+          `;
+
+          // 添加点击事件
+          card.addEventListener(&#39;click&#39;, function(e) {
+          if (!e.target.closest(&#39;.btn&#39;)) {
+          navigateTo(&#39;graph_detail_page&#39;);
+          }
+          });
+
+          // 添加悬停预览
+          card.addEventListener(&#39;mouseenter&#39;, function(e) {
+          showGraphPreview(graph, e);
+          });
+
+          card.addEventListener(&#39;mouseleave&#39;, function() {
+          hideGraphPreview();
+          });
+
+          return card;
+          }
+
+          // 显示图谱预览
+          function showGraphPreview(graph, event) {
+          const tooltip = document.createElement(&#39;div&#39;);
+          tooltip.className = &#39;graph-preview-tooltip&#39;;
+          tooltip.id = &#39;graphPreviewTooltip&#39;;
+
+          tooltip.innerHTML = `
+          <h4 class="font-semibold mb-2">${graph.title}</h4>
+          <p class="text-sm text-base-content/70 mb-3">${graph.description}</p>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span>提供者:</span>
+              <span class="font-medium">${graph.provider}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>创建日期:</span>
+              <span class="font-medium">${graph.createDate}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>浏览次数:</span>
+              <span class="font-medium">${graph.viewCount}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>下载次数:</span>
+              <span class="font-medium">${graph.downloadCount}</span>
+            </div>
+          </div>
+          `;
+
+          document.body.appendChild(tooltip);
+
+          // 定位tooltip
+          const rect = event.currentTarget.getBoundingClientRect();
+          tooltip.style.left = `${rect.right + 10}px`;
+          tooltip.style.top = `${rect.top}px`;
+
+          // 检查是否超出视窗
+          const tooltipRect = tooltip.getBoundingClientRect();
+          if (tooltipRect.right > window.innerWidth) {
+          tooltip.style.left = `${rect.left - tooltipRect.width - 10}px`;
+          }
+          if (tooltipRect.bottom > window.innerHeight) {
+          tooltip.style.top = `${rect.bottom - tooltipRect.height}px`;
+          }
+
+          setTimeout(() => {
+          tooltip.classList.add(&#39;show&#39;);
+          }, 50);
+          }
+
+          // 隐藏图谱预览
+          function hideGraphPreview() {
+          const tooltip = document.getElementById(&#39;graphPreviewTooltip&#39;);
+          if (tooltip) {
+          tooltip.remove();
+          }
+          }
+
+          // 切换收藏状态
+          function toggleFavorite(graphId, event) {
+          event.stopPropagation();
+
+          const graph = currentGraphsList.find(g => g.graphId == graphId);
+
+          if (graph) {
+          window.APP_GLOBALS.favorites.toggle(graphId, graph);
+
+          // 更新心形图标状态
+          const btn = event.target.closest(&#39;.favorite-btn&#39;);
+          const heartIcon = btn.querySelector(&#39;.iconify&#39;);
+          const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
+
+          if (isFavorited) {
+          heartIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart-solid&#39;);
+          btn.classList.add(&#39;favorited&#39;);
+          } else {
+          heartIcon.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart&#39;);
+          btn.classList.remove(&#39;favorited&#39;);
+          }
+          }
+          }
+
+          // 更新结果计数
+          function updateResultCount() {
+          const countElement = document.getElementById(&#39;resultCount&#39;);
+          countElement.textContent = `共找到 ${filteredData.length} 个图谱`;
+          }
+          </script>
+
+
+          <script>
+            setTimeout(() => {
+              Holder.run({
+                domain: "placehold.co"
+              })
+            }, 100)
+          </script>
+</body>
+
+</html>'></iframe>
+</div>
+</div>
+
+</body>
+
+</html>

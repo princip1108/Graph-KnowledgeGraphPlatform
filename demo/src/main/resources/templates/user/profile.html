@@ -17,7 +17,8 @@
                     <!-- 左侧导航栏 -->
                     <div class="w-56 bg-base-100 shadow-soft border-r academic-border flex-shrink-0">
                         <div class="p-6 text-center">
-                            <div id="sidebar-avatar" class="w-24 h-24 mx-auto rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-bold overflow-hidden mb-4">
+                            <div id="sidebar-avatar"
+                                class="w-24 h-24 mx-auto rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-bold overflow-hidden mb-4">
                                 <span id="sidebar-avatar-text">--</span>
                                 <img id="sidebar-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
                             </div>
@@ -26,16 +27,29 @@
                         </div>
                         <nav class="px-3 pb-6">
                             <ul class="menu menu-vertical w-full gap-1">
-                                <li><a id="nav-profile" class="focus-primary active" onclick="showSection('profile')"><span class="iconify" data-icon="heroicons:user" data-width="18"></span>个人资料</a></li>
-                                <li><a id="nav-search-history" class="focus-primary" onclick="showSection('search-history')"><span class="iconify" data-icon="heroicons:magnifying-glass" data-width="18"></span>搜索历史</a></li>
-                                <li><a id="nav-browse-history" class="focus-primary" onclick="showSection('browse-history')"><span class="iconify" data-icon="heroicons:clock" data-width="18"></span>浏览历史</a></li>
-                                <li><a id="nav-favorites" class="focus-primary" onclick="showSection('favorites')"><span class="iconify" data-icon="heroicons:heart" data-width="18"></span>我的收藏</a></li>
-                                <li><a id="nav-messages" class="focus-primary" onclick="showSection('messages')"><span class="iconify" data-icon="heroicons:inbox" data-width="18"></span>收件箱<span id="inbox-badge" class="badge badge-primary badge-sm hidden">0</span></a></li>
-                                <li><a id="nav-settings" class="focus-primary" onclick="showSection('settings')"><span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="18"></span>账户设置</a></li>
+                                <li><a id="nav-profile" class="focus-primary active"
+                                        onclick="showSection('profile')"><span class="iconify"
+                                            data-icon="heroicons:user" data-width="18"></span>个人资料</a></li>
+                                <li><a id="nav-search-history" class="focus-primary"
+                                        onclick="showSection('search-history')"><span class="iconify"
+                                            data-icon="heroicons:magnifying-glass" data-width="18"></span>搜索历史</a></li>
+                                <li><a id="nav-browse-history" class="focus-primary"
+                                        onclick="showSection('browse-history')"><span class="iconify"
+                                            data-icon="heroicons:clock" data-width="18"></span>浏览历史</a></li>
+                                <li><a id="nav-favorites" class="focus-primary" onclick="showSection('favorites')"><span
+                                            class="iconify" data-icon="heroicons:heart" data-width="18"></span>我的收藏</a>
+                                </li>
+                                <li><a id="nav-messages" class="focus-primary" onclick="showSection('messages')"><span
+                                            class="iconify" data-icon="heroicons:inbox" data-width="18"></span>收件箱<span
+                                            id="inbox-badge" class="badge badge-primary badge-sm hidden">0</span></a>
+                                </li>
+                                <li><a id="nav-settings" class="focus-primary" onclick="showSection('settings')"><span
+                                            class="iconify" data-icon="heroicons:cog-6-tooth"
+                                            data-width="18"></span>账户设置</a></li>
                             </ul>
                         </nav>
                     </div>
-                    
+
                     <!-- 右侧内容区域 -->
                     <div class="flex-1 p-8">
                         <!-- 个人资料部分 -->
@@ -46,33 +60,47 @@
                                     <form id="profile-form" class="space-y-6">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div class="form-control md:col-span-2">
-                                                <label class="label"><span class="label-text font-medium">头像</span></label>
+                                                <label class="label"><span
+                                                        class="label-text font-medium">头像</span></label>
                                                 <div class="flex items-center gap-4">
-                                                    <div id="form-avatar-container" class="w-20 h-20 rounded-full bg-primary text-primary-content flex items-center justify-center text-xl font-bold overflow-hidden">
+                                                    <div id="form-avatar-container"
+                                                        class="w-20 h-20 rounded-full bg-primary text-primary-content flex items-center justify-center text-xl font-bold overflow-hidden">
                                                         <span id="form-avatar-text">--</span>
-                                                        <img id="form-avatar-img" class="w-full h-full object-cover hidden" alt="头像">
+                                                        <img id="form-avatar-img"
+                                                            class="w-full h-full object-cover hidden" alt="头像">
                                                     </div>
-                                                    <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarUpload(this)">
-                                                    <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('avatar-input').click()">
-                                                        <span class="iconify" data-icon="heroicons:camera" data-width="16"></span>更换头像
+                                                    <input type="file" id="avatar-input" accept="image/*" class="hidden"
+                                                        onchange="handleAvatarUpload(this)">
+                                                    <button type="button" class="btn btn-outline btn-sm"
+                                                        onclick="document.getElementById('avatar-input').click()">
+                                                        <span class="iconify" data-icon="heroicons:camera"
+                                                            data-width="16"></span>更换头像
                                                     </button>
                                                 </div>
                                             </div>
                                             <div class="form-control w-full">
-                                                <label class="label"><span class="label-text font-medium">用户名</span></label>
-                                                <input id="form-username" type="text" placeholder="用户名" class="input input-bordered w-full focus-primary">
+                                                <label class="label"><span
+                                                        class="label-text font-medium">用户名</span></label>
+                                                <input id="form-username" type="text" placeholder="用户名"
+                                                    class="input input-bordered w-full focus-primary">
                                             </div>
                                             <div class="form-control w-full">
-                                                <label class="label"><span class="label-text font-medium">邮箱</span></label>
-                                                <input id="form-email" type="email" placeholder="邮箱" class="input input-bordered w-full focus-primary">
+                                                <label class="label"><span
+                                                        class="label-text font-medium">邮箱</span></label>
+                                                <input id="form-email" type="email" placeholder="邮箱"
+                                                    class="input input-bordered w-full focus-primary">
                                             </div>
                                             <div class="form-control w-full">
-                                                <label class="label"><span class="label-text font-medium">手机号</span></label>
-                                                <input id="form-phone" type="tel" placeholder="手机号" class="input input-bordered w-full focus-primary">
+                                                <label class="label"><span
+                                                        class="label-text font-medium">手机号</span></label>
+                                                <input id="form-phone" type="tel" placeholder="手机号"
+                                                    class="input input-bordered w-full focus-primary">
                                             </div>
                                             <div class="form-control w-full">
-                                                <label class="label"><span class="label-text font-medium">性别</span></label>
-                                                <select id="form-gender" class="select select-bordered w-full focus-primary">
+                                                <label class="label"><span
+                                                        class="label-text font-medium">性别</span></label>
+                                                <select id="form-gender"
+                                                    class="select select-bordered w-full focus-primary">
                                                     <option value="">请选择</option>
                                                     <option value="MALE">男</option>
                                                     <option value="FEMALE">女</option>
@@ -80,122 +108,157 @@
                                                 </select>
                                             </div>
                                             <div class="form-control w-full">
-                                                <label class="label"><span class="label-text font-medium">生日</span></label>
-                                                <input id="form-birthday" type="date" class="input input-bordered w-full focus-primary">
+                                                <label class="label"><span
+                                                        class="label-text font-medium">生日</span></label>
+                                                <input id="form-birthday" type="date"
+                                                    class="input input-bordered w-full focus-primary">
                                             </div>
                                             <div class="form-control w-full">
-                                                <label class="label"><span class="label-text font-medium">所属机构</span></label>
-                                                <input id="form-institution" type="text" placeholder="学校/公司" class="input input-bordered w-full focus-primary">
+                                                <label class="label"><span
+                                                        class="label-text font-medium">所属机构</span></label>
+                                                <input id="form-institution" type="text" placeholder="学校/公司"
+                                                    class="input input-bordered w-full focus-primary">
                                             </div>
                                             <div class="form-control w-full md:col-span-2">
-                                                <label class="label"><span class="label-text font-medium">个人简介</span></label>
-                                                <textarea id="form-bio" placeholder="介绍一下自己..." class="textarea textarea-bordered w-full h-24 focus-primary"></textarea>
+                                                <label class="label"><span
+                                                        class="label-text font-medium">个人简介</span></label>
+                                                <textarea id="form-bio" placeholder="介绍一下自己..."
+                                                    class="textarea textarea-bordered w-full h-24 focus-primary"></textarea>
                                             </div>
                                         </div>
                                         <div class="flex gap-4 mt-8">
-                                            <button type="submit" class="btn btn-primary"><span class="iconify" data-icon="heroicons:check" data-width="16"></span>保存修改</button>
-                                            <button type="button" class="btn btn-ghost" onclick="loadUserProfile()">取消</button>
+                                            <button type="submit" class="btn btn-primary"><span class="iconify"
+                                                    data-icon="heroicons:check" data-width="16"></span>保存修改</button>
+                                            <button type="button" class="btn btn-ghost"
+                                                onclick="loadUserProfile()">取消</button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- 搜索历史部分 -->
                         <div id="search-history-section" class="content-section hidden">
                             <div class="card bg-base-100 shadow-soft">
                                 <div class="card-body">
                                     <div class="flex justify-between items-center mb-6">
                                         <h2 class="card-title text-2xl font-semibold">搜索历史</h2>
-                                        <button class="btn btn-outline btn-sm text-error" onclick="clearAllSearchHistory()"><span class="iconify" data-icon="heroicons:trash" data-width="16"></span>清空所有</button>
+                                        <button class="btn btn-outline btn-sm text-error"
+                                            onclick="clearAllSearchHistory()"><span class="iconify"
+                                                data-icon="heroicons:trash" data-width="16"></span>清空所有</button>
                                     </div>
-                                    <div class="space-y-4">
-                                        <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                                            <div class="flex items-center gap-3">
-                                                <span class="iconify text-base-content/70" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                                                <div><p class="font-medium">人工智能</p><p class="text-sm text-base-content/70">2024-10-28 14:30</p></div>
-                                            </div>
-                                            <div class="flex gap-2">
-                                                <button class="btn btn-ghost btn-sm" onclick="searchAgain('人工智能')"><span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span>再次搜索</button>
-                                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteSearchItem(this)"><span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span></button>
-                                            </div>
+
+                                    <div class="tabs tabs-boxed mb-6">
+                                        <a id="tab-search-graph" class="tab tab-active"
+                                            onclick="switchSearchHistoryTab('graph')"><span class="iconify mr-1"
+                                                data-icon="heroicons:squares-2x2" data-width="16"></span>图谱搜索</a>
+                                        <a id="tab-search-forum" class="tab"
+                                            onclick="switchSearchHistoryTab('forum')"><span class="iconify mr-1"
+                                                data-icon="heroicons:chat-bubble-left-right"
+                                                data-width="16"></span>论坛搜索</a>
+                                    </div>
+
+                                    <div id="search-history-graph-container" class="space-y-4">
+                                        <div class="text-center py-8 text-base-content/70"><span
+                                                class="loading loading-spinner loading-md"></span>
+                                            <p class="mt-2">加载中...</p>
+                                        </div>
+                                    </div>
+                                    <div id="search-history-forum-container" class="space-y-4 hidden">
+                                        <div class="text-center py-8 text-base-content/70"><span
+                                                class="loading loading-spinner loading-md"></span>
+                                            <p class="mt-2">加载中...</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- 浏览历史部分 -->
                         <div id="browse-history-section" class="content-section hidden">
                             <div class="card bg-base-100 shadow-soft">
                                 <div class="card-body">
                                     <div class="flex justify-between items-center mb-6">
                                         <h2 class="card-title text-2xl font-semibold">浏览历史</h2>
-                                        <button class="btn btn-outline btn-sm text-error" onclick="clearAllBrowseHistory()"><span class="iconify" data-icon="heroicons:trash" data-width="16"></span>清空所有</button>
+                                        <button class="btn btn-outline btn-sm text-error"
+                                            onclick="clearAllBrowseHistory()"><span class="iconify"
+                                                data-icon="heroicons:trash" data-width="16"></span>清空所有</button>
                                     </div>
-                                    <div class="space-y-4">
-                                        <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
-                                            <div class="flex items-center gap-3">
-                                                <span class="iconify text-base-content/70" data-icon="heroicons:document-text" data-width="20"></span>
-                                                <div><p class="font-medium">人工智能技术发展图谱</p><p class="text-sm text-base-content/70">2024-10-28 15:20</p></div>
-                                            </div>
-                                            <div class="flex gap-2">
-                                                <a th:href="@{/graph/graph_detail.html}" class="btn btn-ghost btn-sm"><span class="iconify" data-icon="heroicons:eye" data-width="16"></span>前往查看</a>
-                                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteBrowseItem(this)"><span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span></button>
-                                            </div>
+
+                                    <div class="tabs tabs-boxed mb-6">
+                                        <a id="tab-browse-graph" class="tab tab-active"
+                                            onclick="switchBrowseHistoryTab('graph')"><span class="iconify mr-1"
+                                                data-icon="heroicons:squares-2x2" data-width="16"></span>图谱浏览</a>
+                                        <a id="tab-browse-post" class="tab"
+                                            onclick="switchBrowseHistoryTab('post')"><span class="iconify mr-1"
+                                                data-icon="heroicons:document-text" data-width="16"></span>帖子浏览</a>
+                                    </div>
+
+                                    <div id="browse-history-graph-container" class="space-y-4">
+                                        <div class="text-center py-8 text-base-content/70"><span
+                                                class="loading loading-spinner loading-md"></span>
+                                            <p class="mt-2">加载中...</p>
+                                        </div>
+                                    </div>
+                                    <div id="browse-history-post-container" class="space-y-4 hidden">
+                                        <div class="text-center py-8 text-base-content/70"><span
+                                                class="loading loading-spinner loading-md"></span>
+                                            <p class="mt-2">加载中...</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
+
                         <!-- 我的收藏部分 -->
                         <div id="favorites-section" class="content-section hidden">
                             <div class="card bg-base-100 shadow-soft">
                                 <div class="card-body">
                                     <h2 class="card-title text-2xl font-semibold mb-6">我的收藏</h2>
                                     <div class="tabs tabs-boxed mb-6">
-                                        <a id="tab-posts" class="tab tab-active" onclick="switchFavoriteTab('posts')"><span class="iconify mr-1" data-icon="heroicons:document-text" data-width="16"></span>帖子收藏</a>
-                                        <a id="tab-graphs" class="tab" onclick="switchFavoriteTab('graphs')"><span class="iconify mr-1" data-icon="heroicons:share" data-width="16"></span>图谱收藏</a>
+                                        <a id="tab-posts" class="tab tab-active"
+                                            onclick="switchFavoriteTab('posts')"><span class="iconify mr-1"
+                                                data-icon="heroicons:document-text" data-width="16"></span>帖子收藏</a>
+                                        <a id="tab-graphs" class="tab" onclick="switchFavoriteTab('graphs')"><span
+                                                class="iconify mr-1" data-icon="heroicons:share"
+                                                data-width="16"></span>图谱收藏</a>
                                     </div>
                                     <div id="post-favorites-container" class="space-y-4">
-                                        <div class="text-center py-8 text-base-content/70"><span class="loading loading-spinner loading-md"></span><p class="mt-2">加载中...</p></div>
+                                        <div class="text-center py-8 text-base-content/70"><span
+                                                class="loading loading-spinner loading-md"></span>
+                                            <p class="mt-2">加载中...</p>
+                                        </div>
                                     </div>
                                     <div id="graph-favorites-container" class="space-y-4 hidden">
-                                        <div class="text-center py-8 text-base-content/70"><span class="loading loading-spinner loading-md"></span><p class="mt-2">加载中...</p></div>
+                                        <div class="text-center py-8 text-base-content/70"><span
+                                                class="loading loading-spinner loading-md"></span>
+                                            <p class="mt-2">加载中...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- 收件箱部分 -->
                         <div id="messages-section" class="content-section hidden">
                             <div class="card bg-base-100 shadow-soft">
                                 <div class="card-body">
                                     <div class="flex justify-between items-center mb-6">
                                         <h2 class="card-title text-2xl font-semibold">私信</h2>
-                                        <button class="btn btn-primary btn-sm"><span class="iconify" data-icon="heroicons:plus" data-width="16"></span>发送私信</button>
+                                        <!-- <button class="btn btn-primary btn-sm"><span class="iconify" data-icon="heroicons:plus"
+                                    data-width="16"></span>发送私信</button> -->
                                     </div>
-                                    <div class="space-y-4">
-                                        <div data-repeatable="true" class="flex items-start gap-4 p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="openMessage('msg1')">
-                                            <div class="w-12 h-12 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-sm font-bold">李四</div>
-                                            <div class="flex-1">
-                                                <div class="flex justify-between items-start mb-2">
-                                                    <h4 class="font-semibold">李四</h4>
-                                                    <div class="flex items-center gap-2"><span class="badge badge-accent badge-sm">新消息</span><span class="text-sm text-base-content/70">2小时前</span></div>
-                                                </div>
-                                                <p class="text-sm text-base-content/80 mb-2">关于人工智能图谱的问题咨询...</p>
-                                                <div class="flex gap-2">
-                                                    <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage('msg1')"><span class="iconify" data-icon="heroicons:arrow-uturn-left" data-width="14"></span>回复</button>
-                                                    <button class="btn btn-ghost btn-xs text-error" onclick="event.stopPropagation(); deleteMessage('msg1')"><span class="iconify" data-icon="heroicons:trash" data-width="14"></span>删除</button>
-                                                </div>
-                                            </div>
+                                    <div id="inbox-container" class="space-y-4">
+                                        <div class="text-center py-8 text-base-content/70"><span
+                                                class="loading loading-spinner loading-md"></span>
+                                            <p class="mt-2">加载中...</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- 账户设置部分 -->
                         <div id="settings-section" class="content-section hidden">
                             <div class="card bg-base-100 shadow-soft">
@@ -206,24 +269,36 @@
                                             <h3 class="text-lg font-semibold mb-4">修改密码</h3>
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                                 <div class="flex items-center gap-4">
-                                                    <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">当前密码</label>
-                                                    <input type="password" placeholder="请输入当前密码" class="input input-bordered focus-primary flex-1">
+                                                    <label
+                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">当前密码</label>
+                                                    <input type="password" placeholder="请输入当前密码"
+                                                        class="input input-bordered focus-primary flex-1">
                                                 </div>
                                                 <div class="flex items-center gap-4">
-                                                    <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[4rem]">新密码</label>
-                                                    <input type="password" placeholder="请输入新密码" class="input input-bordered focus-primary flex-1">
+                                                    <label
+                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[4rem]">新密码</label>
+                                                    <input type="password" placeholder="请输入新密码"
+                                                        class="input input-bordered focus-primary flex-1">
                                                 </div>
                                                 <div class="flex items-center gap-4">
-                                                    <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">确认新密码</label>
-                                                    <input type="password" placeholder="请再次输入新密码" class="input input-bordered focus-primary flex-1">
+                                                    <label
+                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">确认新密码</label>
+                                                    <input type="password" placeholder="请再次输入新密码"
+                                                        class="input input-bordered focus-primary flex-1">
                                                 </div>
                                             </div>
-                                            <button class="btn btn-primary mt-4" onclick="changePassword()"><span class="iconify" data-icon="heroicons:key" data-width="16"></span>修改密码</button>
+                                            <button class="btn btn-primary mt-4" onclick="changePassword()"><span
+                                                    class="iconify" data-icon="heroicons:key"
+                                                    data-width="16"></span>修改密码</button>
                                         </div>
                                         <div>
                                             <h3 class="text-lg font-semibold mb-4 text-error">危险操作</h3>
-                                            <div class="alert alert-warning mb-4"><span class="iconify" data-icon="heroicons:exclamation-triangle" data-width="20"></span><span>以下操作不可逆，请谨慎操作</span></div>
-                                            <button class="btn btn-error" onclick="confirmAccountDeletion()"><span class="iconify" data-icon="heroicons:trash" data-width="16"></span>注销账户</button>
+                                            <div class="alert alert-warning mb-4"><span class="iconify"
+                                                    data-icon="heroicons:exclamation-triangle"
+                                                    data-width="20"></span><span>以下操作不可逆，请谨慎操作</span></div>
+                                            <button class="btn btn-error" onclick="confirmAccountDeletion()"><span
+                                                    class="iconify" data-icon="heroicons:trash"
+                                                    data-width="16"></span>注销账户</button>
                                         </div>
                                     </div>
                                 </div>
@@ -233,7 +308,7 @@
                 </main>
             </div>
         </div>
-        
+
         <!-- 确认对话框 -->
         <dialog id="confirmModal" class="modal">
             <div class="modal-box">
@@ -244,6 +319,40 @@
                     <button id="confirmButton" class="btn btn-error" onclick="executeConfirmedAction()">确认</button>
                 </div>
             </div>
+        </dialog>
+
+        <!-- 私信对话框 -->
+        <dialog id="chatModal" class="modal">
+            <div class="modal-box w-11/12 max-w-3xl h-[80vh] flex flex-col p-0">
+                <!-- Header -->
+                <div class="flex justify-between items-center p-4 border-b">
+                    <div class="flex items-center gap-3">
+                        <h3 class="font-bold text-lg" id="chatTargetName">正在加载...</h3>
+                    </div>
+                    <form method="dialog">
+                        <button class="btn btn-sm btn-circle btn-ghost">✕</button>
+                    </form>
+                </div>
+
+                <!-- Messages Area -->
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-base-200/30">
+                    <!-- Messages will be injected here -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 border-t bg-base-100">
+                    <div class="join w-full">
+                        <input id="chatInput" type="text" class="input input-bordered join-item w-full"
+                            placeholder="输入消息..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                        <button class="btn btn-primary join-item" onclick="sendChatMessage()">
+                            <span class="iconify" data-icon="heroicons:paper-airplane" data-width="20"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
         </dialog>
     </div>
 

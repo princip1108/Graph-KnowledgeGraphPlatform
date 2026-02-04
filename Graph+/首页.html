@@ -1,109 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
 
-                <!DOCTYPE html>
-                <html lang="zh">
-                <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>首页</title>
-                  <style>
-                    *,
-                    *::before,
-                    *::after {
-                      box-sizing: border-box;
-                      margin: 0;
-                    }
-                    .iframe-outer {
-                      position: fixed;
-                      top: 0;
-                      left: 0;
-                      bottom: 0;
-                      right: 0;
-                      display: flex;
-                      justify-content: center;
-                      background-color: #E0E0E0;
-                    }
-                    .iframe-wrapper {
-                      width: 100%;
-                      height: 100%;
-                      margin: 0 auto;
-                      transform-origin: center top;
-                      flex-shrink: 0;
-                    }
-                    #dynamicIframe {
-                      border: none;
-                      width: 100%;
-                      height: 100%;
-                    }
-                  </style>
-                  <script>
-                const width = 1920
-                const height = 1080
-                const resolutionRatio = width && height ? width / height : 1
-                const pageNameMap = {
-                  'home_page': '首页',
-    'login_register_page': '登录注册',
-    'registration_success_page': '注册成功',
-    'password_reset_page': '找回密码',
-    'graph_list_page': '图谱列表页',
-    'graph_detail_page': '图谱详情页',
-    'user_profile_page': '个人中心',
-    'documentation_page': '文档',
-    'about_page': '关于我们',
-    'feedback_page': '用户反馈',
-    'page_998124': '管理',
-    'page_998125': '论坛'
-                }
-                function setIframeSize(w, h) {
-                  const currentContainerRadio = w / h
-                  let widthValue = w
-                  let heightValue = h
-                  let zoom = 1
-                  if (currentContainerRadio > resolutionRatio) {
-                    widthValue = h * resolutionRatio
-                    heightValue = h
-                  } else {
-                    widthValue = w
-                    heightValue = w / resolutionRatio
-                  }
-                  zoom = width ? widthValue / width : 1
-                  return {
-                    width: widthValue / zoom + 'px',
-                    height: heightValue / zoom + 'px',
-                    zoom,
-                  }
-                }
-                function adjustIframeSize() {
-                  const iframeWrapper = document.querySelector(".iframe-wrapper")
-                  if (!iframeWrapper) return
-                  iframeWrapper.style.width = '100%'
-                  iframeWrapper.style.height = window.innerHeight + 'px'
-                  iframeWrapper.style.transform = ''
-                }
-                function sanitizeFilename(name) {
-                  return name.replace(/[\/:*?"<>|]/g, '_')
-                }
-                function handlePostMessage(event) {
-                  if (!event.data) {
-                    return
-                  }
-                  const { type, targetPageId } = event.data
-                  const targetPageName = pageNameMap[targetPageId]
-                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
-                    window.location.href = targetPageName + '.html'
-                  }
-                }
-                window.addEventListener('message', handlePostMessage)
-                window.onload = adjustIframeSize
-                window.onresize = adjustIframeSize
-                window.onunload = () => {
-                  window.removeEventListener('message', handlePostMessage)
-                }
-              </script>
-                </head>
-                <body>
-                  <div class="iframe-outer">
-                    <div class="iframe-wrapper">
-                      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    .iframe-outer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      background-color: #E0E0E0;
+    }
+
+    .iframe-wrapper {
+      width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      transform-origin: center top;
+      flex-shrink: 0;
+    }
+
+    #dynamicIframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script>
+    const width = 1920
+    const height = 1080
+    const resolutionRatio = width && height ? width / height : 1
+    const pageNameMap = {
+      'home_page': '首页',
+      'login_register_page': '登录注册',
+      'registration_success_page': '注册成功',
+      'password_reset_page': '找回密码',
+      'graph_list_page': '图谱列表页',
+      'graph_detail_page': '图谱详情页',
+      'user_profile_page': '个人中心',
+      'documentation_page': '文档',
+      'about_page': '关于我们',
+      'feedback_page': '用户反馈',
+      'page_998124': '管理',
+      'page_998125': '论坛'
+    }
+    function setIframeSize(w, h) {
+      const currentContainerRadio = w / h
+      let widthValue = w
+      let heightValue = h
+      let zoom = 1
+      if (currentContainerRadio > resolutionRatio) {
+        widthValue = h * resolutionRatio
+        heightValue = h
+      } else {
+        widthValue = w
+        heightValue = w / resolutionRatio
+      }
+      zoom = width ? widthValue / width : 1
+      return {
+        width: widthValue / zoom + 'px',
+        height: heightValue / zoom + 'px',
+        zoom,
+      }
+    }
+    function adjustIframeSize() {
+      const iframeWrapper = document.querySelector(".iframe-wrapper")
+      if (!iframeWrapper) return
+      iframeWrapper.style.width = '100%'
+      iframeWrapper.style.height = window.innerHeight + 'px'
+      iframeWrapper.style.transform = ''
+    }
+    function sanitizeFilename(name) {
+      return name.replace(/[\/:*?"<>|]/g, '_')
+    }
+    function handlePostMessage(event) {
+      if (!event.data) {
+        return
+      }
+      const { type, targetPageId } = event.data
+      const targetPageName = pageNameMap[targetPageId]
+      if (type === "iframeNavigation" && targetPageId && targetPageName) {
+        window.location.href = targetPageName + '.html'
+      }
+    }
+    window.addEventListener('message', handlePostMessage)
+    window.onload = adjustIframeSize
+    window.onresize = adjustIframeSize
+    window.onunload = () => {
+      window.removeEventListener('message', handlePostMessage)
+    }
+  </script>
+</head>
+
+<body>
+  <div class="iframe-outer">
+    <div class="iframe-wrapper">
+      <iframe id="dynamicIframe" srcdoc='<html lang="zh" data-theme="corporate"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>首页 - Graph+知识图谱平台</title>
@@ -1130,398 +1134,397 @@ getSearchSuggestions: function() {
 return this.history.length > 0 ? this.history : this.recommendations;
 },
 
-performSearch: function(query, targetPage = &#39;graph_list_page&#39;) {
-this.addToHistory(query);
-// Navigate to search results or graph detail based on context
-navigateTo(targetPage);
-}
-};
+performSearch: function(query, targetPage = ' graph_list_page') { this.addToHistory(query); if
+        (targetPage==='graph_list_page' ) { // 直接跳转并携带参数 const
+        url=`${targetPage}.html?keyword=${encodeURIComponent(query)}`; const isInIframe=window.self !==window.top; if
+        (isInIframe) { // 如果在iframe中，尝试通过postMessage (如果父级支持带参数的ID?) // 或者直接改变location (可能会被父级拦截?) // 简单起见，我们尝试直接跳转
+        window.location.href=url; } else { window.location.href=url; } } else { navigateTo(targetPage); } } }; //
+        Notification utilities window.showNotification=function(message, type=&#39;info&#39;) { const
+        notification=document.createElement(&#39;div&#39;); notification.className=`alert alert-${type} fixed top-4
+        right-4 w-96 z-50 shadow-lg`; notification.innerHTML=` <div class="flex items-center gap-2">
+        <span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
+        <span>${message}</span>
+    </div>
+    `;
+    document.body.appendChild(notification);
 
-// Notification utilities
-window.showNotification = function(message, type = &#39;info&#39;) {
-const notification = document.createElement(&#39;div&#39;);
-notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
-notification.innerHTML = `
-<div class="flex items-center gap-2">
-<span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
-<span>${message}</span>
-</div>
-`;
-document.body.appendChild(notification);
+    setTimeout(() => {
+    notification.remove();
+    }, 5000);
+    };
 
-setTimeout(() => {
-notification.remove();
-}, 5000);
-};
+    // Favorites management
+    window.APP_GLOBALS.favorites = {
+    items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
 
-// Favorites management
-window.APP_GLOBALS.favorites = {
-items: JSON.parse(localStorage.getItem(&#39;favorites&#39;) || &#39;[]&#39;),
+    add: function(graphId, graphData) {
+    if (!this.items.find(item => item.id === graphId)) {
+    this.items.push({
+    id: graphId,
+    data: graphData,
+    addedAt: new Date().toISOString()
+    });
+    localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+    showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
+    }
+    },
 
-add: function(graphId, graphData) {
-if (!this.items.find(item => item.id === graphId)) {
-this.items.push({
-id: graphId,
-data: graphData,
-addedAt: new Date().toISOString()
-});
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已添加到收藏&#39;, &#39;success&#39;);
-}
-},
+    remove: function(graphId) {
+    this.items = this.items.filter(item => item.id !== graphId);
+    localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
+    showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
+    },
 
-remove: function(graphId) {
-this.items = this.items.filter(item => item.id !== graphId);
-localStorage.setItem(&#39;favorites&#39;, JSON.stringify(this.items));
-showNotification(&#39;已从收藏中移除&#39;, &#39;info&#39;);
-},
+    isFavorited: function(graphId) {
+    return this.items.some(item => item.id === graphId);
+    },
 
-isFavorited: function(graphId) {
-return this.items.some(item => item.id === graphId);
-},
+    toggle: function(graphId, graphData) {
+    if (this.isFavorited(graphId)) {
+    this.remove(graphId);
+    } else {
+    this.add(graphId, graphData);
+    }
+    }
+    };
 
-toggle: function(graphId, graphData) {
-if (this.isFavorited(graphId)) {
-this.remove(graphId);
-} else {
-this.add(graphId, graphData);
-}
-}
-};
-
-// Initialize components when DOM is loaded
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-window.APP_GLOBALS.user.init();
-});
-
-})();
-</script><script>
-document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
-    initializeSearchFunctionality();
-    initializeFavorites();
-    initializeFilters();
-});
-
-// Enhanced search functionality
-function initializeSearchFunctionality() {
-    const searchInput = document.getElementById(&#39;searchInput&#39;);
-    const suggestionsContainer = document.getElementById(&#39;searchSuggestions&#39;);
-    const suggestionsList = document.getElementById(&#39;suggestionsList&#39;);
-
-    // Show suggestions on input focus
-    searchInput.addEventListener(&#39;focus&#39;, function() {
-        showSearchSuggestions();
+    // Initialize components when DOM is loaded
+    document.addEventListener(&#39;DOMContentLoaded&#39;, function() {
+    window.APP_GLOBALS.user.init();
     });
 
-    // Hide suggestions when clicking outside
-    document.addEventListener(&#39;click&#39;, function(event) {
-        if (!searchInput.contains(event.target) &amp;&amp; !suggestionsContainer.contains(event.target)) {
+    })();
+    </script>
+    <script>
+      document.addEventListener(&#39; DOMContentLoaded &#39;, function() {
+        initializeSearchFunctionality();
+        initializeFavorites();
+        initializeFilters();
+      });
+
+      // Enhanced search functionality
+      function initializeSearchFunctionality() {
+        const searchInput = document.getElementById(&#39; searchInput &#39;);
+        const suggestionsContainer = document.getElementById(&#39; searchSuggestions &#39;);
+        const suggestionsList = document.getElementById(&#39; suggestionsList &#39;);
+
+        // Show suggestions on input focus
+        searchInput.addEventListener(&#39; focus &#39;, function() {
+          showSearchSuggestions();
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener(&#39; click &#39;, function(event) {
+          if (!searchInput.contains(event.target) & amp;& amp; !suggestionsContainer.contains(event.target)) {
             hideSearchSuggestions();
-        }
-    });
+          }
+        });
 
-    // Handle input changes with debouncing
-    let searchTimeout;
-    searchInput.addEventListener(&#39;input&#39;, function() {
-        clearTimeout(searchTimeout);
-        const query = this.value.trim();
-        
-        searchTimeout = setTimeout(() => {
+        // Handle input changes with debouncing
+        let searchTimeout;
+        searchInput.addEventListener(&#39; input &#39;, function() {
+          clearTimeout(searchTimeout);
+          const query = this.value.trim();
+
+          searchTimeout = setTimeout(() => {
             if (query.length > 0) {
-                updateSearchSuggestions(query);
-                showSearchSuggestions();
+              updateSearchSuggestions(query);
+              showSearchSuggestions();
             } else {
-                showDefaultSuggestions();
+              showDefaultSuggestions();
             }
-        }, 300);
-    });
+          }, 300);
+        });
 
-    // Handle Enter key
-    searchInput.addEventListener(&#39;keydown&#39;, function(event) {
-        if (event.key === &#39;Enter&#39;) {
+        // Handle Enter key
+        searchInput.addEventListener(&#39; keydown &#39;, function(event) {
+          if (event.key === &#39; Enter &#39;) {
             event.preventDefault();
             performSearch();
-        }
-    });
+          }
+        });
 
-    // Handle arrow key navigation in suggestions
-    searchInput.addEventListener(&#39;keydown&#39;, function(event) {
-        const suggestions = suggestionsList.querySelectorAll(&#39;.suggestion-item&#39;);
-        let currentIndex = Array.from(suggestions).findIndex(item => item.classList.contains(&#39;active&#39;));
+        // Handle arrow key navigation in suggestions
+        searchInput.addEventListener(&#39; keydown &#39;, function(event) {
+          const suggestions = suggestionsList.querySelectorAll(&#39;.suggestion - item &#39;);
+          let currentIndex = Array.from(suggestions).findIndex(item => item.classList.contains(&#39; active &#39;));
 
-        if (event.key === &#39;ArrowDown&#39;) {
+          if (event.key === &#39; ArrowDown &#39;) {
             event.preventDefault();
             currentIndex = currentIndex < suggestions.length - 1 ? currentIndex + 1 : 0;
             highlightSuggestion(suggestions, currentIndex);
-        } else if (event.key === &#39;ArrowUp&#39;) {
+          } else if (event.key === &#39; ArrowUp &#39;) {
             event.preventDefault();
             currentIndex = currentIndex > 0 ? currentIndex - 1 : suggestions.length - 1;
             highlightSuggestion(suggestions, currentIndex);
-        } else if (event.key === &#39;Enter&#39; &amp;&amp; currentIndex >= 0) {
+          } else if (event.key === &#39; Enter &#39; & amp;& amp; currentIndex >= 0) {
             event.preventDefault();
             suggestions[currentIndex].click();
-        }
+          }
+        });
+      }
+
+      function highlightSuggestion(suggestions, index) {
+        suggestions.forEach((item, i) => {
+          if (i === index) {
+            item.classList.add(&#39; active &#39;);
+        item.style.backgroundColor = &#39; var(--color - primary) &#39;;
+        item.style.color = &#39; var(--color - primary - content) &#39;;
+      } else {
+        item.classList.remove(&#39; active &#39;);
+        item.style.backgroundColor = &#39;&#39;;
+        item.style.color = &#39;&#39;;
+      }
     });
 }
 
-function highlightSuggestion(suggestions, index) {
-    suggestions.forEach((item, i) => {
-        if (i === index) {
-            item.classList.add(&#39;active&#39;);
-            item.style.backgroundColor = &#39;var(--color-primary)&#39;;
-            item.style.color = &#39;var(--color-primary-content)&#39;;
-        } else {
-            item.classList.remove(&#39;active&#39;);
-            item.style.backgroundColor = &#39;&#39;;
-            item.style.color = &#39;&#39;;
-        }
-    });
-}
+      function showSearchSuggestions() {
+        const suggestionsContainer = document.getElementById(&#39; searchSuggestions &#39;);
+        suggestionsContainer.classList.remove(&#39; hidden &#39;);
+        showDefaultSuggestions();
+      }
 
-function showSearchSuggestions() {
-    const suggestionsContainer = document.getElementById(&#39;searchSuggestions&#39;);
-    suggestionsContainer.classList.remove(&#39;hidden&#39;);
-    showDefaultSuggestions();
-}
+      function hideSearchSuggestions() {
+        const suggestionsContainer = document.getElementById(&#39; searchSuggestions &#39;);
+        suggestionsContainer.classList.add(&#39; hidden &#39;);
+      }
 
-function hideSearchSuggestions() {
-    const suggestionsContainer = document.getElementById(&#39;searchSuggestions&#39;);
-    suggestionsContainer.classList.add(&#39;hidden&#39;);
-}
+      function showDefaultSuggestions() {
+        const suggestionsList = document.getElementById(&#39; suggestionsList &#39;);
+        const suggestions = window.APP_GLOBALS.search.getSearchSuggestions();
 
-function showDefaultSuggestions() {
-    const suggestionsList = document.getElementById(&#39;suggestionsList&#39;);
-    const suggestions = window.APP_GLOBALS.search.getSearchSuggestions();
+        suggestionsList.innerHTML = &#39;&#39;;
+        suggestions.slice(0, 5).forEach(suggestion => {
+          const isHistory = window.APP_GLOBALS.search.history.includes(suggestion);
+          const icon = isHistory ? &#39; heroicons: clock &#39; : &#39; heroicons: magnifying - glass &#39;;
+          const item = createSuggestionItem(suggestion, icon);
+          suggestionsList.appendChild(item);
+        });
+      }
 
-    suggestionsList.innerHTML = &#39;&#39;;
-    suggestions.slice(0, 5).forEach(suggestion => {
-        const isHistory = window.APP_GLOBALS.search.history.includes(suggestion);
-        const icon = isHistory ? &#39;heroicons:clock&#39; : &#39;heroicons:magnifying-glass&#39;;
-        const item = createSuggestionItem(suggestion, icon);
-        suggestionsList.appendChild(item);
-    });
-}
+      function updateSearchSuggestions(query) {
+        const suggestionsList = document.getElementById(&#39; suggestionsList &#39;);
+        const allSuggestions = [
+          ...window.APP_GLOBALS.search.history,
+          ...window.APP_GLOBALS.search.recommendations
+        ];
+        const filtered = allSuggestions.filter(item =>
+          item.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, 5);
 
-function updateSearchSuggestions(query) {
-    const suggestionsList = document.getElementById(&#39;suggestionsList&#39;);
-    const allSuggestions = [
-        ...window.APP_GLOBALS.search.history,
-        ...window.APP_GLOBALS.search.recommendations
-    ];
-    const filtered = allSuggestions.filter(item => 
-        item.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 5);
+        suggestionsList.innerHTML = &#39;&#39;;
+        filtered.forEach(suggestion => {
+          const isHistory = window.APP_GLOBALS.search.history.includes(suggestion);
+          const icon = isHistory ? &#39; heroicons: clock &#39; : &#39; heroicons: magnifying - glass &#39;;
+          const item = createSuggestionItem(suggestion, icon);
+          suggestionsList.appendChild(item);
+        });
+      }
 
-    suggestionsList.innerHTML = &#39;&#39;;
-    filtered.forEach(suggestion => {
-        const isHistory = window.APP_GLOBALS.search.history.includes(suggestion);
-        const icon = isHistory ? &#39;heroicons:clock&#39; : &#39;heroicons:magnifying-glass&#39;;
-        const item = createSuggestionItem(suggestion, icon);
-        suggestionsList.appendChild(item);
-    });
-}
-
-function createSuggestionItem(text, iconName) {
-    const item = document.createElement(&#39;div&#39;);
-    item.className = &#39;suggestion-item&#39;;
-    item.innerHTML = `
+      function createSuggestionItem(text, iconName) {
+        const item = document.createElement(&#39; div &#39;);
+        item.className = &#39; suggestion - item &#39;;
+        item.innerHTML = `
         <span class="iconify" data-icon="${iconName}" data-width="16"></span>
         <span class="flex-1">${text}</span>
     `;
-    item.onclick = () => {
-        document.getElementById(&#39;searchInput&#39;).value = text;
+        item.onclick = () => {
+          document.getElementById(&#39; searchInput &#39;).value = text;
+          performSearch();
+        };
+        return item;
+      }
+
+      function performSearch() {
+        const query = document.getElementById(&#39; searchInput &#39;).value.trim();
+        if (query) {
+          window.APP_GLOBALS.search.performSearch(query);
+          hideSearchSuggestions();
+        }
+      }
+
+      function searchTag(tag) {
+        document.getElementById(&#39; searchInput &#39;).value = tag;
         performSearch();
-    };
-    return item;
-}
+      }
 
-function performSearch() {
-    const query = document.getElementById(&#39;searchInput&#39;).value.trim();
-    if (query) {
-        window.APP_GLOBALS.search.performSearch(query);
-        hideSearchSuggestions();
-    }
-}
+      // Enhanced favorites functionality
+      function initializeFavorites() {
+        updateFavoriteButtons();
+      }
 
-function searchTag(tag) {
-    document.getElementById(&#39;searchInput&#39;).value = tag;
-    performSearch();
-}
+      function toggleFavorite(graphId, buttonElement) {
+        const iconElement = buttonElement.querySelector(&#39;.iconify &#39;);
+        const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
 
-// Enhanced favorites functionality
-function initializeFavorites() {
-    updateFavoriteButtons();
-}
+        // Mock graph data for demonstration
+        const cardElement = buttonElement.closest(&#39;.card &#39;);
+        const graphData = {
+          id: graphId,
+          title: cardElement.querySelector(&#39;.card - title &#39;).textContent,
+          description: cardElement.querySelector(&#39; p&#39;).textContent,
+            image: cardElement.querySelector(&#39; img &#39;).src
+      };
 
-function toggleFavorite(graphId, buttonElement) {
-    const iconElement = buttonElement.querySelector(&#39;.iconify&#39;);
-    const isFavorited = window.APP_GLOBALS.favorites.isFavorited(graphId);
+      window.APP_GLOBALS.favorites.toggle(graphId, graphData);
 
-    // Mock graph data for demonstration
-    const cardElement = buttonElement.closest(&#39;.card&#39;);
-    const graphData = {
-        id: graphId,
-        title: cardElement.querySelector(&#39;.card-title&#39;).textContent,
-        description: cardElement.querySelector(&#39;p&#39;).textContent,
-        image: cardElement.querySelector(&#39;img&#39;).src
-    };
-
-    window.APP_GLOBALS.favorites.toggle(graphId, graphData);
-
-    // Update button appearance with animation
-    if (isFavorited) {
-        iconElement.classList.remove(&#39;favorited&#39;);
-        iconElement.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart&#39;);
-        buttonElement.style.transform = &#39;scale(0.9)&#39;;
+      // Update button appearance with animation
+      if (isFavorited) {
+        iconElement.classList.remove(&#39; favorited &#39;);
+        iconElement.setAttribute(&#39; data - icon &#39;, &#39; heroicons: heart &#39;);
+        buttonElement.style.transform = &#39; scale(0.9) &#39;;
         setTimeout(() => {
-            buttonElement.style.transform = &#39;scale(1)&#39;;
+          buttonElement.style.transform = &#39; scale(1) &#39;;
         }, 150);
-    } else {
-        iconElement.classList.add(&#39;favorited&#39;);
-        iconElement.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart-solid&#39;);
-        buttonElement.style.transform = &#39;scale(1.1)&#39;;
+      } else {
+        iconElement.classList.add(&#39; favorited &#39;);
+        iconElement.setAttribute(&#39; data - icon &#39;, &#39; heroicons: heart - solid &#39;);
+        buttonElement.style.transform = &#39; scale(1.1) &#39;;
         setTimeout(() => {
-            buttonElement.style.transform = &#39;scale(1)&#39;;
+          buttonElement.style.transform = &#39; scale(1) &#39;;
         }, 150);
-    }
+      }
 }
 
-function updateFavoriteButtons() {
-    const favoriteButtons = document.querySelectorAll(&#39;[onclick*="toggleFavorite"]&#39;);
-    favoriteButtons.forEach(button => {
-        const onclickAttr = button.getAttribute(&#39;onclick&#39;);
+      function updateFavoriteButtons() {
+        const favoriteButtons = document.querySelectorAll(&#39;[onclick *= "toggleFavorite"] &#39;);
+        favoriteButtons.forEach(button => {
+          const onclickAttr = button.getAttribute(&#39; onclick &#39;);
         const graphIdMatch = onclickAttr.match(/toggleFavorite\(&#39;([^&#39;]+)&#39;/);
         if (graphIdMatch) {
-            const graphId = graphIdMatch[1];
-            const iconElement = button.querySelector(&#39;.iconify&#39;);
-            if (window.APP_GLOBALS.favorites.isFavorited(graphId)) {
-                iconElement.classList.add(&#39;favorited&#39;);
-                iconElement.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart-solid&#39;);
-            } else {
-                iconElement.classList.remove(&#39;favorited&#39;);
-                iconElement.setAttribute(&#39;data-icon&#39;, &#39;heroicons:heart&#39;);
-            }
+          const graphId = graphIdMatch[1];
+          const iconElement = button.querySelector(&#39;.iconify &#39;);
+          if (window.APP_GLOBALS.favorites.isFavorited(graphId)) {
+            iconElement.classList.add(&#39; favorited &#39;);
+            iconElement.setAttribute(&#39; data - icon &#39;, &#39; heroicons: heart - solid &#39;);
+          } else {
+            iconElement.classList.remove(&#39; favorited &#39;);
+            iconElement.setAttribute(&#39; data - icon &#39;, &#39; heroicons: heart &#39;);
+          }
         }
-    });
+      });
 }
 
-// Enhanced filter functionality
-function initializeFilters() {
-    window.APP_GLOBALS.filters = {
-        domain: &#39;all&#39;,
-        time: &#39;all&#39;,
-        popularity: &#39;all&#39;
-    };
+      // Enhanced filter functionality
+      function initializeFilters() {
+        window.APP_GLOBALS.filters = {
+          domain: &#39; all&#39;,
+        time: &#39; all &#39;,
+        popularity: &#39; all &#39;
+      };
 }
 
-function applyFilter(filterType, value) {
-    window.APP_GLOBALS.filters[filterType] = value;
-    
-    // Update filter button text
-    updateFilterButtonText(filterType, value);
-    
-    // Show notification about filter applied
-    const filterLabels = {
-        domain: &#39;领域&#39;,
-        time: &#39;时间&#39;,
-        popularity: &#39;热门程度&#39;
+      function applyFilter(filterType, value) {
+        window.APP_GLOBALS.filters[filterType] = value;
+
+        // Update filter button text
+        updateFilterButtonText(filterType, value);
+
+        // Show notification about filter applied
+        const filterLabels = {
+          domain: &#39; 领域&#39;,
+        time: &#39; 时间 &#39;,
+        popularity: &#39; 热门程度 &#39;
+      };
+
+      const valueLabels = {
+        all: &#39; 全部&#39;,
+      ai: &#39; 人工智能 &#39;,
+      medical: &#39; 医学健康 &#39;,
+      finance: &#39; 金融经济 &#39;,
+      education: &#39; 教育学习 &#39;,
+      week: &#39; 最近一周 &#39;,
+      month: &#39; 最近一月 &#39;,
+      year: &#39; 最近一年 &#39;,
+      hot: &#39; 最热门 &#39;,
+      views: &#39; 最多浏览 &#39;,
+      favorites: &#39; 最多收藏 &#39;
     };
-    
-    const valueLabels = {
-        all: &#39;全部&#39;,
-        ai: &#39;人工智能&#39;,
-        medical: &#39;医学健康&#39;,
-        finance: &#39;金融经济&#39;,
-        education: &#39;教育学习&#39;,
-        week: &#39;最近一周&#39;,
-        month: &#39;最近一月&#39;,
-        year: &#39;最近一年&#39;,
-        hot: &#39;最热门&#39;,
-        views: &#39;最多浏览&#39;,
-        favorites: &#39;最多收藏&#39;
-    };
-    
-    const filterLabel = filterLabels[filterType];
-    const valueLabel = valueLabels[value] || value;
-    
-    showNotification(`已应用${filterLabel}筛选: ${valueLabel}`, &#39;info&#39;);
-    
-    // Simulate filter animation
-    animateFilterResults();
+
+      const filterLabel = filterLabels[filterType];
+      const valueLabel = valueLabels[value] || value;
+
+      showNotification(`已应用${filterLabel}筛选: ${valueLabel}`, &#39; info &#39;);
+
+      // Simulate filter animation
+      animateFilterResults();
 }
 
-function updateFilterButtonText(filterType, value) {
-    const filterButtons = document.querySelectorAll(&#39;.dropdown button&#39;);
-    const filterTypeMap = {
-        domain: 0,
-        time: 1,
-        popularity: 2
-    };
-    
-    const buttonIndex = filterTypeMap[filterType];
-    if (buttonIndex !== undefined &amp;&amp; filterButtons[buttonIndex]) {
-        const button = filterButtons[buttonIndex];
-        const textNodes = Array.from(button.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
-        
-        const valueLabels = {
-            all: filterType === &#39;domain&#39; ? &#39;领域筛选&#39; : filterType === &#39;time&#39; ? &#39;时间筛选&#39; : &#39;热门程度&#39;,
-            ai: &#39;人工智能&#39;,
-            medical: &#39;医学健康&#39;,
-            finance: &#39;金融经济&#39;,
-            education: &#39;教育学习&#39;,
-            week: &#39;最近一周&#39;,
-            month: &#39;最近一月&#39;,
-            year: &#39;最近一年&#39;,
-            hot: &#39;最热门&#39;,
-            views: &#39;最多浏览&#39;,
-            favorites: &#39;最多收藏&#39;
+      function updateFilterButtonText(filterType, value) {
+        const filterButtons = document.querySelectorAll(&#39;.dropdown button &#39;);
+        const filterTypeMap = {
+          domain: 0,
+          time: 1,
+          popularity: 2
         };
-        
+
+        const buttonIndex = filterTypeMap[filterType];
+        if (buttonIndex !== undefined & amp;& amp; filterButtons[buttonIndex]) {
+          const button = filterButtons[buttonIndex];
+          const textNodes = Array.from(button.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+
+          const valueLabels = {
+            all: filterType === &#39; domain&#39; ? &#39; 领域筛选 &#39; : filterType === &#39; time &#39; ? &#39; 时间筛选 &#39; : &#39; 热门程度 &#39;,
+          ai: &#39; 人工智能 &#39;,
+          medical: &#39; 医学健康 &#39;,
+          finance: &#39; 金融经济 &#39;,
+          education: &#39; 教育学习 &#39;,
+          week: &#39; 最近一周 &#39;,
+          month: &#39; 最近一月 &#39;,
+          year: &#39; 最近一年 &#39;,
+          hot: &#39; 最热门 &#39;,
+          views: &#39; 最多浏览 &#39;,
+          favorites: &#39; 最多收藏 &#39;
+        };
+
         if (textNodes.length > 0) {
-            textNodes[0].textContent = valueLabels[value] || value;
+          textNodes[0].textContent = valueLabels[value] || value;
         }
-    }
+      }
 }
 
-function animateFilterResults() {
-    const cards = document.querySelectorAll(&#39;.card&#39;);
-    cards.forEach((card, index) => {
-        card.style.opacity = &#39;0.6&#39;;
-        card.style.transform = &#39;scale(0.98)&#39;;
-        
-        setTimeout(() => {
-            card.style.opacity = &#39;1&#39;;
-            card.style.transform = &#39;scale(1)&#39;;
-        }, index * 30 + 150);
-    });
-}
+      function animateFilterResults() {
+        const cards = document.querySelectorAll(&#39;.card &#39;);
+        cards.forEach((card, index) => {
+          card.style.opacity = &#39; 0.6 &#39;;
+          card.style.transform = &#39; scale(0.98) &#39;;
 
-// Enhanced accessibility features
-document.addEventListener(&#39;keydown&#39;, function(event) {
-    // ESC key to close dropdowns and suggestions
-    if (event.key === &#39;Escape&#39;) {
-        hideSearchSuggestions();
-        
-        // Close any open dropdowns
-        const openDropdowns = document.querySelectorAll(&#39;.dropdown[open]&#39;);
-        openDropdowns.forEach(dropdown => {
-            dropdown.removeAttribute(&#39;open&#39;);
+          setTimeout(() => {
+            card.style.opacity = &#39; 1 &#39;;
+            card.style.transform = &#39; scale(1) &#39;;
+          }, index * 30 + 150);
         });
-    }
+      }
+
+      // Enhanced accessibility features
+      document.addEventListener(&#39; keydown &#39;, function(event) {
+        // ESC key to close dropdowns and suggestions
+        if (event.key === &#39; Escape &#39;) {
+          hideSearchSuggestions();
+
+          // Close any open dropdowns
+          const openDropdowns = document.querySelectorAll(&#39;.dropdown[open] &#39;);
+          openDropdowns.forEach(dropdown => {
+            dropdown.removeAttribute(&#39; open &#39;);
+        });
+      }
 });
-</script>
-  
+    </script>
 
-<script>
-    setTimeout(() => {
-      Holder.run({
-        domain: "placehold.co"
-      })
-    }, 100)
-  </script></body></html>'></iframe>
-                    </div>
-                  </div>
 
-                </body>
-                </html>
-            
+    <script>
+      setTimeout(() => {
+        Holder.run({
+          domain: "placehold.co"
+        })
+      }, 100)
+    </script>
+</body>
+
+</html>'></iframe>
+</div>
+</div>
+
+</body>
+
+</html>

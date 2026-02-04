@@ -87,4 +87,10 @@ public class KnowledgeGraph {
 
     @Column(name = "entity_richness", precision = 5, scale = 2)
     private BigDecimal entityRichness;
+
+    @Column(name = "category_id")
+    private Integer categoryId;
+
+    @Column(name = "hot_score")
+    private Double hotScore = 0.0;
 }

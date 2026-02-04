@@ -50,11 +50,11 @@ public class UserController {
         log.debug("=== 获取用户资料 ===");
         log.debug("Auth: {}", auth);
         log.debug("Auth Name: {}", auth != null ? auth.getName() : "null");
-        
+
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
         }
-        
+
         try {
             UserProfileDto profile = userService.getUserProfile(auth.getName());
             log.debug("获取到用户: {}", profile.getUserName());
@@ -75,7 +75,7 @@ public class UserController {
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
         }
-        
+
         try {
             UserProfileDto updatedProfile = userService.updateUserProfile(auth.getName(), profileDto);
             return ResponseEntity.ok(updatedProfile);
@@ -92,7 +92,7 @@ public class UserController {
     public ResponseEntity<?> checkAuth() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Map<String, Object> result = new HashMap<>();
-        
+
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
             result.put("authenticated", true);
             result.put("username", auth.getName());
@@ -105,7 +105,27 @@ public class UserController {
         } else {
             result.put("authenticated", false);
         }
-        
+
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 获取指定用户资料 (Public API)
+     */
+    @GetMapping("/api/users/{id}")
+    @ResponseBody
+    public ResponseEntity<?> getUserProfileById(@PathVariable Integer id) {
+        try {
+            UserProfileDto profile = userService.getUserProfileById(id);
+            if (profile == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "用户不存在"));
+            }
+            // 脱敏处理，只返回必要信息
+            profile.setEmail(null);
+            profile.setPhone(null);
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "获取用户信息失败"));
+        }
     }
 }
