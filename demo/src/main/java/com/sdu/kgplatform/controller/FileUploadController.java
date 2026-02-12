@@ -42,7 +42,8 @@ public class FileUploadController {
         try {
             validateImage(file, 2 * 1024 * 1024); // 2MB
             String avatarUrl = fileStorageService.storeFile(file, "avatars");
-            userService.updateUserAvatar(auth.getName(), avatarUrl);
+            User user = findCurrentUser(auth);
+            userService.updateUserAvatar(user.getEmail() != null ? user.getEmail() : user.getUserName(), avatarUrl);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -108,6 +109,7 @@ public class FileUploadController {
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "status", defaultValue = "DRAFT") String status,
+            @RequestParam(value = "domain", defaultValue = "other") String domain,
             @RequestParam(value = "cover", required = false) MultipartFile coverFile) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -116,15 +118,11 @@ public class FileUploadController {
         }
 
         try {
-            Integer userId = null;
-            if (auth.getPrincipal() instanceof com.sdu.kgplatform.security.CustomUserDetails) {
-                userId = ((com.sdu.kgplatform.security.CustomUserDetails) auth.getPrincipal()).getUserId();
-            } else {
-                User user = findUserByAccount(auth.getName());
-                userId = user.getUserId();
-            }
+            User user = findCurrentUser(auth);
+            Integer userId = user.getUserId();
 
-            GraphDetailDto graph = graphImportService.importGraph(file, name, description, status, coverFile, userId);
+            GraphDetailDto graph = graphImportService.importGraph(file, name, description, status, domain, coverFile,
+                    userId);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -156,20 +154,15 @@ public class FileUploadController {
         }
     }
 
-    private User findUserByAccount(String account) {
-        User user = null;
-        if (account.contains("@")) {
-            user = userRepository.findByEmail(account).orElse(null);
+    private User findCurrentUser(Authentication auth) {
+        if (auth.getPrincipal() instanceof com.sdu.kgplatform.security.CustomUserDetails cud) {
+            return userRepository.findById(cud.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
         }
-        if (user == null) {
-            user = userRepository.findByPhone(account).orElse(null);
+        if (auth.getPrincipal() instanceof com.sdu.kgplatform.security.CustomOAuth2User oau) {
+            return userRepository.findById(oau.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
         }
-        if (user == null) {
-            user = userRepository.findByUserName(account).orElse(null);
-        }
-        if (user == null) {
-            throw new IllegalArgumentException("用户不存在: " + account);
-        }
-        return user;
+        throw new IllegalArgumentException("无法识别当前用户");
     }
 }

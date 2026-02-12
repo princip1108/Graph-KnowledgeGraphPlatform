@@ -21,7 +21,7 @@
                         <p class="text-base-content/80 mb-4">
                             在您提交反馈之前，请阅读我们的隐私政策。我们承诺保护您的个人信息，您提供的反馈将仅用于改进我们的产品和服务。
                         </p>
-                        <a href="#" class="link link-primary font-medium">
+                        <a th:href="@{/privacy}" class="link link-primary font-medium">
                             <span class="iconify mr-1" data-icon="heroicons:document-text" data-width="16"></span>
                             查看完整隐私政策
                         </a>
@@ -72,7 +72,7 @@
                                     <label class="label pb-1">
                                         <span class="label-text font-medium text-base">主题 <span class="text-error">*</span></span>
                                     </label>
-                                    <input type="text" placeholder="请简要描述您的反馈主题" required class="input input-bordered w-full focus-primary">
+                                    <input type="text" name="subject" placeholder="请简要描述您的反馈主题" required class="input input-bordered w-full focus-primary">
                                     <label class="label pt-1">
                                         <span class="label-text-alt text-base-content/50 text-xs">请用简洁的语言概括您的反馈内容</span>
                                     </label>
@@ -83,7 +83,7 @@
                                     <label class="label pb-1">
                                         <span class="label-text font-medium text-base">详细描述 <span class="text-error">*</span></span>
                                     </label>
-                                    <textarea placeholder="请详细描述您遇到的问题或建议..." required class="textarea textarea-bordered w-full h-32 focus-primary"></textarea>
+                                    <textarea name="content" placeholder="请详细描述您遇到的问题或建议..." required class="textarea textarea-bordered w-full h-32 focus-primary"></textarea>
                                     <label class="label pt-1">
                                         <span class="label-text-alt text-base-content/50 text-xs">请提供尽可能详细的信息，以便我们更好地理解和处理您的反馈</span>
                                     </label>
@@ -94,7 +94,7 @@
                                     <label class="label pb-1">
                                         <span class="label-text font-medium text-base">联系邮箱 <span class="text-error">*</span></span>
                                     </label>
-                                    <input type="email" placeholder="your.email@example.com" required class="input input-bordered w-full focus-primary">
+                                    <input type="email" name="email" placeholder="your.email@example.com" required class="input input-bordered w-full focus-primary">
                                     <label class="label pt-1">
                                         <span class="label-text-alt text-base-content/50 text-xs">我们将通过此邮箱与您联系，请确保邮箱地址正确</span>
                                     </label>
@@ -134,23 +134,15 @@
             <section class="bg-base-100 py-16">
                 <div class="container mx-auto px-4 max-w-4xl">
                     <h3 class="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-2">
-                        <span class="iconify text-primary" data-icon="heroicons:phone" data-width="24"></span>
+                        <span class="iconify text-primary" data-icon="heroicons:envelope" data-width="24"></span>
                         其他联系方式
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="card bg-base-200 shadow-soft academic-border hover-lift">
-                            <div class="card-body text-center p-6">
-                                <span class="iconify text-primary mb-3" data-icon="heroicons:phone" data-width="32"></span>
-                                <h4 class="font-semibold mb-2">客服热线</h4>
-                                <p class="text-lg font-mono">400-123-4567</p>
-                                <p class="text-sm text-base-content/60 mt-2">工作日 9:00-18:00</p>
-                            </div>
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="card bg-base-200 shadow-soft academic-border hover-lift">
                             <div class="card-body text-center p-6">
                                 <span class="iconify text-primary mb-3" data-icon="heroicons:envelope" data-width="32"></span>
                                 <h4 class="font-semibold mb-2">官方邮箱</h4>
-                                <p class="text-lg">support@kgplatform.com</p>
+                                <p class="text-lg">gavriloprincip@163.com</p>
                                 <p class="text-sm text-base-content/60 mt-2">24小时内回复</p>
                             </div>
                         </div>

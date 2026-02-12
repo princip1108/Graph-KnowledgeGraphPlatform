@@ -7,8 +7,8 @@ let graphNameFromUrl = new URLSearchParams(window.location.search).get('graphNam
 let hasUnsavedChanges = false;
 let autoSaveTimer = null;
 
-document.addEventListener('DOMContentLoaded', async function() {
-    easyMDE = new EasyMDE({ 
+document.addEventListener('DOMContentLoaded', async function () {
+    easyMDE = new EasyMDE({
         element: document.getElementById('postContent'),
         placeholder: "在此输入正文（支持 Markdown）...",
         spellChecker: false,
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         uploadImage: true,
         imageMaxSize: 5 * 1024 * 1024,
         imageAccept: "image/png, image/jpeg, image/gif, image/webp",
-        imageUploadFunction: function(file, onSuccess, onError) {
+        imageUploadFunction: function (file, onSuccess, onError) {
             var formData = new FormData();
             formData.append('file', file);
             fetch('/api/upload/image', {
@@ -25,15 +25,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                 body: formData,
                 credentials: 'include'
             })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    onSuccess(data.url);
-                } else {
-                    onError(data.error || '上传失败');
-                }
-            })
-            .catch(function(err) { onError('网络错误'); });
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        onSuccess(data.url);
+                    } else {
+                        onError(data.error || '上传失败');
+                    }
+                })
+                .catch(function (err) { onError('网络错误'); });
         }
     });
 
@@ -41,11 +41,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     await checkLogin();
 
+    // Load categories for dropdown
+    await loadCategories();
+
     // URL 参数自动填充图谱
     if (graphIdFromUrl) {
         document.getElementById('graphId').value = graphIdFromUrl;
         document.getElementById('selectedGraphName').textContent = graphNameFromUrl || '图谱 #' + graphIdFromUrl;
         document.getElementById('selectedGraph').classList.remove('hidden');
+        // Auto-fill category from linked graph
+        await fetchAndSetGraphCategory(graphIdFromUrl);
     }
 
     if (postId) {
@@ -56,11 +61,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // 实时预览
-    easyMDE.codemirror.on('change', function() {
+    easyMDE.codemirror.on('change', function () {
         updatePreview();
         markUnsaved();
     });
-    document.getElementById('postTitle').addEventListener('input', function() {
+    document.getElementById('postTitle').addEventListener('input', function () {
         document.getElementById('previewTitle').textContent = this.value || '标题预览';
         document.getElementById('previewTitle').classList.toggle('text-base-content/30', !this.value);
         document.getElementById('previewTitle').classList.toggle('text-base-content', !!this.value);
@@ -71,13 +76,46 @@ document.addEventListener('DOMContentLoaded', async function() {
     autoSaveTimer = setInterval(autoSave, 30000);
 
     // 退出拦截
-    window.addEventListener('beforeunload', function(e) {
+    window.addEventListener('beforeunload', function (e) {
         if (hasUnsavedChanges) {
             e.preventDefault();
             e.returnValue = '';
         }
     });
 });
+
+// Load categories from API
+async function loadCategories() {
+    try {
+        var res = await fetch('/api/categories');
+        var categories = await res.json();
+        var select = document.getElementById('postCategory');
+        if (select) {
+            select.innerHTML = '<option value="">请选择分类...</option>' +
+                categories.map(function (c) { return '<option value="' + c.code + '">' + c.name + '</option>'; }).join('');
+        }
+    } catch (e) {
+        console.error('Failed to load categories:', e);
+    }
+}
+
+// Fetch graph's domain and set category dropdown
+async function fetchAndSetGraphCategory(graphId) {
+    try {
+        var res = await fetch('/api/graph/' + graphId, { credentials: 'include' });
+        var data = await res.json();
+        var graph = data.graph || data;
+        if (graph.domain) {
+            var select = document.getElementById('postCategory');
+            if (select) {
+                select.value = graph.domain;
+                select.disabled = true; // Lock to graph category
+            }
+        }
+    } catch (e) {
+        console.error('Failed to fetch graph category:', e);
+    }
+}
 
 function updatePreview() {
     var content = easyMDE.value();
@@ -108,7 +146,7 @@ function autoSave() {
     var draft = {
         title: document.getElementById('postTitle').value,
         content: easyMDE.value(),
-        tags: tagify.value.map(function(t) { return t.value; }),
+        tags: tagify.value.map(function (t) { return t.value; }),
         graphId: document.getElementById('graphId').value,
         abstract: document.getElementById('postAbstract').value,
         time: new Date().toISOString()
@@ -142,7 +180,7 @@ async function loadPostData() {
             easyMDE.value(post.postText || '');
             updatePreview();
             if (post.postAbstract) document.getElementById('postAbstract').value = post.postAbstract;
-            if (data.tags) tagify.addTags(data.tags.map(function(t) { return t.tagName; }));
+            if (data.tags) tagify.addTags(data.tags.map(function (t) { return t.tagName; }));
             if (post.graphId) {
                 document.getElementById('graphId').value = post.graphId;
                 document.getElementById('selectedGraphName').textContent = data.graphName || '图谱 #' + post.graphId;
@@ -166,11 +204,11 @@ async function searchGraphs() {
         var results = document.getElementById('graphResults');
         results.innerHTML = '';
         if (data.content && data.content.length > 0) {
-            data.content.forEach(function(g) {
+            data.content.forEach(function (g) {
                 var div = document.createElement('div');
                 div.className = 'p-2 hover:bg-base-200 rounded cursor-pointer text-sm';
                 div.textContent = g.name;
-                div.onclick = function() { selectGraph(g.graphId, g.name); };
+                div.onclick = function () { selectGraph(g.graphId, g.name); };
                 results.appendChild(div);
             });
             results.classList.remove('hidden');
@@ -183,30 +221,42 @@ async function searchGraphs() {
     }
 }
 
-function selectGraph(id, name) {
+async function selectGraph(id, name) {
     document.getElementById('graphId').value = id;
     document.getElementById('selectedGraphName').textContent = name;
     document.getElementById('selectedGraph').classList.remove('hidden');
     document.getElementById('graphResults').classList.add('hidden');
     document.getElementById('graphSearch').value = '';
+    // Auto-fill category from linked graph
+    await fetchAndSetGraphCategory(id);
     markUnsaved();
 }
 
 function clearGraph() {
     document.getElementById('graphId').value = '';
     document.getElementById('selectedGraph').classList.add('hidden');
+    // Re-enable category dropdown
+    var select = document.getElementById('postCategory');
+    if (select) {
+        select.disabled = false;
+        select.value = '';
+    }
     markUnsaved();
 }
 
 async function publishPost() {
     var title = document.getElementById('postTitle').value.trim();
     var content = easyMDE.value();
-    var tags = tagify.value.map(function(t) { return t.value; });
+    var tags = tagify.value.map(function (t) { return t.value; });
     var graphId = document.getElementById('graphId').value;
     var abstract = document.getElementById('postAbstract').value.trim() || content.substring(0, 150);
 
     if (!title) { showToast('请输入标题', 'warning'); return; }
     if (!content) { showToast('请输入正文内容', 'warning'); return; }
+
+    // 强制选择分类
+    var category = document.getElementById('postCategory').value;
+    if (!category) { showToast('请选择领域分类', 'warning'); return; }
 
     var btn = document.getElementById('publishBtn');
     btn.disabled = true;
@@ -219,7 +269,7 @@ async function publishPost() {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ title: title, content: content, tags: tags, abstract: abstract, graphId: graphId || null })
+            body: JSON.stringify({ title: title, content: content, tags: tags, abstract: abstract, graphId: graphId || null, category: document.getElementById('postCategory').value || 'other' })
         });
         var data = await response.json();
 
@@ -227,7 +277,7 @@ async function publishPost() {
             showToast(postId ? '更新成功！' : '发布成功！', 'success');
             localStorage.removeItem('post_draft_' + (postId || 'new'));
             hasUnsavedChanges = false;
-            setTimeout(function() {
+            setTimeout(function () {
                 window.location.href = '/community/post_detail.html?id=' + (data.post ? data.post.postId : postId);
             }, 1000);
         } else {
@@ -243,7 +293,7 @@ async function publishPost() {
 function resetPublishBtn() {
     var btn = document.getElementById('publishBtn');
     btn.disabled = false;
-    btn.innerHTML = postId 
+    btn.innerHTML = postId
         ? '<span class="iconify" data-icon="heroicons:pencil-square" data-width="18"></span> 更新'
         : '<span class="iconify" data-icon="heroicons:paper-airplane" data-width="18"></span> 发布';
 }
@@ -265,5 +315,5 @@ function showToast(message, type) {
     if (type === 'info') alert.classList.add('alert-info');
     msg.textContent = message;
     toast.classList.remove('hidden');
-    setTimeout(function() { toast.classList.add('hidden'); }, 3000);
+    setTimeout(function () { toast.classList.add('hidden'); }, 3000);
 }

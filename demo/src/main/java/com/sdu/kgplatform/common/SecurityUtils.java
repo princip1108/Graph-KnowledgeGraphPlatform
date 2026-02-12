@@ -2,6 +2,7 @@ package com.sdu.kgplatform.common;
 
 import com.sdu.kgplatform.entity.User;
 import com.sdu.kgplatform.repository.UserRepository;
+import com.sdu.kgplatform.security.CustomOAuth2User;
 import com.sdu.kgplatform.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,9 +23,14 @@ public final class SecurityUtils {
      */
     public static Integer getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()
-                && auth.getPrincipal() instanceof CustomUserDetails) {
-            return ((CustomUserDetails) auth.getPrincipal()).getUserId();
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+        if (auth.getPrincipal() instanceof CustomUserDetails cud) {
+            return cud.getUserId();
+        }
+        if (auth.getPrincipal() instanceof CustomOAuth2User oau) {
+            return oau.getUserId();
         }
         return null;
     }
@@ -58,12 +64,27 @@ public final class SecurityUtils {
      * @return User实体，未登录或用户不存在返回null
      */
     public static User getCurrentUser(UserRepository userRepository) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+
+        // 优先从 principal 直接取 userId（最可靠）
+        if (auth.getPrincipal() instanceof CustomUserDetails cud) {
+            return userRepository.findById(cud.getUserId()).orElse(null);
+        }
+        if (auth.getPrincipal() instanceof CustomOAuth2User oau) {
+            return userRepository.findById(oau.getUserId()).orElse(null);
+        }
+
+        // 兜底：按 username 查找（email → phone → userName）
         String username = getCurrentUsername();
         if (username == null) {
             return null;
         }
         return userRepository.findByEmail(username)
                 .or(() -> userRepository.findByPhone(username))
+                .or(() -> userRepository.findByUserName(username))
                 .orElse(null);
     }
 

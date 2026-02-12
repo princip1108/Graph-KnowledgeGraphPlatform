@@ -10,6 +10,7 @@ public class UserRegistrationDto {
     private String email;
     private String phone;
     private String password;
+    private String verificationCode;
 
      private String role="USER";
 

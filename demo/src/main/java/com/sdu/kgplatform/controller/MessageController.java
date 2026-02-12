@@ -110,10 +110,6 @@ public class MessageController {
     }
 
     private Integer getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails) {
-            return ((CustomUserDetails) auth.getPrincipal()).getUserId();
-        }
-        return null;
+        return com.sdu.kgplatform.common.SecurityUtils.getCurrentUserId();
     }
 }

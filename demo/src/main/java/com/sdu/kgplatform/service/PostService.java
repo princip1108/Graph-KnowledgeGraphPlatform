@@ -45,6 +45,9 @@ public class PostService {
     @Autowired
     private com.sdu.kgplatform.repository.CategoryRepository categoryRepository;
 
+    @Autowired
+    private BrowsingHistoryRepository browsingHistoryRepository;
+
     /**
      * 获取置顶帖子
      */
@@ -176,6 +179,15 @@ public class PostService {
     @Transactional
     public Post createPost(Integer authorId, String title, String postAbstract, String content, List<String> tagNames,
             Integer graphId, Integer categoryId) {
+        return createPost(authorId, title, postAbstract, content, tagNames, graphId, categoryId, "other");
+    }
+
+    /**
+     * 发布帖子（支持关联图谱、分类ID和分类代码）
+     */
+    @Transactional
+    public Post createPost(Integer authorId, String title, String postAbstract, String content, List<String> tagNames,
+            Integer graphId, Integer categoryId, String category) {
         Post post = new Post();
         post.setAuthorId(authorId);
         post.setPostTitle(title);
@@ -186,6 +198,7 @@ public class PostService {
         post.setUploadTime(LocalDateTime.now());
         post.setGraphId(graphId);
         post.setCategoryId(categoryId);
+        post.setCategory(category != null ? category : "other");
 
         Post savedPost = postRepository.save(post);
 
@@ -282,9 +295,21 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("帖子不存在"));
 
-        if (!post.getAuthorId().equals(userId)) {
+        // 检查权限：作者本人或管理员可删除
+        boolean isAuthor = post.getAuthorId().equals(userId);
+        boolean isAdmin = false;
+        if (!isAuthor) {
+            var userOpt = userRepository.findById(userId);
+            if (userOpt.isPresent() && userOpt.get().getRole() == Role.ADMIN) {
+                isAdmin = true;
+            }
+        }
+        if (!isAuthor && !isAdmin) {
             throw new IllegalArgumentException("无权删除此帖子");
         }
+
+        // 删除浏览历史（避免外键约束错误）
+        browsingHistoryRepository.deleteByPostId(postId);
 
         // 删除相关评论
         commentRepository.deleteByPostId(postId);
@@ -333,8 +358,8 @@ public class PostService {
         long totalPosts = postRepository.countByPostStatus(PostStatus.已发布);
         stats.put("totalPosts", totalPosts);
 
-        // 总评论数
-        long totalComments = commentRepository.countAllComments();
+        // 总评论数（仅统计已发布帖子的评论）
+        long totalComments = commentRepository.countByPostStatus(PostStatus.已发布);
         stats.put("totalComments", totalComments);
 
         // 今日新帖
@@ -375,6 +400,81 @@ public class PostService {
     }
 
     /**
+     * 获取图谱的相关帖子（推荐）
+     * P1: 直接关联该图谱的帖子
+     * P2: 同领域的帖子（补足）
+     * 降级: domain 为 "other" 或 null 时，P2 改为热门帖子
+     */
+    public List<Map<String, Object>> getRelatedPostsForGraph(Integer graphId, int size) {
+        // 获取图谱信息
+        var graphOpt = knowledgeGraphRepository.findById(graphId);
+        if (graphOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+        var graph = graphOpt.get();
+        String domain = graph.getDomain();
+
+        List<Post> result = new ArrayList<>();
+        Set<Integer> addedIds = new HashSet<>();
+
+        // P1: 直接关联帖子
+        List<Post> directPosts = postRepository.findByGraphIdAndPostStatusOrderByUploadTimeDesc(graphId, PostStatus.已发布);
+        for (Post p : directPosts) {
+            if (result.size() >= size) break;
+            result.add(p);
+            addedIds.add(p.getPostId());
+        }
+
+        // P2: 同领域帖子补足
+        int remaining = size - result.size();
+        if (remaining > 0) {
+            Pageable pageable = PageRequest.of(0, remaining + 5); // 多查几条以防重复
+            List<Post> domainPosts;
+            if (domain == null || "other".equalsIgnoreCase(domain)) {
+                // 降级：热门帖子
+                domainPosts = postRepository.findByPostStatusOrderByLikeCountDesc(PostStatus.已发布, pageable).getContent();
+            } else {
+                domainPosts = postRepository.findByCategoryAndPostStatusExcludingGraph(domain, PostStatus.已发布, graphId, pageable);
+            }
+            for (Post p : domainPosts) {
+                if (result.size() >= size) break;
+                if (!addedIds.contains(p.getPostId())) {
+                    result.add(p);
+                    addedIds.add(p.getPostId());
+                }
+            }
+        }
+
+        // 转换为带作者信息的 Map
+        List<Map<String, Object>> postList = new ArrayList<>();
+        for (Post post : result) {
+            Map<String, Object> postMap = new HashMap<>();
+            postMap.put("postId", post.getPostId());
+            postMap.put("postTitle", post.getPostTitle());
+            postMap.put("postAbstract", post.getPostAbstract());
+            postMap.put("uploadTime", post.getUploadTime());
+            postMap.put("likeCount", post.getLikeCount());
+            postMap.put("viewCount", post.getViewCount());
+            postMap.put("graphId", post.getGraphId());
+            postMap.put("category", post.getCategory());
+            postMap.put("isDirectlyRelated", graphId.equals(post.getGraphId()));
+
+            userRepository.findById(post.getAuthorId()).ifPresent(author -> {
+                postMap.put("authorName", author.getUserName());
+                postMap.put("authorAvatar", author.getAvatar());
+            });
+
+            // 获取评论数
+            long commentCount = commentRepository.countByPostId(post.getPostId());
+            postMap.put("commentCount", commentCount);
+
+            postList.add(postMap);
+        }
+
+        return postList;
+    }
+
+    /**
      * 增加阅读量
      */
     @Transactional
@@ -384,5 +484,40 @@ public class PostService {
             post.setViewCount((post.getViewCount() == null ? 0 : post.getViewCount()) + 1);
             postRepository.save(post);
         }
+    }
+
+    /**
+     * 获取热门帖子（Hacker News 风格热度算法）
+     * hotScore = (views×1 + likes×5 + comments×3 + favorites×2 + 1) / (daysSinceUpload + 2)^1.5
+     */
+    public List<Map<String, Object>> getHotPosts(int size) {
+        LocalDateTime since = LocalDateTime.now().minusDays(30);
+        List<Post> recentPosts = postRepository.findByPostStatusAndUploadTimeAfter(PostStatus.已发布, since);
+
+        return recentPosts.stream().map(post -> {
+            long views = post.getViewCount() != null ? post.getViewCount() : 0;
+            long likes = post.getLikeCount() != null ? post.getLikeCount() : 0;
+            long favorites = post.getFavoriteCount() != null ? post.getFavoriteCount() : 0;
+            long comments = commentRepository.countByPostId(post.getPostId());
+
+            double interactions = views * 1.0 + likes * 5.0 + comments * 3.0 + favorites * 2.0 + 1;
+            double daysSince = java.time.Duration.between(post.getUploadTime(), LocalDateTime.now()).toHours() / 24.0 + 2;
+            double hotScore = interactions / Math.pow(daysSince, 1.5);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("postId", post.getPostId());
+            map.put("postTitle", post.getPostTitle());
+            map.put("viewCount", views);
+            map.put("likeCount", likes);
+            map.put("commentCount", comments);
+            map.put("hotScore", hotScore);
+            boolean isNew = post.getUploadTime() != null &&
+                    post.getUploadTime().isAfter(LocalDateTime.now().minusHours(24));
+            map.put("badge", isNew ? "new" : "hot");
+            return map;
+        })
+        .sorted((a, b) -> Double.compare((double) b.get("hotScore"), (double) a.get("hotScore")))
+        .limit(size)
+        .collect(java.util.stream.Collectors.toList());
     }
 }

@@ -81,9 +81,11 @@
                                 </div>
                                 <p class="text-sm text-base-content/70 line-clamp-1 mb-2">${conv.lastMessage || ''}</p>
                                 <div class="flex gap-2">
-                                    <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage(${conv.otherUserId}, '${conv.otherUserName}')">
+                                    ${conv.otherUserName === '已注销用户'
+                                        ? `<span class="badge badge-ghost badge-sm">已注销</span>`
+                                        : `<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage(${conv.otherUserId}, '${conv.otherUserName}')">
                                         <span class="iconify" data-icon="heroicons:arrow-uturn-left" data-width="14"></span>回复
-                                    </button>
+                                    </button>`}
                                     <button class="btn btn-ghost btn-xs text-error" onclick="event.stopPropagation(); deleteConversationMessage(${conv.lastMessageId})">
                                         <span class="iconify" data-icon="heroicons:trash" data-width="14"></span>删除
                                     </button>
@@ -215,6 +217,22 @@
             .then(data => {
                 if (!data) return;
                 const user = data.user || data; // /api/users/{id} returns direct object, /api/profile returns {user: ...}
+                // 已注销用户处理
+                if (user.deleted) {
+                    var headerTitle = document.querySelector('.navbar-center .text-xl');
+                    if (headerTitle) headerTitle.textContent = '已注销用户';
+                    var mainContent = document.querySelector('.flex-1.p-6') || document.querySelector('.flex-1');
+                    if (mainContent) {
+                        mainContent.innerHTML = '<div class="flex items-center justify-center min-h-[60vh]">'
+                            + '<div class="text-center">'
+                            + '<div class="text-6xl mb-4 opacity-30">👤</div>'
+                            + '<h2 class="text-xl font-bold mb-2">该用户已注销</h2>'
+                            + '<p class="text-base-content/60 mb-4">此账号已注销，相关内容不再可用</p>'
+                            + '<a href="/" class="btn btn-primary btn-sm">返回首页</a>'
+                            + '</div></div>';
+                    }
+                    return;
+                }
                 if (user && (user.userName || user.email)) {
                     populateUserData(user);
                     if (targetUserId) {
@@ -309,8 +327,8 @@
 
         if (input.files && input.files[0]) {
             const formData = new FormData();
-            formData.append('avatar', input.files[0]);
-            fetch('/user/api/upload-avatar', { method: 'POST', body: formData, credentials: 'include' })
+            formData.append('file', input.files[0]);
+            fetch('/api/upload/avatar', { method: 'POST', body: formData, credentials: 'include' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) { showNotification('头像上传成功', 'success'); loadUserProfile(); }
@@ -558,15 +576,96 @@
         });
     };
 
-    window.changePassword = function () {
-        const cur = document.querySelector('input[placeholder="请输入当前密码"]'), np = document.querySelector('input[placeholder="请输入新密码"]'), cp = document.querySelector('input[placeholder="请再次输入新密码"]');
-        if (!cur?.value || !np?.value || !cp?.value) { showNotification('请填写完整', 'error'); return; }
-        if (np.value !== cp.value) { showNotification('两次密码不一致', 'error'); return; }
-        if (np.value.length < 8) { showNotification('密码至少8位', 'error'); return; }
-        showConfirmDialog('确定修改密码？', () => { showNotification('密码修改成功', 'success'); cur.value = ''; np.value = ''; cp.value = ''; });
+    let cpCountdownTimer = null;
+
+    window.sendChangePasswordCode = function () {
+        const email = document.getElementById('form-email')?.value?.trim();
+        if (!email) { showNotification('请先在个人资料中填写邮箱', 'error'); return; }
+        const btn = document.getElementById('cp-send-code-btn');
+        btn.disabled = true;
+        btn.textContent = '发送中...';
+        fetch('/api/auth/send-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, purpose: 'change-password' }),
+            credentials: 'include'
+        })
+        .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+        .then(function (result) {
+            if (result.ok) {
+                showNotification('验证码已发送到 ' + email, 'success');
+                var sec = 60;
+                cpCountdownTimer = setInterval(function () {
+                    sec--;
+                    btn.textContent = sec + 's';
+                    if (sec <= 0) { clearInterval(cpCountdownTimer); btn.disabled = false; btn.textContent = '获取验证码'; }
+                }, 1000);
+            } else {
+                showNotification(result.data.error || '发送失败', 'error');
+                btn.disabled = false; btn.textContent = '获取验证码';
+            }
+        })
+        .catch(function () { showNotification('网络错误', 'error'); btn.disabled = false; btn.textContent = '获取验证码'; });
     };
 
-    window.confirmAccountDeletion = function () { showConfirmDialog('警告：账户注销后无法恢复。确定继续？', () => showNotification('注销申请已提交', 'warning')); };
+    window.changePassword = function () {
+        const oldPwd = document.getElementById('cp-old-password')?.value;
+        const code = document.getElementById('cp-verify-code')?.value?.trim();
+        const newPwd = document.getElementById('cp-new-password')?.value;
+        const confirmPwd = document.getElementById('cp-confirm-password')?.value;
+        const email = document.getElementById('form-email')?.value?.trim();
+
+        if (!oldPwd) { showNotification('请输入当前密码', 'error'); return; }
+        if (!code || code.length !== 6) { showNotification('请输入6位验证码', 'error'); return; }
+        if (!newPwd || newPwd.length < 8) { showNotification('新密码至少8位', 'error'); return; }
+        if (newPwd.length > 20) { showNotification('新密码不能超过20位', 'error'); return; }
+        if (newPwd !== confirmPwd) { showNotification('两次密码不一致', 'error'); return; }
+
+        showConfirmDialog('确定修改密码？', function () {
+            fetch('/user/api/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd, verificationCode: code, email: email }),
+                credentials: 'include'
+            })
+            .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+            .then(function (result) {
+                if (result.ok && result.data.success) {
+                    showNotification('密码修改成功', 'success');
+                    document.getElementById('cp-old-password').value = '';
+                    document.getElementById('cp-verify-code').value = '';
+                    document.getElementById('cp-new-password').value = '';
+                    document.getElementById('cp-confirm-password').value = '';
+                } else {
+                    showNotification(result.data.error || '修改失败', 'error');
+                }
+            })
+            .catch(function () { showNotification('网络错误', 'error'); });
+        });
+    };
+
+    window.confirmAccountDeletion = function () {
+        const pwd = document.getElementById('deactivate-password')?.value;
+        if (!pwd) { showNotification('请输入密码确认注销', 'error'); return; }
+        showConfirmDialog('警告：账户注销后无法恢复，所有个人数据将被清除。确定继续？', function () {
+            fetch('/user/api/deactivate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pwd }),
+                credentials: 'include'
+            })
+            .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+            .then(function (result) {
+                if (result.ok && result.data.success) {
+                    showNotification('账号已注销，即将跳转到首页', 'success');
+                    setTimeout(function () { window.location.href = '/'; }, 2000);
+                } else {
+                    showNotification(result.data.error || '注销失败', 'error');
+                }
+            })
+            .catch(function () { showNotification('网络错误', 'error'); });
+        });
+    };
     // Stub functions for openMessage etc removed to avoid overriding real logic
 
     window.showConfirmDialog = function (msg, action) { const m = document.getElementById('confirmModal'), e = document.getElementById('confirmMessage'); if (e) e.textContent = msg; confirmAction = action; m?.showModal(); };

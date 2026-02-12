@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
+<head>
+    <title>隐私政策 - GraphWisdom智汇星图</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/privacy.css}">
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <main class="min-h-screen">
+            <!-- Hero Section -->
+            <section class="hero min-h-64 relative bg-gradient-to-br from-primary to-primary/80">
+                <div class="hero-overlay bg-primary/60"></div>
+                <div class="hero-content text-center text-primary-content py-16">
+                    <div class="max-w-4xl">
+                        <div class="flex justify-center mb-4">
+                            <span class="iconify" data-icon="heroicons:shield-check" data-width="48"></span>
+                        </div>
+                        <h1 class="mb-4 text-4xl font-bold">隐私政策</h1>
+                        <p class="text-lg opacity-90">我们重视并保护您的个人隐私</p>
+                        <p class="text-sm opacity-70 mt-2">最后更新日期：2025年1月1日 &nbsp;|&nbsp; 生效日期：2025年1月1日</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 引言 -->
+            <section class="py-12 bg-base-100">
+                <div class="container mx-auto px-4 max-w-4xl">
+                    <div class="bg-base-200 rounded-lg p-6 academic-border">
+                        <div class="flex items-start gap-3">
+                            <span class="iconify text-info flex-shrink-0 mt-1" data-icon="heroicons:information-circle" data-width="24"></span>
+                            <p class="text-base-content/80 leading-relaxed">
+                                欢迎使用 GraphWisdom智汇星图（以下简称"本平台"）。本隐私政策旨在向您说明我们如何收集、使用、存储和保护您的个人信息。使用本平台即表示您同意本隐私政策中描述的数据处理方式。请您在使用本平台前仔细阅读本政策。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 目录 -->
+            <section class="py-6 bg-base-100">
+                <div class="container mx-auto px-4 max-w-4xl">
+                    <div class="bg-base-200 rounded-lg p-6">
+                        <h2 class="font-bold text-lg mb-3 flex items-center gap-2">
+                            <span class="iconify" data-icon="heroicons:list-bullet" data-width="20"></span>
+                            目录
+                        </h2>
+                        <nav class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                            <a href="#privacy-collect" class="link link-hover">1. 我们收集的信息</a>
+                            <a href="#privacy-usage" class="link link-hover">2. 我们如何使用您的信息</a>
+                            <a href="#privacy-share" class="link link-hover">3. 信息共享与披露</a>
+                            <a href="#privacy-cookie" class="link link-hover">4. Cookie 与会话技术</a>
+                            <a href="#privacy-security" class="link link-hover">5. 数据安全</a>
+                            <a href="#privacy-rights" class="link link-hover">6. 您的权利</a>
+                            <a href="#privacy-minors" class="link link-hover">7. 未成年人保护</a>
+                            <a href="#privacy-update" class="link link-hover">8. 隐私政策的更新</a>
+                            <a href="#privacy-contact" class="link link-hover">9. 联系我们</a>
+                        </nav>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 正文内容 -->
+            <section class="py-8 bg-base-200">
+                <div class="container mx-auto px-4 max-w-4xl">
+                    <div class="space-y-8">
+
+                        <!-- 1. 信息收集 -->
+                        <div id="privacy-collect" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">1</span>
+                                    我们收集的信息
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <div class="space-y-4 text-base-content/80 leading-relaxed">
+                                    <div>
+                                        <h3 class="font-semibold text-base-content mb-2">1.1 您主动提供的信息</h3>
+                                        <ul class="list-disc list-inside space-y-1 ml-4">
+                                            <li><strong>账户信息：</strong>当您注册账户时，我们会收集您的用户名、电子邮箱地址和加密后的密码。</li>
+                                            <li><strong>个人资料：</strong>您可以选择性地完善个人资料，包括头像、个人简介等信息。</li>
+                                            <li><strong>用户内容：</strong>您在平台上创建的知识图谱数据、上传的文件、发布的论坛帖子和评论。</li>
+                                            <li><strong>反馈信息：</strong>您通过反馈功能提交的意见、建议及联系方式。</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-base-content mb-2">1.2 自动收集的信息</h3>
+                                        <ul class="list-disc list-inside space-y-1 ml-4">
+                                            <li><strong>浏览记录：</strong>您在平台上的图谱浏览历史和操作记录。</li>
+                                            <li><strong>设备信息：</strong>浏览器类型、操作系统、IP地址等基本设备信息。</li>
+                                            <li><strong>会话数据：</strong>用于维持登录状态的会话标识信息。</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. 信息使用 -->
+                        <div id="privacy-usage" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">2</span>
+                                    我们如何使用您的信息
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <div class="space-y-3 text-base-content/80 leading-relaxed">
+                                    <p>我们收集的信息将用于以下目的：</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-4">
+                                        <li><strong>提供核心服务：</strong>支持您创建、管理和可视化知识图谱，处理文件上传与下载。</li>
+                                        <li><strong>账户管理：</strong>验证您的身份，维护账户安全，处理密码重置请求。</li>
+                                        <li><strong>社区功能：</strong>支持论坛发帖、评论互动和站内消息功能。</li>
+                                        <li><strong>个性化体验：</strong>基于您的浏览历史提供相关图谱推荐。</li>
+                                        <li><strong>平台改进：</strong>分析使用数据以优化平台功能和用户体验。</li>
+                                        <li><strong>安全保障：</strong>检测和防范恶意行为，保障平台安全运行。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. 信息共享 -->
+                        <div id="privacy-share" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">3</span>
+                                    信息共享与披露
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <div class="space-y-3 text-base-content/80 leading-relaxed">
+                                    <p>我们不会将您的个人信息出售给第三方。仅在以下情况下，我们可能会共享您的信息：</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-4">
+                                        <li><strong>公开内容：</strong>您在社区论坛发布的帖子和评论将对其他用户可见，您设置为公开的知识图谱可被其他用户浏览。</li>
+                                        <li><strong>法律要求：</strong>当法律法规要求或政府机关依法提出请求时。</li>
+                                        <li><strong>安全需要：</strong>为保护本平台、用户或公众的权利、财产或安全所必需时。</li>
+                                        <li><strong>您的同意：</strong>在获得您明确同意的其他情况下。</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Cookie -->
+                        <div id="privacy-cookie" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">4</span>
+                                    Cookie 与会话技术
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <div class="space-y-3 text-base-content/80 leading-relaxed">
+                                    <p>本平台使用 Cookie 和类似技术来：</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-4">
+                                        <li>维持您的登录会话状态，避免重复登录。</li>
+                                        <li>记住您的偏好设置（如主题选择）。</li>
+                                        <li>保障平台安全，防止跨站请求伪造（CSRF）攻击。</li>
+                                    </ul>
+                                    <p>这些 Cookie 均为平台运行所必需的功能性 Cookie，我们不使用第三方广告追踪 Cookie。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. 数据安全 -->
+                        <div id="privacy-security" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">5</span>
+                                    数据安全
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <div class="space-y-3 text-base-content/80 leading-relaxed">
+                                    <p>我们采取多种安全措施保护您的个人信息：</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-4">
+                                        <li><strong>密码加密：</strong>您的密码经过加密处理后存储，我们无法获取您的明文密码。</li>
+                                        <li><strong>访问控制：</strong>严格限制对用户数据的内部访问权限。</li>
+                                        <li><strong>安全传输：</strong>采用安全的数据传输协议保护数据在传输过程中的安全。</li>
+                                        <li><strong>定期审查：</strong>定期审查和更新安全措施以应对新的安全威胁。</li>
+                                    </ul>
+                                    <div class="bg-warning/10 border-l-4 border-warning p-4 rounded-r-lg mt-4">
+                                        <p class="text-sm">尽管我们尽力保护您的信息安全，但互联网传输无法保证100%安全。我们建议您妥善保管账户密码，不要将密码透露给他人。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. 用户权利 -->
+                        <div id="privacy-rights" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">6</span>
+                                    您的权利
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <div class="space-y-3 text-base-content/80 leading-relaxed">
+                                    <p>您对自己的个人信息享有以下权利：</p>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                        <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                            <span class="iconify text-primary flex-shrink-0 mt-0.5" data-icon="heroicons:eye" data-width="20"></span>
+                                            <div>
+                                                <h4 class="font-semibold text-sm text-base-content">查看权</h4>
+                                                <p class="text-sm">您可以随时在个人资料页面查看您的账户信息。</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                            <span class="iconify text-primary flex-shrink-0 mt-0.5" data-icon="heroicons:pencil-square" data-width="20"></span>
+                                            <div>
+                                                <h4 class="font-semibold text-sm text-base-content">修改权</h4>
+                                                <p class="text-sm">您可以修改您的个人资料、用户名和其他账户信息。</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                            <span class="iconify text-primary flex-shrink-0 mt-0.5" data-icon="heroicons:trash" data-width="20"></span>
+                                            <div>
+                                                <h4 class="font-semibold text-sm text-base-content">删除权</h4>
+                                                <p class="text-sm">您可以删除您创建的知识图谱、帖子和评论等内容。</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                            <span class="iconify text-primary flex-shrink-0 mt-0.5" data-icon="heroicons:arrow-down-tray" data-width="20"></span>
+                                            <div>
+                                                <h4 class="font-semibold text-sm text-base-content">导出权</h4>
+                                                <p class="text-sm">您可以导出您创建的知识图谱数据。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2">如需注销账户或有其他数据相关请求，请通过下方联系方式与我们取得联系。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. 未成年人保护 -->
+                        <div id="privacy-minors" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">7</span>
+                                    未成年人保护
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <p class="text-base-content/80 leading-relaxed">
+                                    本平台主要面向具有完全民事行为能力的用户。我们不会故意收集未满14周岁未成年人的个人信息。如果您是未成年人的监护人，发现您的孩子未经您同意向我们提供了个人信息，请通过下方联系方式与我们联系，我们将及时删除相关信息。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- 8. 政策更新 -->
+                        <div id="privacy-update" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">8</span>
+                                    隐私政策的更新
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <p class="text-base-content/80 leading-relaxed">
+                                    我们可能会不定期更新本隐私政策。当政策发生重大变更时，我们将通过平台公告或站内消息的方式通知您。更新后的政策一经发布即生效。建议您定期查阅本页面以了解最新的隐私保护措施。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- 9. 联系我们 -->
+                        <div id="privacy-contact" class="card bg-base-100 shadow-soft">
+                            <div class="card-body">
+                                <h2 class="card-title text-xl flex items-center gap-2">
+                                    <span class="badge badge-primary badge-sm">9</span>
+                                    联系我们
+                                </h2>
+                                <div class="divider mt-0 mb-2"></div>
+                                <div class="text-base-content/80 leading-relaxed">
+                                    <p class="mb-4">如果您对本隐私政策有任何疑问、意见或请求，请通过以下方式联系我们：</p>
+                                    <div class="flex flex-col sm:flex-row gap-4">
+                                        <div class="flex items-center gap-2">
+                                            <span class="iconify text-primary" data-icon="heroicons:envelope" data-width="18"></span>
+                                            <span>gavriloprincip@163.com</span>
+                                        </div>
+                                    </div>
+                                    <p class="mt-4">我们将在收到您的请求后15个工作日内予以回复。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- 底部导航 -->
+            <section class="py-8 bg-base-100">
+                <div class="container mx-auto px-4 max-w-4xl text-center">
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <a th:href="@{/terms}" class="btn btn-outline btn-primary">
+                            <span class="iconify" data-icon="heroicons:document-text" data-width="18"></span>
+                            查看服务条款
+                        </a>
+                        <a th:href="@{/feedback}" class="btn btn-outline">
+                            <span class="iconify" data-icon="heroicons:chat-bubble-left-right" data-width="18"></span>
+                            提交反馈
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

@@ -53,7 +53,7 @@
                 <div th:if="${currentUser == null}" class="flex gap-2">
                     <a href="/user/login_register.html"
                         class="btn btn-ghost btn-sm text-base-content hover:bg-base-content/10">登录</a>
-                    <a href="/user/login_register.html"
+                    <a href="/user/login_register.html?tab=register"
                         class="btn btn-outline btn-sm border-base-content text-base-content hover:bg-base-content hover:text-base-100">注册</a>
                 </div>
                 <!-- 已登录状态 -->
@@ -74,7 +74,7 @@
                         <li><a href="/user/profile.html?section=search-history" class="text-base-content"><span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>搜索历史</a></li>
                         <li><a href="/user/profile.html?section=browse-history" class="text-base-content"><span class="iconify" data-icon="heroicons:clock" data-width="16"></span>浏览历史</a></li>
                         <li><a href="/user/profile.html?section=favorites" class="text-base-content"><span class="iconify" data-icon="heroicons:heart" data-width="16"></span>我的收藏</a></li>
-                        <li><a href="/user/profile.html?section=messages" class="text-base-content"><span class="iconify" data-icon="heroicons:inbox" data-width="16"></span>收件箱</a></li>
+                        <li><a href="/user/profile.html?section=messages" class="text-base-content"><span class="iconify" data-icon="heroicons:inbox" data-width="16"></span>收件箱<span id="header-inbox-badge" class="badge badge-error badge-xs ml-1 hidden"></span></a></li>
                         <li><a href="/user/profile.html?section=settings" class="text-base-content"><span class="iconify" data-icon="heroicons:cog-6-tooth" data-width="16"></span>账户设置</a></li>
                         <li>
                             <hr class="academic-divider">

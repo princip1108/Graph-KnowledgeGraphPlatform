@@ -13,6 +13,7 @@ import com.sdu.kgplatform.repository.GraphFavoriteRepository;
 import com.sdu.kgplatform.repository.KnowledgeGraphRepository;
 import com.sdu.kgplatform.repository.UserRepository;
 import com.sdu.kgplatform.service.GraphService;
+import com.sdu.kgplatform.common.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -287,6 +288,27 @@ public class GraphController {
     public ResponseEntity<?> getPopularGraphs(@RequestParam(defaultValue = "10") int limit) {
         List<GraphListDto> graphs = graphService.getPopularGraphs(Math.min(limit, 50));
         return ResponseEntity.ok(graphs);
+    }
+
+    /**
+     * 个性化推荐图谱
+     * GET /api/graph/recommend
+     * 已登录用户：基于浏览历史的领域偏好
+     * 未登录用户：降级为热门排序
+     */
+    @GetMapping("/recommend")
+    public ResponseEntity<?> getRecommendedGraphs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String domain) {
+
+        Integer userId = getCurrentUserId();
+        Page<GraphListDto> graphs = graphService.getRecommendedGraphs(userId, domain, page, Math.min(size, 50));
+        return ResponseEntity.ok(Map.of(
+                "content", graphs.getContent(),
+                "totalElements", graphs.getTotalElements(),
+                "totalPages", graphs.getTotalPages(),
+                "currentPage", graphs.getNumber()));
     }
 
     // ==================== 更新图谱 ====================
@@ -692,11 +714,6 @@ public class GraphController {
      * 获取当前登录用户ID
      */
     private Integer getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()
-                && auth.getPrincipal() instanceof com.sdu.kgplatform.security.CustomUserDetails) {
-            return ((com.sdu.kgplatform.security.CustomUserDetails) auth.getPrincipal()).getUserId();
-        }
-        return null;
+        return SecurityUtils.getCurrentUserId();
     }
 }

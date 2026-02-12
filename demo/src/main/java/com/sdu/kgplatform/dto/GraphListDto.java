@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -33,8 +34,11 @@ public class GraphListDto {
     private Integer collectCount;
     private Integer nodeCount;
     private Integer relationCount;
+    private Integer downloadCount;
+    private BigDecimal density;
 
     // 分类信息
     private Integer categoryId;
     private String categoryName;
+    private String domain;
 }

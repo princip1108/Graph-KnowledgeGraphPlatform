@@ -42,4 +42,9 @@ public class GraphCreateDto {
      * 分类ID
      */
     private Integer categoryId;
+
+    /**
+     * 领域分类代码
+     */
+    private String domain;
 }

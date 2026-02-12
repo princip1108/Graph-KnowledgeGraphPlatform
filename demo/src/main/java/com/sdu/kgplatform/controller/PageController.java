@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class PageController {
 
     // ========== 主框架页面（导航栏不刷新） ==========
-    
+
     @GetMapping("/app")
     public String mainFrame() {
         return "main";
@@ -22,8 +22,8 @@ public class PageController {
     }
 
     // ========== 图谱相关页面 ==========
-    
-    @GetMapping({"/", "/graph/home.html"})
+
+    @GetMapping({ "/", "/graph/home.html" })
     public String home() {
         return "graph/home";
     }
@@ -62,7 +62,7 @@ public class PageController {
 
     // ========== 社区相关页面 ==========
 
-    @GetMapping("/community/feedback.html")
+    @GetMapping({ "/community/feedback.html", "/feedback" })
     public String feedback() {
         return "community/feedback";
     }
@@ -84,14 +84,24 @@ public class PageController {
 
     // ========== 其他页面 ==========
 
-    @GetMapping("/pages/documentation.html")
+    @GetMapping({ "/pages/documentation.html", "/documentation" })
     public String documentation() {
         return "pages/documentation";
     }
 
-    @GetMapping("/pages/about.html")
+    @GetMapping({ "/pages/about.html", "/about" })
     public String about() {
         return "pages/about";
+    }
+
+    @GetMapping({ "/pages/privacy.html", "/privacy" })
+    public String privacy() {
+        return "pages/privacy";
+    }
+
+    @GetMapping({ "/pages/terms.html", "/terms" })
+    public String terms() {
+        return "pages/terms";
     }
 
     @GetMapping("/admin/dashboard.html")

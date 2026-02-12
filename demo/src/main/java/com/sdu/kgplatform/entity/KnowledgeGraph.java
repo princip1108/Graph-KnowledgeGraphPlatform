@@ -91,6 +91,9 @@ public class KnowledgeGraph {
     @Column(name = "category_id")
     private Integer categoryId;
 
+    @Column(name = "domain", length = 50)
+    private String domain = "other";
+
     @Column(name = "hot_score")
     private Double hotScore = 0.0;
 }

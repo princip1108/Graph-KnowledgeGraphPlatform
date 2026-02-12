@@ -271,19 +271,30 @@
                                                 <div class="flex items-center gap-4">
                                                     <label
                                                         class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">当前密码</label>
-                                                    <input type="password" placeholder="请输入当前密码"
+                                                    <input type="password" id="cp-old-password" placeholder="请输入当前密码"
                                                         class="input input-bordered focus-primary flex-1">
                                                 </div>
                                                 <div class="flex items-center gap-4">
                                                     <label
-                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[4rem]">新密码</label>
-                                                    <input type="password" placeholder="请输入新密码"
+                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">邮箱验证</label>
+                                                    <div class="flex gap-2 flex-1">
+                                                        <input type="text" id="cp-verify-code" placeholder="6位验证码" maxlength="6"
+                                                            class="input input-bordered focus-primary flex-1">
+                                                        <button type="button" id="cp-send-code-btn"
+                                                            class="btn btn-outline btn-sm whitespace-nowrap"
+                                                            onclick="sendChangePasswordCode()">获取验证码</button>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-4">
+                                                    <label
+                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">新密码</label>
+                                                    <input type="password" id="cp-new-password" placeholder="请输入新密码(8-20位)"
                                                         class="input input-bordered focus-primary flex-1">
                                                 </div>
                                                 <div class="flex items-center gap-4">
                                                     <label
-                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">确认新密码</label>
-                                                    <input type="password" placeholder="请再次输入新密码"
+                                                        class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]">确认密码</label>
+                                                    <input type="password" id="cp-confirm-password" placeholder="请再次输入新密码"
                                                         class="input input-bordered focus-primary flex-1">
                                                 </div>
                                             </div>
@@ -296,6 +307,22 @@
                                             <div class="alert alert-warning mb-4"><span class="iconify"
                                                     data-icon="heroicons:exclamation-triangle"
                                                     data-width="20"></span><span>以下操作不可逆，请谨慎操作</span></div>
+                                            <div class="text-sm text-base-content/60 mb-4">
+                                                <p class="mb-1">注销账户后将：</p>
+                                                <ul class="list-disc list-inside space-y-1">
+                                                    <li>清除个人资料、搜索记录、浏览记录</li>
+                                                    <li>删除所有草稿帖子和草稿图谱</li>
+                                                    <li>取消所有关注关系</li>
+                                                    <li>已发布的帖子和图谱将保留但显示为"已注销用户"</li>
+                                                </ul>
+                                            </div>
+                                            <div class="flex items-center gap-3 mb-4">
+                                                <label class="label-text font-medium text-base-content/70 whitespace-nowrap min-w-[5rem]"
+                                                    id="deactivate-label">确认密码</label>
+                                                <input type="password" id="deactivate-password"
+                                                    placeholder="请输入当前密码"
+                                                    class="input input-bordered input-error focus-primary flex-1 max-w-xs">
+                                            </div>
                                             <button class="btn btn-error" onclick="confirmAccountDeletion()"><span
                                                     class="iconify" data-icon="heroicons:trash"
                                                     data-width="16"></span>注销账户</button>

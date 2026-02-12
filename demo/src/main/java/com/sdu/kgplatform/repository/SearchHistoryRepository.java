@@ -42,4 +42,6 @@ public interface SearchHistoryRepository extends JpaRepository<SearchHistory, In
      * 获取用户最早的一条搜索记录（用于删除多余记录）
      */
     Optional<SearchHistory> findTopByUserIdAndSearchTypeOrderBySearchTimeAsc(Integer userId, String searchType);
+
+    void deleteByUserId(Integer userId);
 }

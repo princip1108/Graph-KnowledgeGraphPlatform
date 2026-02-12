@@ -2,6 +2,7 @@ package com.sdu.kgplatform.controller;
 
 import com.sdu.kgplatform.common.SecurityUtils;
 import com.sdu.kgplatform.entity.*;
+import com.sdu.kgplatform.repository.CommentRepository;
 import com.sdu.kgplatform.repository.PostFavoriteRepository;
 import com.sdu.kgplatform.repository.PostRepository;
 import com.sdu.kgplatform.repository.UserFollowRepository;
@@ -27,6 +28,7 @@ public class PostController {
     private final PostFavoriteRepository postFavoriteRepository;
     private final UserFollowRepository userFollowRepository;
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
     private final com.sdu.kgplatform.service.HistoryService historyService;
 
     public PostController(PostService postService,
@@ -34,12 +36,14 @@ public class PostController {
             PostFavoriteRepository postFavoriteRepository,
             UserFollowRepository userFollowRepository,
             PostRepository postRepository,
+            CommentRepository commentRepository,
             com.sdu.kgplatform.service.HistoryService historyService) {
         this.postService = postService;
         this.userRepository = userRepository;
         this.postFavoriteRepository = postFavoriteRepository;
         this.userFollowRepository = userFollowRepository;
         this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
         this.historyService = historyService;
     }
 
@@ -83,6 +87,11 @@ public class PostController {
                 postMap.put("authorId", post.getAuthorId());
                 postMap.put("isPinned", post.getIsPinned());
                 postMap.put("categoryId", post.getCategoryId());
+                postMap.put("createdAt", post.getUploadTime());
+
+                // 获取评论数
+                long commentCount = commentRepository.countByPostId(post.getPostId());
+                postMap.put("commentCount", commentCount);
 
                 // 获取作者信息
                 userRepository.findById(post.getAuthorId()).ifPresent(author -> {
@@ -173,6 +182,12 @@ public class PostController {
                 }
             }
 
+            // Get category code string (from frontend)
+            String category = (String) request.get("category");
+            if (category == null || category.isEmpty()) {
+                category = "other";
+            }
+
             if (title == null || title.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("error", "标题不能为空");
@@ -184,7 +199,8 @@ public class PostController {
                 return ResponseEntity.badRequest().body(response);
             }
             Post post = postService.createPost(user.getUserId(), title.trim(),
-                    postAbstract != null ? postAbstract.trim() : "", content.trim(), tags, graphId, categoryId);
+                    postAbstract != null ? postAbstract.trim() : "", content.trim(), tags, graphId, categoryId,
+                    category);
             response.put("success", true);
             response.put("post", post);
             response.put("message", "发布成功");
@@ -357,6 +373,22 @@ public class PostController {
         }
     }
 
+    @GetMapping("/posts/hot")
+    public ResponseEntity<Map<String, Object>> getHotPosts(
+            @RequestParam(defaultValue = "5") int size) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Map<String, Object>> hotPosts = postService.getHotPosts(Math.min(size, 10));
+            response.put("success", true);
+            response.put("posts", hotPosts);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", "获取热门帖子失败");
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
     /**
      * 获取置顶帖子
      */
@@ -365,8 +397,28 @@ public class PostController {
         Map<String, Object> response = new HashMap<>();
         try {
             List<Post> posts = postService.getPinnedPosts();
+            List<Map<String, Object>> postsWithAuthor = new ArrayList<>();
+            for (Post post : posts) {
+                Map<String, Object> postMap = new HashMap<>();
+                postMap.put("postId", post.getPostId());
+                postMap.put("postTitle", post.getPostTitle());
+                postMap.put("postAbstract", post.getPostAbstract());
+                postMap.put("uploadTime", post.getUploadTime());
+                postMap.put("likeCount", post.getLikeCount());
+                postMap.put("authorId", post.getAuthorId());
+                postMap.put("isPinned", post.getIsPinned());
+                postMap.put("categoryId", post.getCategoryId());
+                postMap.put("createdAt", post.getUploadTime());
+                postMap.put("viewCount", post.getViewCount());
+                postMap.put("favoriteCount", post.getFavoriteCount());
+                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
+                    postMap.put("authorName", author.getUserName());
+                    postMap.put("authorAvatar", author.getAvatar());
+                });
+                postsWithAuthor.add(postMap);
+            }
             response.put("success", true);
-            response.put("posts", posts);
+            response.put("posts", postsWithAuthor);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
@@ -768,6 +820,28 @@ public class PostController {
             }
             response.put("success", true);
             response.put("drafts", posts);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 获取图谱的相关帖子推荐
+     * GET /api/posts/related?graphId=xxx&size=10
+     */
+    @GetMapping("/posts/related")
+    public ResponseEntity<Map<String, Object>> getRelatedPosts(
+            @RequestParam Integer graphId,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Map<String, Object>> posts = postService.getRelatedPostsForGraph(graphId, Math.min(size, 20));
+            response.put("success", true);
+            response.put("posts", posts);
+            response.put("total", posts.size());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);

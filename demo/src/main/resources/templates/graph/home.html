@@ -47,27 +47,7 @@
                         </div>
                     </div>
 
-                    <!-- Popular Search Tags -->
-                    <div class="mt-12">
-                        <div class="text-base text-base-content/60 mb-6 font-medium">热门搜索</div>
-                        <div class="flex flex-wrap justify-center gap-3">
-                            <button
-                                class="badge badge-outline badge-lg hover:badge-primary transition-all duration-200 px-4 py-2"
-                                onclick="searchTag('人工智能')">人工智能</button>
-                            <button
-                                class="badge badge-outline badge-lg hover:badge-primary transition-all duration-200 px-4 py-2"
-                                onclick="searchTag('机器学习')">机器学习</button>
-                            <button
-                                class="badge badge-outline badge-lg hover:badge-primary transition-all duration-200 px-4 py-2"
-                                onclick="searchTag('自然语言处理')">自然语言处理</button>
-                            <button
-                                class="badge badge-outline badge-lg hover:badge-primary transition-all duration-200 px-4 py-2"
-                                onclick="searchTag('计算机视觉')">计算机视觉</button>
-                            <button
-                                class="badge badge-outline badge-lg hover:badge-primary transition-all duration-200 px-4 py-2"
-                                onclick="searchTag('深度学习')">深度学习</button>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </section>
@@ -82,49 +62,32 @@
                     </p>
                 </div>
 
-                <!-- Filter Controls -->
-                <div class="flex flex-wrap justify-center gap-4 mb-12 p-6 bg-base-200 rounded-box academic-border">
+                <!-- Recommendation Tabs + Domain Filter -->
+                <div class="flex flex-col items-center gap-4 mb-12">
+                    <div class="tabs tabs-boxed bg-base-200 p-1" id="homeRecommendTabs">
+                        <a class="tab tab-lg tab-active gap-2" data-tab="hot" onclick="switchHomeTab('hot')">
+                            <span class="iconify" data-icon="heroicons:fire" data-width="18"></span>
+                            热门
+                        </a>
+                        <a class="tab tab-lg gap-2" data-tab="latest" onclick="switchHomeTab('latest')">
+                            <span class="iconify" data-icon="heroicons:clock" data-width="18"></span>
+                            最新
+                        </a>
+                        <a class="tab tab-lg gap-2" data-tab="recommend" onclick="switchHomeTab('recommend')">
+                            <span class="iconify" data-icon="heroicons:star" data-width="18"></span>
+                            推荐
+                        </a>
+                    </div>
                     <div class="dropdown">
-                        <button tabindex="0" class="btn btn-outline gap-2 academic-border">
+                        <button tabindex="0" class="btn btn-outline btn-sm gap-2 academic-border">
                             <span class="iconify" data-icon="heroicons:funnel" data-width="16"></span>
                             领域筛选
                             <span class="iconify" data-icon="heroicons:chevron-down" data-width="16"></span>
                         </button>
-                        <ul tabindex="0"
+                        <ul id="homeDomainFilter" tabindex="0"
                             class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-48 mt-1 academic-border">
                             <li><a onclick="applyFilter('domain', 'all')">全部领域</a></li>
-                            <li><a onclick="applyFilter('domain', 'ai')">人工智能</a></li>
-                            <li><a onclick="applyFilter('domain', 'medical')">医学健康</a></li>
-                            <li><a onclick="applyFilter('domain', 'finance')">金融经济</a></li>
-                            <li><a onclick="applyFilter('domain', 'education')">教育学习</a></li>
-                        </ul>
-                    </div>
-                    <div class="dropdown">
-                        <button tabindex="0" class="btn btn-outline gap-2 academic-border">
-                            <span class="iconify" data-icon="heroicons:clock" data-width="16"></span>
-                            时间筛选
-                            <span class="iconify" data-icon="heroicons:chevron-down" data-width="16"></span>
-                        </button>
-                        <ul tabindex="0"
-                            class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-48 mt-1 academic-border">
-                            <li><a onclick="applyFilter('time', 'all')">全部时间</a></li>
-                            <li><a onclick="applyFilter('time', 'week')">最近一周</a></li>
-                            <li><a onclick="applyFilter('time', 'month')">最近一月</a></li>
-                            <li><a onclick="applyFilter('time', 'year')">最近一年</a></li>
-                        </ul>
-                    </div>
-                    <div class="dropdown">
-                        <button tabindex="0" class="btn btn-outline gap-2 academic-border">
-                            <span class="iconify" data-icon="heroicons:fire" data-width="16"></span>
-                            热门程度
-                            <span class="iconify" data-icon="heroicons:chevron-down" data-width="16"></span>
-                        </button>
-                        <ul tabindex="0"
-                            class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-48 mt-1 academic-border">
-                            <li><a onclick="applyFilter('popularity', 'all')">全部</a></li>
-                            <li><a onclick="applyFilter('popularity', 'hot')">最热门</a></li>
-                            <li><a onclick="applyFilter('popularity', 'views')">最多浏览</a></li>
-                            <li><a onclick="applyFilter('popularity', 'favorites')">最多收藏</a></li>
+                            <!-- 动态加载分类 -->
                         </ul>
                     </div>
                 </div>

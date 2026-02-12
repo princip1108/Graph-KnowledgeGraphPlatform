@@ -46,6 +46,15 @@
                             <div id="graphTags" class="flex flex-wrap gap-2 mb-4">
                                 <div class="badge badge-ghost badge-sm">加载中...</div>
                             </div>
+                            <!-- Domain Category -->
+                            <div id="graphDomainSection" class="mb-4 hidden">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="iconify text-primary" data-icon="heroicons:folder"
+                                        data-width="16"></span>
+                                    <span class="text-base-content/70">领域分类：</span>
+                                    <span id="graphDomain" class="font-medium text-primary"></span>
+                                </div>
+                            </div>
                             <!-- Uploader Info -->
                             <div id="uploaderSection" class="flex items-center gap-3 p-3 bg-base-100 rounded-lg mb-4">
                                 <a id="uploaderLink" href="#" target="_top"
@@ -288,7 +297,7 @@
                         <span class="iconify text-base-content" data-icon="heroicons:chevron-right" data-width="16"
                             id="rightToggleIcon"></span>
                     </button>
-                    <div class="sidebar-content">
+                    <div class="sidebar-content flex-1 flex flex-col overflow-hidden">
                         <!-- Header -->
                         <div class="p-4 border-b academic-border">
                             <h3 class="text-sm font-semibold text-base-content flex items-center gap-2">
@@ -324,12 +333,6 @@
                     <div data-tip="下载图谱" class="tooltip tooltip-left">
                         <button class="btn btn-circle btn-sm hover-lift focus-primary" onclick="downloadGraph()">
                             <span class="iconify text-base-content" data-icon="heroicons:arrow-down-tray"
-                                data-width="20"></span>
-                        </button>
-                    </div>
-                    <div data-tip="全屏显示" class="tooltip tooltip-left">
-                        <button class="btn btn-circle btn-sm hover-lift focus-primary" onclick="toggleFullscreen()">
-                            <span class="iconify text-base-content" data-icon="heroicons:arrows-pointing-out"
                                 data-width="20"></span>
                         </button>
                     </div>
@@ -390,12 +393,24 @@
                     </div>
                 </div>
             </div>
-            <!-- Related Graph Recommendations -->
+            <!-- Related Posts -->
             <div class="bg-base-200 border-t academic-border">
                 <div class="p-6">
-                    <h2 class="text-lg font-semibold text-base-content mb-6">相关图谱推荐</h2>
-                    <div id="recommendationsContainer" class="flex gap-6 overflow-x-auto pb-2">
-                        <!-- Recommendation cards will be loaded dynamically -->
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-base-content flex items-center gap-2">
+                            <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right" data-width="22"></span>
+                            相关帖子
+                        </h2>
+                        <a id="createPostLink" href="#" class="btn btn-outline btn-sm gap-1" onclick="createPostForGraph()">
+                            <span class="iconify" data-icon="heroicons:pencil-square" data-width="16"></span>
+                            发布相关帖子
+                        </a>
+                    </div>
+                    <div id="relatedPostsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div class="col-span-full flex flex-col items-center justify-center py-8">
+                            <span class="loading loading-spinner loading-md text-primary"></span>
+                            <p class="mt-3 text-sm text-base-content/60">加载相关帖子...</p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -54,49 +54,14 @@
                                                             data-width="16"></span>
                                                         领域分类
                                                     </h4>
-                                                    <div class="grid grid-cols-2 gap-1">
+                                                    <div id="categoryFilters" class="grid grid-cols-2 gap-1">
                                                         <button data-filter="all"
                                                             class="btn btn-ghost btn-xs justify-start filter-btn active"
                                                             onclick="filterGraphs('all')">
                                                             <span class="iconify" data-icon="heroicons:squares-2x2"
                                                                 data-width="12"></span>全部
                                                         </button>
-                                                        <button data-filter="humanities"
-                                                            class="btn btn-ghost btn-xs justify-start filter-btn"
-                                                            onclick="filterGraphs('humanities')">
-                                                            <span class="iconify" data-icon="heroicons:book-open"
-                                                                data-width="12"></span>人文
-                                                        </button>
-                                                        <button data-filter="history"
-                                                            class="btn btn-ghost btn-xs justify-start filter-btn"
-                                                            onclick="filterGraphs('history')">
-                                                            <span class="iconify" data-icon="heroicons:clock"
-                                                                data-width="12"></span>历史
-                                                        </button>
-                                                        <button data-filter="science"
-                                                            class="btn btn-ghost btn-xs justify-start filter-btn"
-                                                            onclick="filterGraphs('science')">
-                                                            <span class="iconify" data-icon="heroicons:beaker"
-                                                                data-width="12"></span>科学
-                                                        </button>
-                                                        <button data-filter="technology"
-                                                            class="btn btn-ghost btn-xs justify-start filter-btn"
-                                                            onclick="filterGraphs('technology')">
-                                                            <span class="iconify" data-icon="heroicons:cpu-chip"
-                                                                data-width="12"></span>技术
-                                                        </button>
-                                                        <button data-filter="medicine"
-                                                            class="btn btn-ghost btn-xs justify-start filter-btn"
-                                                            onclick="filterGraphs('medicine')">
-                                                            <span class="iconify" data-icon="heroicons:heart"
-                                                                data-width="12"></span>医学
-                                                        </button>
-                                                        <button data-filter="economics"
-                                                            class="btn btn-ghost btn-xs justify-start filter-btn"
-                                                            onclick="filterGraphs('economics')">
-                                                            <span class="iconify" data-icon="heroicons:chart-bar"
-                                                                data-width="12"></span>经济
-                                                        </button>
+                                                        <!-- 动态加载分类 -->
                                                     </div>
                                                 </div>
                                                 <div class="mb-4">
@@ -134,7 +99,7 @@
                                                                 class="label-text text-xs">最小节点数</span><span
                                                                 id="minNodesValue"
                                                                 class="label-text-alt text-xs">0</span></label>
-                                                        <input type="range" min="0" max="10000" value="0"
+                                                        <input type="range" min="0" max="1000" value="0"
                                                             id="minNodesRange" class="range range-primary range-xs"
                                                             oninput="updateSliderValue(this)">
                                                     </div>
@@ -142,8 +107,8 @@
                                                         <label class="label py-1"><span
                                                                 class="label-text text-xs">最大节点数</span><span
                                                                 id="maxNodesValue"
-                                                                class="label-text-alt text-xs">10000</span></label>
-                                                        <input type="range" min="0" max="10000" value="10000"
+                                                                class="label-text-alt text-xs">1000</span></label>
+                                                        <input type="range" min="0" max="1000" value="1000"
                                                             id="maxNodesRange" class="range range-primary range-xs"
                                                             oninput="updateSliderValue(this)">
                                                     </div>
@@ -160,7 +125,7 @@
                                                                 class="label-text text-xs">最小关系数</span><span
                                                                 id="minEdgesValue"
                                                                 class="label-text-alt text-xs">0</span></label>
-                                                        <input type="range" min="0" max="20000" value="0"
+                                                        <input type="range" min="0" max="2000" value="0"
                                                             id="minEdgesRange" class="range range-primary range-xs"
                                                             oninput="updateSliderValue(this)">
                                                     </div>
@@ -168,8 +133,8 @@
                                                         <label class="label py-1"><span
                                                                 class="label-text text-xs">最大关系数</span><span
                                                                 id="maxEdgesValue"
-                                                                class="label-text-alt text-xs">20000</span></label>
-                                                        <input type="range" min="0" max="20000" value="20000"
+                                                                class="label-text-alt text-xs">2000</span></label>
+                                                        <input type="range" min="0" max="2000" value="2000"
                                                             id="maxEdgesRange" class="range range-primary range-xs"
                                                             oninput="updateSliderValue(this)">
                                                     </div>
@@ -185,7 +150,7 @@
                                                         <label class="label py-1"><span
                                                                 class="label-text text-xs">最小密度</span><span
                                                                 id="minDensityValue"
-                                                                class="label-text-alt text-xs">0.0</span></label>
+                                                                class="label-text-alt text-xs">0.00</span></label>
                                                         <input type="range" min="0" max="100" value="0"
                                                             id="minDensityRange" class="range range-primary range-xs"
                                                             oninput="updateSliderValue(this, 'decimal')">
@@ -194,7 +159,7 @@
                                                         <label class="label py-1"><span
                                                                 class="label-text text-xs">最大密度</span><span
                                                                 id="maxDensityValue"
-                                                                class="label-text-alt text-xs">10.0</span></label>
+                                                                class="label-text-alt text-xs">1.00</span></label>
                                                         <input type="range" min="0" max="100" value="100"
                                                             id="maxDensityRange" class="range range-primary range-xs"
                                                             oninput="updateSliderValue(this, 'decimal')">

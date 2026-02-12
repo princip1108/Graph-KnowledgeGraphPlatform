@@ -30,8 +30,32 @@
     }
 
     async function initForum() {
+        await initGuestCheck();
+        await loadCategories();
         await loadForumStats();
         await loadPosts(true);
+        await loadAnnouncements();
+        await loadHotTopics();
+        await checkAdminStatus();
+    }
+
+    // Load categories from API
+    async function loadCategories() {
+        try {
+            const res = await fetch('/api/categories');
+            const categories = await res.json();
+            const select = document.getElementById('domainFilter');
+            if (select && categories.length > 0) {
+                categories.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.code;
+                    option.textContent = c.name;
+                    select.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('Failed to load categories:', e);
+        }
     }
 
     function bindEvents() {
@@ -198,8 +222,10 @@
     };
 
     window.toggleLike = async function (postId, btn) {
+        if (!requireLogin('点赞')) return;
         try {
             const response = await fetch('/api/posts/' + postId + '/like', { method: 'POST', credentials: 'include' });
+            if (checkNeedLogin(response)) return;
             const data = await response.json();
             if (data.success) {
                 btn.classList.toggle('liked');
@@ -212,6 +238,7 @@
     };
 
     window.openQuickComment = function (postId) {
+        if (!requireLogin('评论')) return;
         currentPostId = postId;
         document.getElementById('quickCommentContent').value = '';
         document.getElementById('quickCommentCharCount').textContent = '0';
@@ -296,6 +323,182 @@
         }
         showNotification('私信发送成功', 'success');
         closePrivateMessageModal();
+    };
+
+    // ========== 热门话题 ==========
+
+    async function loadHotTopics() {
+        var container = document.getElementById('hotTopicsList');
+        if (!container) return;
+        try {
+            var res = await fetch('/api/posts/hot?size=5');
+            var data = await res.json();
+            if (data.success && data.posts && data.posts.length > 0) {
+                container.innerHTML = data.posts.map(function(post) {
+                    var badgeClass = post.badge === 'new' ? 'badge-warning' : 'badge-error';
+                    var badgeText = post.badge === 'new' ? '新' : '热';
+                    return '<div class="p-3 rounded-lg bg-base-200 hover:bg-base-300 transition-colors cursor-pointer" onclick="window.location.href=\'/community/post_detail.html?id=' + post.postId + '\'">'
+                        + '<div class="flex items-center justify-between mb-1">'
+                        + '<span class="font-medium text-sm line-clamp-1">' + post.postTitle + '</span>'
+                        + '<div class="badge ' + badgeClass + ' badge-xs">' + badgeText + '</div>'
+                        + '</div>'
+                        + '<div class="text-xs text-base-content/70">'
+                        + post.commentCount + ' 讨论 \u2022 ' + post.viewCount + ' 浏览 \u2022 ' + post.likeCount + ' 赞'
+                        + '</div></div>';
+                }).join('');
+            } else {
+                container.innerHTML = '<div class="text-center text-sm text-base-content/50 py-2">暂无热门话题</div>';
+            }
+        } catch (e) {
+            container.innerHTML = '<div class="text-center text-sm text-base-content/50 py-2">加载失败</div>';
+        }
+    }
+
+    // ========== 公告功能 ==========
+
+    async function loadAnnouncements() {
+        try {
+            const response = await fetch('/api/announcements');
+            const data = await response.json();
+            const container = document.getElementById('announcementList');
+            if (!container) return;
+
+            if (data.success && data.announcements && data.announcements.length > 0) {
+                container.innerHTML = '';
+                data.announcements.forEach(function (a) {
+                    var alertClass = 'alert-info';
+                    var iconName = 'heroicons:information-circle';
+                    if (a.type === 'SUCCESS') { alertClass = 'alert-success'; iconName = 'heroicons:gift'; }
+                    else if (a.type === 'WARNING') { alertClass = 'alert-warning'; iconName = 'heroicons:exclamation-triangle'; }
+                    else if (a.type === 'ERROR') { alertClass = 'alert-error'; iconName = 'heroicons:exclamation-circle'; }
+
+                    var pinned = a.isPinned === true;
+                    var pinnedTag = pinned ? '<span class="badge badge-warning badge-xs">置顶</span>' : '';
+                    var adminBtns = '';
+                    if (window._isAdmin) {
+                        var pinIcon = pinned ? 'heroicons:arrow-down-on-square' : 'heroicons:arrow-up-on-square';
+                        var pinTitle = pinned ? '取消置顶' : '置顶';
+                        adminBtns = '<div class="flex gap-0.5">'
+                            + '<button class="btn btn-ghost btn-xs' + (pinned ? ' text-warning' : '') + '" onclick="toggleAnnouncementPin(' + a.id + ')" title="' + pinTitle + '">'
+                            + '<span class="iconify" data-icon="' + pinIcon + '" data-width="14"></span></button>'
+                            + '<button class="btn btn-ghost btn-xs" onclick="deleteAnnouncement(' + a.id + ')" title="删除">'
+                            + '<span class="iconify" data-icon="heroicons:x-mark" data-width="14"></span></button>'
+                            + '</div>';
+                    }
+
+                    var div = document.createElement('div');
+                    div.className = 'alert ' + alertClass + ' p-3';
+                    div.setAttribute('data-id', a.id);
+                    div.innerHTML = '<span class="iconify" data-icon="' + iconName + '" data-width="16"></span>'
+                        + '<div class="text-sm flex-1">'
+                        + '<div class="font-medium flex items-center gap-1">' + (a.title || '') + pinnedTag + '</div>'
+                        + '<div class="text-xs opacity-70">' + (a.content || '') + '</div>'
+                        + '</div>'
+                        + adminBtns;
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = '<div class="text-center text-sm text-base-content/50 py-2">暂无公告</div>';
+            }
+        } catch (e) {
+            var container = document.getElementById('announcementList');
+            if (container) container.innerHTML = '<div class="text-center text-sm text-base-content/50 py-2">暂无公告</div>';
+        }
+    }
+
+    async function checkAdminStatus() {
+        try {
+            const response = await fetch('/user/api/check-auth', { credentials: 'include' });
+            const data = await response.json();
+            if (data.authenticated && data.role === 'ADMIN') {
+                window._isAdmin = true;
+                var btn = document.getElementById('addAnnouncementBtn');
+                if (btn) btn.classList.remove('hidden');
+                loadAnnouncements();
+            } else {
+                window._isAdmin = false;
+            }
+        } catch (e) {
+            window._isAdmin = false;
+        }
+    }
+
+    window.openAnnouncementModal = function () {
+        document.getElementById('announcementTitle').value = '';
+        document.getElementById('announcementContent').value = '';
+        document.getElementById('announcementType').value = 'INFO';
+        document.getElementById('announcementModal').showModal();
+    };
+
+    window.closeAnnouncementModal = function () {
+        document.getElementById('announcementModal').close();
+    };
+
+    window.submitAnnouncement = async function () {
+        var title = document.getElementById('announcementTitle').value.trim();
+        var content = document.getElementById('announcementContent').value.trim();
+        var type = document.getElementById('announcementType').value;
+
+        if (!title) {
+            showNotification('请输入公告标题', 'warning');
+            return;
+        }
+
+        try {
+            var response = await fetch('/api/announcements', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, content: content, type: type }),
+                credentials: 'include'
+            });
+            var data = await response.json();
+            if (data.success) {
+                showNotification('公告发布成功', 'success');
+                closeAnnouncementModal();
+                loadAnnouncements();
+            } else {
+                showNotification(data.error || '发布失败', 'error');
+            }
+        } catch (e) {
+            showNotification('发布失败', 'error');
+        }
+    };
+
+    window.toggleAnnouncementPin = async function (id) {
+        try {
+            var response = await fetch('/api/announcements/' + id + '/pin', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            var data = await response.json();
+            if (data.success) {
+                showNotification(data.message || '操作成功', 'success');
+                loadAnnouncements();
+            } else {
+                showNotification(data.error || '操作失败', 'error');
+            }
+        } catch (e) {
+            showNotification('操作失败', 'error');
+        }
+    };
+
+    window.deleteAnnouncement = async function (id) {
+        if (!confirm('确定删除该公告？')) return;
+        try {
+            var response = await fetch('/api/announcements/' + id, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            var data = await response.json();
+            if (data.success) {
+                showNotification('公告已删除', 'success');
+                loadAnnouncements();
+            } else {
+                showNotification(data.error || '删除失败', 'error');
+            }
+        } catch (e) {
+            showNotification('删除失败', 'error');
+        }
     };
 
     function showNotification(message, type) {

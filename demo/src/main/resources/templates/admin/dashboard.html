@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout/base}">
 
@@ -189,18 +189,147 @@
                         <h1 class="text-2xl font-bold text-base-content mb-2">用户权限管理</h1>
                         <p class="text-base-content/70">管理用户角色和权限</p>
                     </div>
-                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle"
-                            data-width="20"></span>此功能仅管理员可用</div>
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-base-200 rounded-lg p-4">
+                            <div class="text-xs text-base-content/60">总用户</div>
+                            <div class="text-2xl font-bold" id="statTotal">-</div>
+                        </div>
+                        <div class="bg-base-200 rounded-lg p-4">
+                            <div class="text-xs text-base-content/60">管理员</div>
+                            <div class="text-2xl font-bold text-primary" id="statAdmin">-</div>
+                        </div>
+                        <div class="bg-base-200 rounded-lg p-4">
+                            <div class="text-xs text-base-content/60">普通用户</div>
+                            <div class="text-2xl font-bold text-success" id="statUser">-</div>
+                        </div>
+                        <div class="bg-base-200 rounded-lg p-4">
+                            <div class="text-xs text-base-content/60">已封禁</div>
+                            <div class="text-2xl font-bold text-error" id="statBanned">-</div>
+                        </div>
+                    </div>
+                    <!-- Filter Tabs + Search -->
+                    <div class="flex flex-wrap items-center gap-4 mb-6">
+                        <div class="tabs tabs-boxed">
+                            <a class="tab tab-active" data-filter="ALL" onclick="setUserFilter(this)">全部</a>
+                            <a class="tab" data-filter="ADMIN" onclick="setUserFilter(this)">管理员</a>
+                            <a class="tab" data-filter="USER" onclick="setUserFilter(this)">普通用户</a>
+                            <a class="tab" data-filter="BANNED" onclick="setUserFilter(this)">已封禁</a>
+                        </div>
+                        <div class="join flex-1 min-w-[200px]">
+                            <input id="userSearchInput" type="text" placeholder="搜索用户名或邮箱..."
+                                class="input input-bordered join-item flex-1 input-sm"
+                                onkeypress="if(event.key===&#39;Enter&#39;) searchUserPermissions()">
+                            <button class="btn join-item btn-primary btn-sm" onclick="searchUserPermissions()">
+                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- User Table -->
+                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr class="bg-base-200">
+                                    <th>用户</th>
+                                    <th>邮箱</th>
+                                    <th>角色</th>
+                                    <th>状态</th>
+                                    <th>注册时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userPermTableBody">
+                                <tr><td colspan="6" class="text-center py-8 text-base-content/60">请输入用户名或邮箱进行搜索</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <div class="flex justify-between items-center mt-4">
+                        <div id="userPermPageInfo" class="text-sm text-base-content/70"></div>
+                        <div id="userPermPageButtons" class="join"></div>
+                    </div>
                 </div>
+
+                <!-- Ban Modal -->
+                <dialog id="banModal" class="modal">
+                    <div class="modal-box max-w-sm">
+                        <h3 class="font-bold text-lg mb-4">封禁用户</h3>
+                        <p class="text-base-content/70 mb-4">选择封禁时长：</p>
+                        <input type="hidden" id="banTargetUserId">
+                        <div class="space-y-2">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input type="radio" name="banDuration" value="1" class="radio radio-warning" checked>
+                                <span>1 小时</span>
+                            </label>
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input type="radio" name="banDuration" value="24" class="radio radio-warning">
+                                <span>1 天</span>
+                            </label>
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input type="radio" name="banDuration" value="168" class="radio radio-warning">
+                                <span>7 天</span>
+                            </label>
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input type="radio" name="banDuration" value="720" class="radio radio-warning">
+                                <span>30 天</span>
+                            </label>
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input type="radio" name="banDuration" value="0" class="radio radio-error">
+                                <span class="text-error">永久封禁</span>
+                            </label>
+                        </div>
+                        <div class="modal-action">
+                            <button class="btn btn-ghost btn-sm" onclick="document.getElementById(&#39;banModal&#39;).close()">取消</button>
+                            <button class="btn btn-warning btn-sm" onclick="confirmBanUser()">确认封禁</button>
+                        </div>
+                    </div>
+                    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+                </dialog>
 
                 <!-- Forum Management Section -->
                 <div id="forum-management-section" class="content-section">
                     <div class="mb-6">
                         <h1 class="text-2xl font-bold text-base-content mb-2">论坛管理</h1>
-                        <p class="text-base-content/70">管理论坛帖子和评论</p>
+                        <p class="text-base-content/70">管理所有帖子，支持置顶/取消置顶操作</p>
                     </div>
-                    <div class="alert alert-info"><span class="iconify" data-icon="heroicons:information-circle"
-                            data-width="20"></span>此功能仅管理员可用</div>
+                    <div class="flex gap-4 mb-6">
+                        <div class="join flex-1">
+                            <input id="forumSearchInput" type="text" placeholder="搜索帖子标题..."
+                                class="input input-bordered join-item flex-1"
+                                onkeypress="if(event.key===&#39;Enter&#39;) performForumSearch()">
+                            <button class="btn join-item btn-primary" onclick="performForumSearch()">
+                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
+                            </button>
+                        </div>
+                        <select id="forumPinFilter" class="select select-bordered w-48"
+                            onchange="filterForumByPin(this.value)">
+                            <option value="all">全部帖子</option>
+                            <option value="pinned">仅置顶</option>
+                            <option value="unpinned">未置顶</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
+                        <table class="table">
+                            <thead>
+                                <tr class="bg-base-200">
+                                    <th>帖子信息</th>
+                                    <th>作者</th>
+                                    <th>状态</th>
+                                    <th>置顶</th>
+                                    <th>发布日期</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forumTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-base-content/60">
+                                        <span class="loading loading-spinner loading-md"></span>
+                                        <span class="ml-2">加载中...</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -231,6 +360,13 @@
                             <option value="DRAFT">草稿</option>
                             <option value="PUBLISHED">发布</option>
                             <option value="PRIVATE">私有</option>
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">领域分类 <span
+                                    class="text-error">*</span></span></label>
+                        <select id="graphDomain" class="select select-bordered" required>
+                            <option value="">请选择分类...</option>
                         </select>
                     </div>
                     <div class="form-control">

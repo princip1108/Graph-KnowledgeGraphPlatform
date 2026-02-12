@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout/base}">
 
@@ -23,7 +23,8 @@
                     <div class="form-control mb-4">
                         <label class="label"><span class="label-text">关键字搜索</span></label>
                         <div class="join">
-                            <input type="text" placeholder="输入关键字..." id="searchInput" class="input input-bordered join-item flex-1">
+                            <input type="text" placeholder="输入关键字..." id="searchInput"
+                                class="input input-bordered join-item flex-1">
                             <button class="btn btn-primary join-item" onclick="performSearch()">
                                 <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
                             </button>
@@ -33,11 +34,7 @@
                         <label class="label"><span class="label-text">领域分类</span></label>
                         <select id="domainFilter" class="select select-bordered">
                             <option value="">全部领域</option>
-                            <option value="ai">人工智能</option>
-                            <option value="ml">机器学习</option>
-                            <option value="nlp">自然语言处理</option>
-                            <option value="cv">计算机视觉</option>
-                            <option value="data">数据科学</option>
+                            <!-- 动态加载分类 -->
                         </select>
                     </div>
                     <div class="form-control mb-6">
@@ -55,12 +52,12 @@
                     </button>
                 </div>
             </div>
-            
+
             <!-- Main Content -->
             <div class="main-content-wrapper flex-1 flex flex-col">
                 <!-- Stats Section -->
                 <div class="bg-base-100 border-b academic-border p-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                         <div class="card bg-gradient-to-r from-primary/10 to-primary/5 border academic-border">
                             <div class="card-body p-4 text-center">
                                 <div id="statTotalPosts" class="text-2xl font-bold text-primary">0</div>
@@ -73,12 +70,6 @@
                                 <div class="text-sm text-base-content/70">总评论数</div>
                             </div>
                         </div>
-                        <div class="card bg-gradient-to-r from-accent/10 to-accent/5 border academic-border">
-                            <div class="card-body p-4 text-center">
-                                <div id="statActiveUsers" class="text-2xl font-bold text-accent">--</div>
-                                <div class="text-sm text-base-content/70">活跃用户</div>
-                            </div>
-                        </div>
                         <div class="card bg-gradient-to-r from-info/10 to-info/5 border academic-border">
                             <div class="card-body p-4 text-center">
                                 <div id="statTodayPosts" class="text-2xl font-bold text-info">0</div>
@@ -88,7 +79,7 @@
                     </div>
                     <div class="flex flex-wrap gap-4 items-center justify-between">
                         <div class="flex gap-4">
-                            <a th:href="@{/community/post_edit.html}" class="btn btn-primary">
+                            <a href="javascript:void(0)" onclick="if(!requireLogin('\u53d1\u5e16')) return; window.location.href='/community/post_edit.html'" class="btn btn-primary">
                                 <span class="iconify" data-icon="heroicons:plus" data-width="16"></span>
                                 发布新帖
                             </a>
@@ -103,7 +94,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Posts List -->
                 <div class="flex-1 p-6">
                     <div id="postsLoading" class="text-center py-12">
@@ -111,9 +102,10 @@
                         <p class="mt-4 text-base-content/60">加载帖子中...</p>
                     </div>
                     <div id="postsEmpty" class="hidden text-center py-12">
-                        <span class="iconify text-base-content/30" data-icon="heroicons:document-text" data-width="48"></span>
+                        <span class="iconify text-base-content/30" data-icon="heroicons:document-text"
+                            data-width="48"></span>
                         <p class="mt-4 text-base-content/60">暂无帖子</p>
-                        <a th:href="@{/community/post_edit.html}" class="btn btn-primary btn-sm mt-4">发布第一篇帖子</a>
+                        <a href="javascript:void(0)" onclick="if(!requireLogin('\u53d1\u5e16')) return; window.location.href='/community/post_edit.html'" class="btn btn-primary btn-sm mt-4">发布第一篇帖子</a>
                     </div>
                     <div id="postsList" class="space-y-4"></div>
                     <div id="loadMoreSection" class="hidden text-center py-8">
@@ -124,7 +116,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Right Sidebar -->
             <div class="sidebar-wrapper w-80 bg-base-100 border-l academic-border">
                 <div class="p-6">
@@ -133,55 +125,68 @@
                             <span class="iconify text-error" data-icon="heroicons:fire" data-width="20"></span>
                             热门话题
                         </h2>
-                        <div class="space-y-3">
-                            <div class="p-3 rounded-lg bg-base-200 hover:bg-base-300 transition-colors cursor-pointer">
-                                <div class="flex items-center justify-between mb-1">
-                                    <span class="font-medium text-sm">AI大模型发展趋势</span>
-                                    <div class="badge badge-error badge-xs">热</div>
-                                </div>
-                                <div class="text-xs text-base-content/70">1.2k 讨论 • 3.5k 浏览</div>
-                            </div>
-                            <div class="p-3 rounded-lg bg-base-200 hover:bg-base-300 transition-colors cursor-pointer">
-                                <div class="flex items-center justify-between mb-1">
-                                    <span class="font-medium text-sm">图神经网络应用</span>
-                                    <div class="badge badge-warning badge-xs">新</div>
-                                </div>
-                                <div class="text-xs text-base-content/70">856 讨论 • 2.1k 浏览</div>
-                            </div>
-                            <div class="p-3 rounded-lg bg-base-200 hover:bg-base-300 transition-colors cursor-pointer">
-                                <div class="flex items-center justify-between mb-1">
-                                    <span class="font-medium text-sm">多模态学习研究</span>
-                                </div>
-                                <div class="text-xs text-base-content/70">642 讨论 • 1.8k 浏览</div>
-                            </div>
+                        <div id="hotTopicsList" class="space-y-3">
+                            <div class="text-center text-sm text-base-content/50 py-2">加载中...</div>
                         </div>
                     </div>
                     <div class="mb-8">
-                        <h2 class="text-lg font-semibold text-base-content mb-4 flex items-center gap-2">
-                            <span class="iconify text-info" data-icon="heroicons:megaphone" data-width="20"></span>
-                            论坛公告
-                        </h2>
-                        <div class="space-y-3">
-                            <div class="alert alert-info p-3">
-                                <span class="iconify" data-icon="heroicons:information-circle" data-width="16"></span>
-                                <div class="text-sm">
-                                    <div class="font-medium">论坛升级通知</div>
-                                    <div class="text-xs opacity-70">系统将于本周末进行维护升级</div>
-                                </div>
-                            </div>
-                            <div class="alert alert-success p-3">
-                                <span class="iconify" data-icon="heroicons:gift" data-width="16"></span>
-                                <div class="text-sm">
-                                    <div class="font-medium">新功能上线</div>
-                                    <div class="text-xs opacity-70">支持图片和视频上传功能</div>
-                                </div>
-                            </div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-base-content flex items-center gap-2">
+                                <span class="iconify text-info" data-icon="heroicons:megaphone" data-width="20"></span>
+                                论坛公告
+                            </h2>
+                            <button id="addAnnouncementBtn" class="btn btn-ghost btn-xs hidden" onclick="openAnnouncementModal()">
+                                <span class="iconify" data-icon="heroicons:plus-circle" data-width="16"></span>
+                                发布
+                            </button>
+                        </div>
+                        <div id="announcementList" class="space-y-3">
+                            <div class="text-center text-sm text-base-content/50 py-2">加载中...</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
+        <!-- Announcement Modal -->
+        <dialog id="announcementModal" class="modal">
+            <div class="modal-box w-96 max-w-md">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <span class="iconify text-info" data-icon="heroicons:megaphone" data-width="20"></span>
+                    发布公告
+                </h3>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">公告标题</span></label>
+                        <input type="text" id="announcementTitle" placeholder="输入公告标题..." maxlength="100"
+                            class="input input-bordered input-sm">
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">公告内容</span></label>
+                        <textarea id="announcementContent" placeholder="输入公告内容..." maxlength="500"
+                            class="textarea textarea-bordered h-20 text-sm"></textarea>
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">公告类型</span></label>
+                        <select id="announcementType" class="select select-bordered select-sm">
+                            <option value="INFO">通知</option>
+                            <option value="SUCCESS">好消息</option>
+                            <option value="WARNING">警告</option>
+                            <option value="ERROR">紧急</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-action">
+                    <button class="btn btn-ghost btn-sm" onclick="closeAnnouncementModal()">取消</button>
+                    <button class="btn btn-primary btn-sm" onclick="submitAnnouncement()">
+                        <span class="iconify" data-icon="heroicons:paper-airplane" data-width="16"></span>
+                        发布
+                    </button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
         <!-- Quick Comment Modal -->
         <dialog id="quickCommentModal" class="modal">
             <div class="modal-box w-96 max-w-sm">
@@ -192,8 +197,10 @@
                 <div class="space-y-4">
                     <div class="form-control">
                         <label class="label"><span class="label-text">评论内容</span></label>
-                        <textarea id="quickCommentContent" placeholder="写下你的评论..." maxlength="300" class="textarea textarea-bordered h-20 text-sm"></textarea>
-                        <label class="label"><span class="label-text-alt text-base-content/50"><span id="quickCommentCharCount">0</span>/300</span></label>
+                        <textarea id="quickCommentContent" placeholder="写下你的评论..." maxlength="300"
+                            class="textarea textarea-bordered h-20 text-sm"></textarea>
+                        <label class="label"><span class="label-text-alt text-base-content/50"><span
+                                    id="quickCommentCharCount">0</span>/300</span></label>
                     </div>
                 </div>
                 <div class="modal-action">
@@ -206,7 +213,7 @@
             </div>
             <form method="dialog" class="modal-backdrop"><button>close</button></form>
         </dialog>
-        
+
         <!-- Share Modal -->
         <dialog id="shareModal" class="modal">
             <div class="modal-box w-96 max-w-sm">
@@ -218,7 +225,8 @@
                     <div class="form-control">
                         <label class="label"><span class="label-text">分享链接</span></label>
                         <div class="join">
-                            <input type="text" id="shareLink" readonly class="input input-bordered join-item flex-1 text-sm">
+                            <input type="text" id="shareLink" readonly
+                                class="input input-bordered join-item flex-1 text-sm">
                             <button id="copyButton" class="btn btn-primary join-item" onclick="copyShareLink()">
                                 <span class="iconify" data-icon="heroicons:clipboard-document" data-width="16"></span>
                                 复制
@@ -228,7 +236,8 @@
                     <div class="divider text-xs">或通过以下方式分享</div>
                     <div class="flex gap-2 justify-center">
                         <button class="btn btn-outline btn-sm" onclick="shareToWeChat()">
-                            <span class="iconify text-green-500" data-icon="heroicons:chat-bubble-left-ellipsis" data-width="16"></span>
+                            <span class="iconify text-green-500" data-icon="heroicons:chat-bubble-left-ellipsis"
+                                data-width="16"></span>
                             微信
                         </button>
                         <button class="btn btn-outline btn-sm" onclick="shareToWeibo()">
@@ -236,7 +245,8 @@
                             微博
                         </button>
                         <button class="btn btn-outline btn-sm" onclick="shareToQQ()">
-                            <span class="iconify text-blue-500" data-icon="heroicons:chat-bubble-oval-left" data-width="16"></span>
+                            <span class="iconify text-blue-500" data-icon="heroicons:chat-bubble-oval-left"
+                                data-width="16"></span>
                             QQ
                         </button>
                     </div>
@@ -247,7 +257,7 @@
             </div>
             <form method="dialog" class="modal-backdrop"><button>close</button></form>
         </dialog>
-        
+
         <!-- Private Message Modal -->
         <dialog id="privateMessageModal" class="modal">
             <div class="modal-box w-96 max-w-sm">
@@ -258,12 +268,15 @@
                 <div class="space-y-4">
                     <div class="form-control">
                         <label class="label"><span class="label-text">收件人</span></label>
-                        <input type="text" id="recipientName" placeholder="用户名" readonly class="input input-bordered input-sm">
+                        <input type="text" id="recipientName" placeholder="用户名" readonly
+                            class="input input-bordered input-sm">
                     </div>
                     <div class="form-control">
                         <label class="label"><span class="label-text">消息内容</span></label>
-                        <textarea id="messageContent" placeholder="输入你的消息..." maxlength="500" class="textarea textarea-bordered h-24 text-sm"></textarea>
-                        <label class="label"><span class="label-text-alt text-base-content/50"><span id="charCount">0</span>/500</span></label>
+                        <textarea id="messageContent" placeholder="输入你的消息..." maxlength="500"
+                            class="textarea textarea-bordered h-24 text-sm"></textarea>
+                        <label class="label"><span class="label-text-alt text-base-content/50"><span
+                                    id="charCount">0</span>/500</span></label>
                     </div>
                 </div>
                 <div class="modal-action">

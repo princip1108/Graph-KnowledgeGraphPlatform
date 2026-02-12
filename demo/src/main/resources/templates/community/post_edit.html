@@ -1,16 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" data-theme="corporate">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/base}">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>发布帖子 - Graph+知识图谱平台</title>
-    
-    <!-- Base Libraries -->
-    <link href="/assets/static/libs/daisyui@5.css" rel="stylesheet" type="text/css">
-    <script src="/assets/static/libs/tailwind-browser@4.js"></script>
-    <link href="/assets/static/libs/daisyui-themes.css" rel="stylesheet" type="text/css">
-    <script src="/assets/3/3.1.1/iconify.min.js"></script>
-    
+    <title>发布帖子 - GraphWisdom智汇星图</title>
+
     <!-- Editor Libraries -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
@@ -18,116 +12,135 @@
     <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    
-    <!-- Page Specific CSS -->
-    <link rel="stylesheet" th:href="@{/css/post-edit.css}">
-</head>
-<body class="bg-base-200 min-h-screen flex flex-col">
-    <!-- Header -->
-    <div class="navbar bg-base-100 header-shadow px-4 sticky top-0 z-50 h-16">
-        <div class="navbar-start gap-3">
-            <a th:href="@{/community/forum_list.html}" class="btn btn-ghost btn-sm gap-1">
-                <span class="iconify" data-icon="heroicons:arrow-left" data-width="16"></span>
-                返回论坛
-            </a>
-            <span class="text-xl font-bold text-base-content" id="pageTitle">发布新帖</span>
-            <span class="unsaved-indicator badge badge-warning badge-sm" id="unsavedIndicator">未保存</span>
-        </div>
-        <div class="navbar-end gap-2">
-            <button class="btn btn-ghost btn-sm" onclick="saveDraft()">
-                <span class="iconify" data-icon="heroicons:bookmark" data-width="18"></span>
-                存为草稿
-            </button>
-            <button class="btn btn-primary gap-2" onclick="publishPost()" id="publishBtn">
-                <span class="iconify" data-icon="heroicons:paper-airplane" data-width="18"></span>
-                发布
-            </button>
-        </div>
-    </div>
 
-    <!-- Three Column Layout -->
-    <div class="flex-1 flex" style="height: calc(100vh - 64px);">
-        <!-- Left Sidebar: Settings -->
-        <div id="leftSidebar" class="bg-base-100 border-r border-base-300 p-4 overflow-y-auto space-y-4">
-            <h3 class="font-bold text-sm uppercase text-base-content/60 mb-3">发布设置</h3>
-            
-            <!-- Graph Association -->
-            <div class="form-control">
-                <label class="label"><span class="label-text font-medium">关联图谱（可选）</span></label>
-                <div class="flex gap-2">
-                    <input type="text" id="graphSearch" class="input input-bordered input-sm flex-1" placeholder="搜索图谱..." />
-                    <button class="btn btn-ghost btn-sm btn-square" onclick="searchGraphs()">
-                        <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
-                    </button>
-                </div>
-                <div id="graphResults" class="mt-2 space-y-1 max-h-32 overflow-y-auto hidden"></div>
-                <div id="selectedGraph" class="mt-2 hidden">
-                    <div class="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
-                        <span class="iconify text-primary" data-icon="heroicons:cube-transparent" data-width="16"></span>
-                        <span class="flex-1 text-sm font-medium" id="selectedGraphName"></span>
-                        <button class="btn btn-ghost btn-xs btn-circle" onclick="clearGraph()">
-                            <span class="iconify" data-icon="heroicons:x-mark" data-width="14"></span>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/post-edit.css}">
+    </th:block>
+</head>
+
+<body class="bg-base-200 min-h-screen flex flex-col">
+
+    <div layout:fragment="content" class="flex-1 flex flex-col">
+        <!-- Page Sub-Header: 发布控制栏 -->
+        <div class="navbar bg-base-100 border-b border-base-300 px-4 h-14">
+            <div class="navbar-start gap-3">
+                <a th:href="@{/community/forum_list.html}" class="btn btn-ghost btn-sm gap-1">
+                    <span class="iconify" data-icon="heroicons:arrow-left" data-width="16"></span>
+                    返回论坛
+                </a>
+                <span class="text-xl font-bold text-base-content" id="pageTitle">发布新帖</span>
+                <span class="unsaved-indicator badge badge-warning badge-sm" id="unsavedIndicator">未保存</span>
+            </div>
+            <div class="navbar-end gap-2">
+                <button class="btn btn-ghost btn-sm" onclick="saveDraft()">
+                    <span class="iconify" data-icon="heroicons:bookmark" data-width="18"></span>
+                    存为草稿
+                </button>
+                <button class="btn btn-primary gap-2" onclick="publishPost()" id="publishBtn">
+                    <span class="iconify" data-icon="heroicons:paper-airplane" data-width="18"></span>
+                    发布
+                </button>
+            </div>
+        </div>
+
+        <!-- Three Column Layout -->
+        <div class="flex-1 flex" style="height: calc(100vh - 64px - 56px);">
+            <!-- Left Sidebar: Settings -->
+            <div id="leftSidebar" class="bg-base-100 border-r border-base-300 p-4 overflow-y-auto space-y-4" style="width: 280px; flex-shrink: 0;">
+                <h3 class="font-bold text-sm uppercase text-base-content/60 mb-3">发布设置</h3>
+
+                <!-- Graph Association -->
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">关联图谱（可选）</span></label>
+                    <div class="flex gap-2">
+                        <input type="text" id="graphSearch" class="input input-bordered input-sm flex-1"
+                            placeholder="搜索图谱..." />
+                        <button class="btn btn-ghost btn-sm btn-square" onclick="searchGraphs()">
+                            <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
                         </button>
                     </div>
+                    <div id="graphResults" class="mt-2 space-y-1 max-h-32 overflow-y-auto hidden"></div>
+                    <div id="selectedGraph" class="mt-2 hidden">
+                        <div class="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
+                            <span class="iconify text-primary" data-icon="heroicons:cube-transparent"
+                                data-width="16"></span>
+                            <span class="flex-1 text-sm font-medium" id="selectedGraphName"></span>
+                            <button class="btn btn-ghost btn-xs btn-circle" onclick="clearGraph()">
+                                <span class="iconify" data-icon="heroicons:x-mark" data-width="14"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="graphId" value="" />
                 </div>
-                <input type="hidden" id="graphId" value="" />
+
+                <!-- Tags -->
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">标签</span></label>
+                    <input id="postTags" class="w-full" placeholder="添加标签（回车确认）" value="">
+                    <div class="label"><span class="label-text-alt">最多5个标签</span></div>
+                </div>
+
+                <!-- Abstract -->
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">摘要</span></label>
+                    <textarea id="postAbstract" class="textarea textarea-bordered textarea-sm" rows="3"
+                        placeholder="自动从正文提取，或手动输入"></textarea>
+                    <div class="label"><span class="label-text-alt">显示在帖子列表中</span></div>
+                </div>
+
+                <!-- Category -->
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-medium">领域分类</span></label>
+                    <select id="postCategory" class="select select-bordered select-sm w-full">
+                        <option value="">请选择分类...</option>
+                    </select>
+                    <div class="label"><span class="label-text-alt">关联图谱时自动匹配</span></div>
+                </div>
+
+                <!-- Tips -->
+                <div class="alert alert-info text-xs p-3">
+                    <span class="iconify" data-icon="heroicons:light-bulb" data-width="16"></span>
+                    <span>支持 Markdown 语法，内容每30秒自动保存</span>
+                </div>
             </div>
 
-            <!-- Tags -->
-            <div class="form-control">
-                <label class="label"><span class="label-text font-medium">标签</span></label>
-                <input id="postTags" class="w-full" placeholder="添加标签（回车确认）" value="">
-                <div class="label"><span class="label-text-alt">最多5个标签</span></div>
+            <!-- Middle: Editor -->
+            <div class="flex-1 flex flex-col overflow-hidden bg-base-200">
+                <div class="p-4 flex-1 flex flex-col">
+                    <!-- Title -->
+                    <input type="text" id="postTitle" placeholder="请输入标题..."
+                        class="input input-lg w-full text-xl font-bold bg-base-100 border border-base-300 mb-4" />
+                    <!-- Editor -->
+                    <div class="flex-1 bg-base-100 rounded-lg border border-base-300 overflow-hidden">
+                        <textarea id="postContent"></textarea>
+                    </div>
+                </div>
             </div>
 
-            <!-- Abstract -->
-            <div class="form-control">
-                <label class="label"><span class="label-text font-medium">摘要</span></label>
-                <textarea id="postAbstract" class="textarea textarea-bordered textarea-sm" rows="3" placeholder="自动从正文提取，或手动输入"></textarea>
-                <div class="label"><span class="label-text-alt">显示在帖子列表中</span></div>
-            </div>
-
-            <!-- Tips -->
-            <div class="alert alert-info text-xs p-3">
-                <span class="iconify" data-icon="heroicons:light-bulb" data-width="16"></span>
-                <span>支持 Markdown 语法，内容每30秒自动保存</span>
+            <!-- Right Sidebar: Preview -->
+            <div id="rightSidebar" class="bg-base-100 border-l border-base-300 flex flex-col" style="width: 320px; flex-shrink: 0;">
+                <div class="p-3 border-b border-base-300 flex items-center gap-2">
+                    <span class="iconify text-primary" data-icon="heroicons:eye" data-width="18"></span>
+                    <span class="font-bold text-sm">实时预览</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4">
+                    <h1 id="previewTitle" class="text-2xl font-bold mb-4 text-base-content/30">标题预览</h1>
+                    <div id="previewContent" class="preview-content text-base-content/50">
+                        正文预览将显示在这里...
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Middle: Editor -->
-        <div class="flex-1 flex flex-col overflow-hidden bg-base-200">
-            <div class="p-4 flex-1 flex flex-col">
-                <!-- Title -->
-                <input type="text" id="postTitle" placeholder="请输入标题..." 
-                    class="input input-lg w-full text-xl font-bold bg-base-100 border border-base-300 mb-4" />
-                <!-- Editor -->
-                <div class="flex-1 bg-base-100 rounded-lg border border-base-300 overflow-hidden">
-                    <textarea id="postContent"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Sidebar: Preview -->
-        <div id="rightSidebar" class="bg-base-100 border-l border-base-300 flex flex-col">
-            <div class="p-3 border-b border-base-300 flex items-center gap-2">
-                <span class="iconify text-primary" data-icon="heroicons:eye" data-width="18"></span>
-                <span class="font-bold text-sm">实时预览</span>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4">
-                <h1 id="previewTitle" class="text-2xl font-bold mb-4 text-base-content/30">标题预览</h1>
-                <div id="previewContent" class="preview-content text-base-content/50">
-                    正文预览将显示在这里...
-                </div>
-            </div>
+        <!-- Toast -->
+        <div id="toast" class="toast toast-top toast-end z-50 hidden">
+            <div class="alert"><span id="toastMessage"></span></div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast toast-top toast-end z-50 hidden">
-        <div class="alert"><span id="toastMessage"></span></div>
-    </div>
-
-    <!-- Page Specific JS -->
-    <script th:src="@{/js/post-edit.js}"></script>
+    <th:block layout:fragment="js">
+        <script th:src="@{/js/post-edit.js}"></script>
+    </th:block>
 </body>
+
 </html>

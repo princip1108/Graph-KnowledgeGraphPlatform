@@ -93,4 +93,26 @@ public interface KnowledgeGraphRepository
          * 检查图谱名称是否已存在（同一用户下）
          */
         boolean existsByUploaderIdAndName(Integer uploaderId, String name);
+
+        /**
+         * 个性化推荐：按偏好领域加权 + hotScore 混合排序
+         * 偏好领域的图谱优先，同时按热度排序
+         */
+        @Query("SELECT g FROM KnowledgeGraph g WHERE g.status = 'PUBLISHED' AND g.graphId NOT IN :excludeIds " +
+                        "ORDER BY CASE WHEN g.domain IN :preferredDomains THEN 0 ELSE 1 END ASC, g.hotScore DESC")
+        Page<KnowledgeGraph> findRecommendedGraphs(@Param("preferredDomains") List<String> preferredDomains,
+                        @Param("excludeIds") List<Integer> excludeIds,
+                        Pageable pageable);
+
+        /**
+         * 热门推荐降级（无偏好时按 hotScore 排序）
+         */
+        @Query("SELECT g FROM KnowledgeGraph g WHERE g.status = 'PUBLISHED' ORDER BY g.hotScore DESC")
+        Page<KnowledgeGraph> findByHotScore(Pageable pageable);
+
+        /**
+         * 按领域筛选的热门推荐降级
+         */
+        @Query("SELECT g FROM KnowledgeGraph g WHERE g.status = 'PUBLISHED' AND g.domain = :domain ORDER BY g.hotScore DESC")
+        Page<KnowledgeGraph> findByHotScoreAndDomain(@Param("domain") String domain, Pageable pageable);
 }

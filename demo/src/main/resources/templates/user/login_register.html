@@ -41,18 +41,6 @@
                             <!-- Social Login -->
                             <div class="space-y-3">
                                 <button class="btn btn-outline w-full gap-3 hover-lift"
-                                    onclick="handleSocialLogin('wechat')">
-                                    <div class="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                            fill="white">
-                                            <path
-                                                d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.328.328 0 0 0 .186-.059l2.114-1.225a.866.866 0 0 1 .446-.126.79.79 0 0 1 .214.03 10.07 10.07 0 0 0 2.664.35c.32 0 .636-.02.95-.05a5.6 5.6 0 0 1-.201-1.478c0-3.449 3.382-6.254 7.558-6.254.146 0 .29.007.434.017C16.752 4.842 13.027 2.188 8.69 2.188zm-2.85 4.76a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.12 0a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.849 3.32c-3.602 0-6.528 2.418-6.528 5.4 0 2.98 2.926 5.4 6.528 5.4.71 0 1.394-.093 2.038-.262.052-.015.107-.023.162-.023a.67.67 0 0 1 .345.098l1.636.947a.254.254 0 0 0 .144.046.227.227 0 0 0 .224-.229c0-.056-.023-.11-.037-.164l-.301-1.146a.456.456 0 0 1 .165-.515C22.862 18.778 24 17.167 24 15.27c0-2.983-2.926-5.402-6.528-5.402h-.662zM14.18 14.1a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48zm3.952 0a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48z" />
-                                        </svg>
-                                    </div>
-                                    <span>微信登录</span>
-                                    <div class="badge badge-primary badge-sm">推荐</div>
-                                </button>
-                                <button class="btn btn-outline w-full gap-3 hover-lift"
                                     onclick="handleSocialLogin('github')">
                                     <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -71,9 +59,9 @@
                             <form class="space-y-4" onsubmit="handleLogin(event)">
                                 <div class="form-control">
                                     <label class="label">
-                                        <span class="label-text">邮箱或手机号</span>
+                                        <span class="label-text">用户名、邮箱或手机号</span>
                                     </label>
-                                    <input id="login-account" type="text" placeholder="请输入邮箱或手机号" required
+                                    <input id="login-account" type="text" placeholder="请输入用户名、邮箱或手机号" required
                                         class="input input-bordered w-full focus-primary">
                                 </div>
                                 <div class="form-control">
@@ -108,18 +96,6 @@
                             <!-- Social Register -->
                             <div class="space-y-3">
                                 <button class="btn btn-outline w-full gap-3 hover-lift"
-                                    onclick="handleSocialLogin('wechat')">
-                                    <div class="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                            fill="white">
-                                            <path
-                                                d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.328.328 0 0 0 .186-.059l2.114-1.225a.866.866 0 0 1 .446-.126.79.79 0 0 1 .214.03 10.07 10.07 0 0 0 2.664.35c.32 0 .636-.02.95-.05a5.6 5.6 0 0 1-.201-1.478c0-3.449 3.382-6.254 7.558-6.254.146 0 .29.007.434.017C16.752 4.842 13.027 2.188 8.69 2.188zm-2.85 4.76a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.12 0a.96.96 0 1 1 0 1.92.96.96 0 0 1 0-1.92zm5.849 3.32c-3.602 0-6.528 2.418-6.528 5.4 0 2.98 2.926 5.4 6.528 5.4.71 0 1.394-.093 2.038-.262.052-.015.107-.023.162-.023a.67.67 0 0 1 .345.098l1.636.947a.254.254 0 0 0 .144.046.227.227 0 0 0 .224-.229c0-.056-.023-.11-.037-.164l-.301-1.146a.456.456 0 0 1 .165-.515C22.862 18.778 24 17.167 24 15.27c0-2.983-2.926-5.402-6.528-5.402h-.662zM14.18 14.1a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48zm3.952 0a.74.74 0 1 1 0 1.48.74.74 0 0 1 0-1.48z" />
-                                        </svg>
-                                    </div>
-                                    <span>微信注册</span>
-                                    <div class="badge badge-primary badge-sm">快速</div>
-                                </button>
-                                <button class="btn btn-outline w-full gap-3 hover-lift"
                                     onclick="handleSocialLogin('github')">
                                     <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -145,16 +121,28 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label">
-                                        <span class="label-text">邮箱地址</span>
-                                        <span class="label-text-alt text-base-content/50">选填</span>
+                                        <span class="label-text">邮箱地址 <span class="text-error">*</span></span>
                                     </label>
-                                    <input id="reg-email" type="email" placeholder="请输入邮箱地址"
-                                        class="input input-bordered w-full focus-primary">
+                                    <div class="flex gap-2">
+                                        <input id="reg-email" type="email" placeholder="请输入邮箱地址" required
+                                            class="input input-bordered flex-1 focus-primary">
+                                        <button type="button" id="sendCodeBtn" onclick="sendEmailCode()"
+                                            class="btn btn-outline btn-primary btn-sm min-w-[100px] self-center">
+                                            发送验证码
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">邮箱验证码 <span class="text-error">*</span></span>
+                                    </label>
+                                    <input id="reg-code" type="text" placeholder="请输入6位验证码" required
+                                        maxlength="6" class="input input-bordered w-full focus-primary">
                                 </div>
                                 <div class="form-control">
                                     <label class="label">
                                         <span class="label-text">手机号码</span>
-                                        <span class="label-text-alt text-base-content/50">邮箱和手机至少填一个</span>
+                                        <span class="label-text-alt text-base-content/50">选填</span>
                                     </label>
                                     <input id="reg-phone" type="tel" placeholder="请输入手机号码"
                                         class="input input-bordered w-full focus-primary">
@@ -178,9 +166,9 @@
                                         <input type="checkbox" required class="checkbox checkbox-primary checkbox-sm">
                                         <span class="label-text text-sm">
                                             我已阅读并同意
-                                            <a href="#" class="link link-primary">用户协议</a>
+                                            <a th:href="@{/terms}" class="link link-primary" target="_blank">用户协议</a>
                                             和
-                                            <a href="#" class="link link-primary">隐私政策</a>
+                                            <a th:href="@{/privacy}" class="link link-primary" target="_blank">隐私政策</a>
                                         </span>
                                     </label>
                                 </div>

@@ -36,6 +36,7 @@ public class GraphService {
     private final NodeRepository nodeRepository;
     private final com.sdu.kgplatform.repository.CategoryRepository categoryRepository;
     private final FileStorageService fileStorageService;
+    private final com.sdu.kgplatform.repository.BrowsingHistoryRepository browsingHistoryRepository;
 
     private final RelationshipRepository relationshipRepository;
 
@@ -44,13 +45,15 @@ public class GraphService {
             NodeRepository nodeRepository,
             RelationshipRepository relationshipRepository,
             com.sdu.kgplatform.repository.CategoryRepository categoryRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService,
+            com.sdu.kgplatform.repository.BrowsingHistoryRepository browsingHistoryRepository) {
         this.graphRepository = graphRepository;
         this.userRepository = userRepository;
         this.nodeRepository = nodeRepository;
         this.relationshipRepository = relationshipRepository;
         this.categoryRepository = categoryRepository;
         this.fileStorageService = fileStorageService;
+        this.browsingHistoryRepository = browsingHistoryRepository;
     }
 
     // ==================== 创建图谱 ====================
@@ -114,6 +117,9 @@ public class GraphService {
         if (dto.getCategoryId() != null) {
             graph.setCategoryId(dto.getCategoryId());
         }
+
+        // 设置领域分类
+        graph.setDomain(dto.getDomain() != null ? dto.getDomain() : "other");
 
         KnowledgeGraph saved = graphRepository.save(graph);
         return convertToDetailDto(saved, uploader.getUserName(), uploader.getAvatar());
@@ -262,13 +268,22 @@ public class GraphService {
         List<com.sdu.kgplatform.dto.LiteRelationshipDto> relations = relationshipRepository
                 .findLiteRelationshipsByGraphId(graphId);
 
-        // 3. 组装返回
-        return Map.of(
-                "nodes", nodes,
-                "links", relations,
-                "count", Map.of(
-                        "nodes", nodes.size(),
-                        "links", relations.size()));
+        // 3. 获取分类名称
+        String categoryName = getCategoryName(graph.getCategoryId());
+
+        // 4. 组装返回
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("nodes", nodes);
+        result.put("links", relations);
+        result.put("count", Map.of(
+                "nodes", nodes.size(),
+                "links", relations.size()));
+        result.put("name", graph.getName());
+        result.put("description", graph.getDescription());
+        result.put("categoryId", graph.getCategoryId());
+        result.put("categoryName", categoryName);
+        result.put("domain", graph.getDomain());
+        return result;
     }
 
     // ==================== 更新图谱 ====================
@@ -425,6 +440,9 @@ public class GraphService {
             throw new IllegalArgumentException("无权删除此图谱");
         }
 
+        // 删除浏览历史（避免外键约束错误）
+        browsingHistoryRepository.deleteByGraphId(graphId);
+
         // 删除 Neo4j 中的节点（级联删除关系）
         nodeRepository.deleteByGraphId(graphId);
 
@@ -444,6 +462,9 @@ public class GraphService {
     public void adminDeleteGraph(Integer graphId) {
         KnowledgeGraph graph = graphRepository.findById(graphId)
                 .orElseThrow(() -> new IllegalArgumentException("图谱不存在: " + graphId));
+
+        // 删除浏览历史（避免外键约束错误）
+        browsingHistoryRepository.deleteByGraphId(graphId);
 
         nodeRepository.deleteByGraphId(graphId);
 
@@ -630,6 +651,7 @@ public class GraphService {
                 .isCacheValid(graph.getIsCacheValid())
                 .categoryId(graph.getCategoryId())
                 .categoryName(getCategoryName(graph.getCategoryId()))
+                .domain(graph.getDomain())
                 .build();
     }
 
@@ -656,9 +678,100 @@ public class GraphService {
                 .collectCount(graph.getCollectCount())
                 .nodeCount(graph.getNodeCount())
                 .relationCount(graph.getRelationCount())
+                .downloadCount(graph.getDownloadCount())
+                .density(graph.getDensity())
                 .categoryId(graph.getCategoryId())
                 .categoryName(getCategoryName(graph.getCategoryId()))
+                .domain(graph.getDomain())
                 .build();
+    }
+
+    /**
+     * 个性化推荐图谱
+     * 已登录用户：基于浏览历史的领域偏好 + hotScore 混合排序
+     * 未登录/无记录：降级为 hotScore 排序
+     */
+    public Page<GraphListDto> getRecommendedGraphs(Integer userId, String domain, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 如果指定了领域筛选
+        if (domain != null && !domain.isEmpty() && !"all".equals(domain)) {
+            if (userId == null) {
+                // 未登录 + 领域筛选：按 hotScore 排序
+                Page<KnowledgeGraph> graphs = graphRepository.findByHotScoreAndDomain(domain, pageable);
+                return mapToGraphListDtos(graphs);
+            }
+        }
+
+        // 未登录：降级为热门
+        if (userId == null) {
+            Page<KnowledgeGraph> graphs = graphRepository.findByHotScore(pageable);
+            return mapToGraphListDtos(graphs);
+        }
+
+        // 获取用户最近浏览的图谱记录
+        java.util.List<com.sdu.kgplatform.entity.BrowsingHistory> history = browsingHistoryRepository
+                .findTop50ByUserIdAndResourceTypeOrderByViewTimeDesc(userId,
+                        com.sdu.kgplatform.entity.ResourceType.graph);
+
+        if (history.isEmpty()) {
+            // 无浏览记录：降级为热门
+            if (domain != null && !domain.isEmpty() && !"all".equals(domain)) {
+                Page<KnowledgeGraph> graphs = graphRepository.findByHotScoreAndDomain(domain, pageable);
+                return mapToGraphListDtos(graphs);
+            }
+            Page<KnowledgeGraph> graphs = graphRepository.findByHotScore(pageable);
+            return mapToGraphListDtos(graphs);
+        }
+
+        // 统计领域偏好频次
+        java.util.Map<String, Long> domainFreq = new java.util.HashMap<>();
+        java.util.List<Integer> viewedGraphIds = new java.util.ArrayList<>();
+        for (com.sdu.kgplatform.entity.BrowsingHistory h : history) {
+            if (h.getGraphId() != null) {
+                viewedGraphIds.add(h.getGraphId());
+                graphRepository.findById(h.getGraphId()).ifPresent(g -> {
+                    String d = g.getDomain();
+                    if (d != null && !"other".equals(d)) {
+                        domainFreq.merge(d, 1L, Long::sum);
+                    }
+                });
+            }
+        }
+
+        // 取偏好领域 Top 3
+        java.util.List<String> preferredDomains = domainFreq.entrySet().stream()
+                .sorted(java.util.Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(3)
+                .map(java.util.Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toList());
+
+        // 如果指定了领域筛选，且该领域不在偏好中，也加入
+        if (domain != null && !domain.isEmpty() && !"all".equals(domain)) {
+            if (!preferredDomains.contains(domain)) {
+                preferredDomains.add(0, domain);
+            }
+        }
+
+        if (preferredDomains.isEmpty()) {
+            // 无有效偏好：降级为热门
+            Page<KnowledgeGraph> graphs = graphRepository.findByHotScore(pageable);
+            return mapToGraphListDtos(graphs);
+        }
+
+        // 排除已浏览的图谱（提升新鲜度），但如果排除后太少则不排除
+        java.util.List<Integer> excludeIds = viewedGraphIds.isEmpty()
+                ? java.util.List.of(-1)
+                : viewedGraphIds;
+
+        Page<KnowledgeGraph> graphs = graphRepository.findRecommendedGraphs(preferredDomains, excludeIds, pageable);
+
+        // 如果排除后结果太少，不排除再查一次
+        if (graphs.getTotalElements() < size) {
+            graphs = graphRepository.findRecommendedGraphs(preferredDomains, java.util.List.of(-1), pageable);
+        }
+
+        return mapToGraphListDtos(graphs);
     }
 
     /**
@@ -683,19 +796,17 @@ public class GraphService {
         // 2. 计算互动总分 (权重: 收藏x5, 下载x3, 浏览x1)
         double interactions = views * 1.0 + collects * 5.0 + downloads * 3.0;
 
-        // 3. 获取时间间隔 (小时)
-        // 使用上传时间作为基准 T
-        long hoursSinceUpload = 0;
+        // 3. 获取时间间隔 (天)
+        long daysSinceUpload = 0;
         if (graph.getUploadDate() != null) {
-            hoursSinceUpload = java.time.Duration.between(
+            daysSinceUpload = java.time.Duration.between(
                     graph.getUploadDate().atStartOfDay(),
-                    LocalDateTime.now()).toHours();
+                    LocalDateTime.now()).toDays();
         }
 
-        // 防止新发布的图谱分母过小，加 2 是标准做法
-        // (Interactions + 1) 防止互动为0时分数完全一致，给新发布的图谱微弱优势
-        double t = Math.max(0, hoursSinceUpload) + 2.0;
-        double gravity = 1.8; // 重力因子
+        // +2 防止新发布时分母过小; +1 防止零互动图谱分数完全一致
+        double t = Math.max(0, daysSinceUpload) + 2.0;
+        double gravity = 1.5; // 重力因子 (越小衰减越慢)
 
         return (interactions + 1) / Math.pow(t, gravity);
     }

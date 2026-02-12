@@ -1,0 +1,72 @@
+/**
+ * Privacy Policy Page Styles
+ * 隐私政策页面特定样式
+ */
+
+/* Hero overlay gradient */
+.hero-overlay {
+    background: linear-gradient(135deg, var(--color-primary) 0%, rgba(30, 58, 138, 0.8) 100%);
+}
+
+/* Section spacing consistency */
+section {
+    scroll-margin-top: 80px;
+}
+
+/* Anchor scroll offset for cards */
+.card[id] {
+    scroll-margin-top: 88px;
+}
+
+/* Card hover effect */
+.card {
+    border: 1px solid var(--color-base-300);
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Badge number styling */
+.badge-sm {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+}
+
+/* Rights grid cards */
+.grid .flex.items-start {
+    transition: all 0.2s ease-in-out;
+}
+
+.grid .flex.items-start:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Warning box styling */
+.border-warning {
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+}
+
+/* Button styling consistency */
+.btn-outline {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-outline:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+}

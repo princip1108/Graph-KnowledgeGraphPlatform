@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         langPrefix: 'hljs language-'
     });
 
+    await initGuestCheck();
     await checkLogin();
     if (postId) {
         loadPost();
@@ -34,6 +35,8 @@ async function checkLogin() {
         const data = await res.json();
         if (data.authenticated && data.user) {
             currentUser = data.user;
+            window._isLoggedIn = true;
+            window._currentUser = data.user;
             const loggedInEl = document.querySelector('[data-user-control="logged-in"]');
             const loggedOutEl = document.querySelector('[data-user-control="logged-out"]');
             if (loggedInEl) loggedInEl.style.display = 'block';
@@ -133,9 +136,14 @@ function renderPost(data) {
     var sidebarAuthorNameEl = document.getElementById('sidebarAuthorName');
     if (sidebarAuthorNameEl) sidebarAuthorNameEl.textContent = authorName;
     var authorLinkEl = document.getElementById('authorLink');
-    if (authorLinkEl) authorLinkEl.href = '/user/profile.html?id=' + data.post.authorId;
     var sidebarAuthorLinkEl = document.getElementById('sidebarAuthorLink');
-    if (sidebarAuthorLinkEl) sidebarAuthorLinkEl.href = '/user/profile.html?id=' + data.post.authorId;
+    if (authorName === '已注销用户') {
+        if (authorLinkEl) { authorLinkEl.removeAttribute('href'); authorLinkEl.style.pointerEvents = 'none'; authorLinkEl.style.cursor = 'default'; }
+        if (sidebarAuthorLinkEl) { sidebarAuthorLinkEl.removeAttribute('href'); sidebarAuthorLinkEl.style.pointerEvents = 'none'; sidebarAuthorLinkEl.style.cursor = 'default'; }
+    } else {
+        if (authorLinkEl) authorLinkEl.href = '/user/profile.html?id=' + data.post.authorId;
+        if (sidebarAuthorLinkEl) sidebarAuthorLinkEl.href = '/user/profile.html?id=' + data.post.authorId;
+    }
 
     // Avatar with image support
     var authorAvatarEl = document.getElementById('authorAvatar');
@@ -159,6 +167,30 @@ function renderPost(data) {
                 span.textContent = tag.tagName;
                 tagsContainer.appendChild(span);
             });
+        }
+    }
+
+    // Category (领域分类)
+    var postCategoryEl = document.getElementById('postCategory');
+    if (postCategoryEl) {
+        if (data.categoryName) {
+            postCategoryEl.textContent = data.categoryName;
+            postCategoryEl.style.display = 'inline-flex';
+        } else if (data.post.category) {
+            // Fallback to category code
+            var categoryMap = {
+                'ai': '人工智能',
+                'medical': '医疗健康',
+                'finance': '金融经济',
+                'law': '法律法规',
+                'education': '教育学习',
+                'tech': '科技技术',
+                'other': '其他领域'
+            };
+            postCategoryEl.textContent = categoryMap[data.post.category] || data.post.category;
+            postCategoryEl.style.display = 'inline-flex';
+        } else {
+            postCategoryEl.style.display = 'none';
         }
     }
 
@@ -283,16 +315,29 @@ async function loadComments() {
             list.innerHTML = '';
             if (!data.comments || data.comments.length === 0) {
                 list.innerHTML = '<p class="text-center text-base-content/40 py-8">暂无评论，快来抢沙发</p>';
+                updateCommentCount(0);
                 return;
             }
+            var total = 0;
             data.comments.forEach(function (c) {
                 list.innerHTML += createCommentHTML(c, false);
+                total++;
                 if (c.replies) {
-                    c.replies.forEach(function (r) { list.innerHTML += createCommentHTML(r, true, c.username); });
+                    c.replies.forEach(function (r) { list.innerHTML += createCommentHTML(r, true, c.username); total++; });
                 }
             });
+            updateCommentCount(total);
         }
     } catch (e) { }
+}
+
+function updateCommentCount(count) {
+    var el1 = document.getElementById('commentCount');
+    var el2 = document.getElementById('totalComments');
+    var el3 = document.getElementById('statComments');
+    if (el1) el1.textContent = count;
+    if (el2) el2.textContent = count;
+    if (el3) el3.textContent = count;
 }
 
 function createCommentHTML(comment, isReply, parentName) {
@@ -337,6 +382,7 @@ function cancelReply() {
 }
 
 async function submitComment() {
+    if (!requireLogin('评论')) return;
     const text = document.getElementById('commentText').value;
     if (!text.trim()) { showToast('请输入评论内容', 'warning'); return; }
     if (!postId) { showToast('模拟模式无法评论', 'info'); return; }
@@ -369,6 +415,7 @@ async function deleteComment(commentId) {
 
 // ========== Like/Favorite/Follow ==========
 async function toggleLike() {
+    if (!requireLogin('点赞')) return;
     if (!postId) {
         const btn = document.getElementById('likeBtn');
         const count = document.getElementById('likeCount');
@@ -383,20 +430,23 @@ async function toggleLike() {
     }
     try {
         const res = await fetch('/api/posts/' + postId + '/like', { method: 'POST', credentials: 'include' });
+        if (checkNeedLogin(res)) return;
         const data = await res.json();
         if (data.success) {
             const btn = document.getElementById('likeBtn');
             const count = document.getElementById('likeCount');
             if (data.liked) { btn.classList.add('btn-active', 'btn-primary'); count.textContent = parseInt(count.textContent) + 1; }
             else { btn.classList.remove('btn-active', 'btn-primary'); count.textContent = parseInt(count.textContent) - 1; }
-        } else { if (res.status === 401) showToast('请先登录', 'warning'); else showToast(data.error, 'error'); }
+        } else { showToast(data.error, 'error'); }
     } catch (e) { showToast('操作失败', 'error'); }
 }
 
 async function toggleFavorite() {
+    if (!requireLogin('收藏')) return;
     if (!postId) { showToast('收藏成功', 'success'); return; }
     try {
         const res = await fetch('/api/posts/' + postId + '/favorite', { method: 'POST', credentials: 'include' });
+        if (checkNeedLogin(res)) return;
         const data = await res.json();
         if (data.success) {
             const icon = document.getElementById('favoriteIcon');
@@ -415,7 +465,7 @@ async function toggleFavorite() {
                 localStorage.setItem('post_favorites', JSON.stringify(favorites));
                 showToast('已取消收藏', 'info');
             }
-        } else { if (res.status === 401) showToast('请先登录', 'warning'); else showToast(data.error, 'error'); }
+        } else { showToast(data.error, 'error'); }
     } catch (e) { showToast('操作失败', 'error'); }
 }
 
@@ -431,22 +481,27 @@ async function checkFavoriteStatus() {
 }
 
 async function toggleFollow() {
+    if (!requireLogin('关注')) return;
     if (!authorId) return;
+    var sidebarName = document.getElementById('sidebarAuthorName');
+    if (sidebarName && sidebarName.textContent === '已注销用户') { showToast('该用户已注销，无法关注', 'warning'); return; }
     try {
         const res = await fetch('/api/users/' + authorId + '/follow', { method: 'POST', credentials: 'include' });
+        if (checkNeedLogin(res)) return;
         const data = await res.json();
         if (data.success) {
             const btn = document.getElementById('followBtn');
             if (data.following) { btn.innerHTML = '<span class="iconify" data-icon="heroicons:user-minus" data-width="16"></span> 已关注'; btn.classList.add('btn-primary'); }
             else { btn.innerHTML = '<span class="iconify" data-icon="heroicons:user-plus" data-width="16"></span> 关注作者'; btn.classList.remove('btn-primary'); }
-        } else { if (res.status === 401) showToast('请先登录', 'warning'); else showToast(data.error, 'error'); }
+        } else { showToast(data.error, 'error'); }
     } catch (e) { showToast('操作失败', 'error'); }
 }
 
 window.sendPrivateMessage = function () {
-    if (!currentUser) { showToast('请先登录', 'warning'); return; }
+    if (!requireLogin('发送私信')) return;
     if (!authorId) return;
     const authorName = document.getElementById('sidebarAuthorName').textContent;
+    if (authorName === '已注销用户') { showToast('该用户已注销，无法发送私信', 'warning'); return; }
     window.location.href = `/user/profile.html?section=messages&targetUserId=${authorId}&targetUserName=${encodeURIComponent(authorName)}`;
 }
 

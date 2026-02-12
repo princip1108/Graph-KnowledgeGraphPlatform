@@ -88,19 +88,6 @@
                                             </ul>
                                         </details>
                                     </li>
-                                    <li>
-                                        <details>
-                                            <summary class="font-medium">
-                                                <span class="iconify" data-icon="heroicons:code-bracket"
-                                                    data-width="16"></span>
-                                                API接口文档
-                                            </summary>
-                                            <ul>
-                                                <li><a href="#api-overview" class="doc-nav-link">API概览</a></li>
-                                                <li><a href="#authentication" class="doc-nav-link">身份验证</a></li>
-                                            </ul>
-                                        </details>
-                                    </li>
                                 </ul>
                             </div>
                         </aside>
@@ -114,39 +101,21 @@
                                         data-width="28"></span>
                                     入门指南
                                 </h2>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="card bg-base-100 shadow-soft hover-lift">
-                                        <div class="card-body">
-                                            <div class="flex items-center gap-3 mb-3">
-                                                <span class="iconify text-primary" data-icon="heroicons:rocket-launch"
-                                                    data-width="24"></span>
-                                                <h3 class="card-title text-lg">快速上手</h3>
-                                            </div>
-                                            <p class="text-base-content/70 mb-4">5分钟了解平台核心功能，快速创建您的第一个知识图谱</p>
-                                            <div class="card-actions">
-                                                <button class="btn btn-primary btn-sm"
-                                                    onclick="scrollToSection('quick-start')">
-                                                    开始学习
-                                                    <span class="iconify" data-icon="heroicons:arrow-right"
-                                                        data-width="16"></span>
-                                                </button>
-                                            </div>
+                                <div class="card bg-base-100 shadow-soft hover-lift">
+                                    <div class="card-body">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <span class="iconify text-primary" data-icon="heroicons:rocket-launch"
+                                                data-width="24"></span>
+                                            <h3 class="card-title text-lg">快速上手</h3>
                                         </div>
-                                    </div>
-                                    <div class="card bg-base-100 shadow-soft hover-lift">
-                                        <div class="card-body">
-                                            <div class="flex items-center gap-3 mb-3">
-                                                <span class="iconify text-secondary" data-icon="heroicons:video-camera"
-                                                    data-width="24"></span>
-                                                <h3 class="card-title text-lg">视频教程</h3>
-                                            </div>
-                                            <p class="text-base-content/70 mb-4">通过视频演示深入了解各项功能的具体操作方法</p>
-                                            <div class="card-actions">
-                                                <button class="btn btn-secondary btn-sm">
-                                                    观看视频
-                                                    <span class="iconify" data-icon="heroicons:play" data-width="16"></span>
-                                                </button>
-                                            </div>
+                                        <p class="text-base-content/70 mb-4">5分钟了解平台核心功能，快速创建您的第一个知识图谱</p>
+                                        <div class="card-actions">
+                                            <button class="btn btn-primary btn-sm"
+                                                onclick="scrollToSection('quick-start')">
+                                                开始学习
+                                                <span class="iconify" data-icon="heroicons:arrow-right"
+                                                    data-width="16"></span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -164,8 +133,8 @@
                                     <div class="prose max-w-none">
                                         <h3 class="text-xl font-semibold mb-4">平台介绍</h3>
                                         <p class="text-base-content/80 mb-4">
-                                            知识图谱平台是一个强大的数据可视化和分析工具，帮助您构建、管理和探索复杂的知识网络。
-                                            平台支持多种数据格式导入，提供丰富的可视化选项和交互功能。
+                                            GraphWisdom智汇星图是一个知识图谱构建与可视化平台，帮助您创建、管理和探索知识网络。
+                                            平台支持 JSON 格式的图谱数据导入，提供力导向图可视化、节点关系编辑和社区交流等功能。
                                         </p>
                                         <div class="bg-info/10 border-l-4 border-info p-4 mb-6">
                                             <div class="flex items-start gap-3">
@@ -181,11 +150,11 @@
                                         </div>
                                         <h4 class="text-lg font-semibold mb-3">主要功能特性</h4>
                                         <ul class="list-disc list-inside space-y-2 text-base-content/80 mb-6">
-                                            <li>支持多种数据格式导入（CSV、JSON、XML等）</li>
-                                            <li>丰富的图谱布局算法和可视化选项</li>
-                                            <li>强大的搜索和筛选功能</li>
-                                            <li>实时协作和分享功能</li>
-                                            <li>完整的API接口支持</li>
+                                            <li>支持 JSON 格式图谱数据导入，可导出为 JSON、CSV、PNG</li>
+                                            <li>力导向图可视化，支持节点搜索、类型筛选</li>
+                                            <li>在线编辑图谱：添加/修改/删除节点和关系</li>
+                                            <li>图谱收藏、分享链接、状态管理（草稿/发布/私有）</li>
+                                            <li>社区论坛：发帖交流、评论互动、私信功能</li>
                                         </ul>
                                     </div>
                                 </article>
@@ -202,14 +171,14 @@
                                             创建知识图谱是使用平台的第一步。本指南将详细介绍如何从零开始创建一个完整的知识图谱。
                                         </p>
                                         <div class="steps steps-vertical lg:steps-horizontal mb-8">
-                                            <div class="step step-primary">创建项目</div>
-                                            <div class="step step-primary">导入数据</div>
-                                            <div class="step">配置可视化</div>
+                                            <div class="step step-primary">上传JSON文件</div>
+                                            <div class="step step-primary">填写图谱信息</div>
+                                            <div class="step">查看可视化</div>
                                             <div class="step">发布分享</div>
                                         </div>
                                         <h3 class="text-xl font-semibold mb-4">创建新图谱</h3>
                                         <p class="text-base-content/80 mb-4">
-                                            点击"创建图谱"按钮开始创建新的知识图谱项目。您需要提供项目名称、描述和选择合适的模板。
+                                            在探索页点击"上传图谱"按钮，上传 JSON 格式的图谱文件，填写图谱名称、描述、选择领域分类，即可创建知识图谱。
                                         </p>
                                     </div>
                                 </article>
@@ -245,9 +214,9 @@
                                                 <p class="text-base-content/80 mb-3">注册账户非常简单，只需要提供邮箱地址和设置密码即可。</p>
                                                 <ol class="list-decimal list-inside space-y-2 text-base-content/70">
                                                     <li>点击页面右上角的"注册"按钮</li>
-                                                    <li>填写有效的邮箱地址</li>
-                                                    <li>设置安全密码（至少8位）</li>
-                                                    <li>验证邮箱地址</li>
+                                                    <li>填写用户名和有效的邮箱地址</li>
+                                                    <li>设置安全密码</li>
+                                                    <li>勾选同意用户协议和隐私政策，完成注册</li>
                                                 </ol>
                                             </div>
                                         </div>
@@ -261,12 +230,11 @@
                                         </div>
                                         <div class="collapse-content">
                                             <div class="pt-2">
-                                                <p class="text-base-content/80 mb-3">平台支持多种常见的数据格式：</p>
+                                                <p class="text-base-content/80 mb-3">平台目前支持 JSON 格式的图谱文件导入，文件需包含以下结构：</p>
                                                 <ul class="list-disc list-inside space-y-1 text-base-content/70">
-                                                    <li>CSV、Excel (.xlsx, .xls)</li>
-                                                    <li>JSON、XML格式</li>
-                                                    <li>GraphML、GEXF</li>
-                                                    <li>RDF/TTL</li>
+                                                    <li><strong>nodes</strong>：节点数组，每个节点包含 name（必填）、type、description</li>
+                                                    <li><strong>relations</strong>：关系数组，每条关系包含 source、target（节点名称匹配）、type</li>
+                                                    <li>可选字段：name（图谱名称）、description（图谱描述）、coverImage（封面URL）</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -280,11 +248,11 @@
                                         </div>
                                         <div class="collapse-content">
                                             <div class="pt-2">
-                                                <p class="text-base-content/80 mb-3">您可以通过多种方式分享您的知识图谱：</p>
+                                                <p class="text-base-content/80 mb-3">您可以通过以下方式分享您的知识图谱：</p>
                                                 <ul class="list-disc list-inside space-y-1 text-base-content/70">
-                                                    <li>生成公开链接分享给任何人</li>
-                                                    <li>邀请特定用户协作编辑</li>
-                                                    <li>导出为图片或PDF分享</li>
+                                                    <li>将图谱状态设为"已发布"，其他用户即可在探索页看到</li>
+                                                    <li>通过分享链接将图谱发送给指定人员</li>
+                                                    <li>导出为 JSON、CSV 或 PNG 格式离线分享</li>
                                                 </ul>
                                             </div>
                                         </div>

@@ -4,43 +4,101 @@
  * 收藏功能完全照搬探索页 (graph-list.js)
  */
 
-console.log('=== home.js v4 loaded ===');
+console.log('=== home.js v5 loaded ===');
 
-(function() {
+(function () {
     'use strict';
 
+    // Current recommendation tab: 'hot', 'latest', 'recommend'
+    var currentHomeTab = 'hot';
+
     // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         initializeSearchFunctionality();
         initializeFilters();
+        loadCategories();
         loadRecommendedGraphs();
     });
+
+    // Load categories from API for domain filter
+    async function loadCategories() {
+        try {
+            const res = await fetch('/api/categories');
+            const categories = await res.json();
+            const container = document.getElementById('homeDomainFilter');
+            if (container && categories.length > 0) {
+                categories.forEach(c => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a onclick="applyFilter('domain', '${c.code}')">${c.name}</a>`;
+                    container.appendChild(li);
+                });
+            }
+        } catch (e) {
+            console.error('Failed to load categories:', e);
+        }
+    }
 
     // 判断是否已收藏 - 直接读取 localStorage
     function isFavorited(graphId) {
         var id = String(graphId);
         var favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        return favorites.some(function(item) { return String(item.id) === id; });
+        return favorites.some(function (item) { return String(item.id) === id; });
     }
+
+    // Switch home recommendation tab
+    window.switchHomeTab = function (tab) {
+        currentHomeTab = tab;
+        // Update tab UI
+        var tabs = document.querySelectorAll('#homeRecommendTabs .tab');
+        tabs.forEach(function (t) {
+            if (t.getAttribute('data-tab') === tab) {
+                t.classList.add('tab-active');
+            } else {
+                t.classList.remove('tab-active');
+            }
+        });
+        loadRecommendedGraphs();
+    };
 
     // Load recommended graphs from API
     async function loadRecommendedGraphs() {
         const container = document.getElementById('recommendedGraphsGrid');
         if (!container) return;
-        
+
+        // Show loading state
+        container.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center py-16"><span class="loading loading-spinner loading-lg text-primary"></span><p class="mt-4 text-base-content/60">加载推荐图谱...</p></div>';
+
         try {
-            const response = await fetch('/api/graph/public?page=0&size=8&sortBy=viewCount', {
+            const filters = window.APP_GLOBALS?.filters || {};
+            var domain = (filters.domain && filters.domain !== 'all') ? filters.domain : '';
+            var url;
+
+            if (currentHomeTab === 'recommend') {
+                // 个性化推荐接口
+                url = '/api/graph/recommend?page=0&size=8';
+                if (domain) url += '&domain=' + encodeURIComponent(domain);
+            } else if (currentHomeTab === 'latest') {
+                // 最新：按上传日期排序
+                url = '/api/graph/search?page=0&size=8&sortBy=date';
+                if (domain) url += '&domain=' + encodeURIComponent(domain);
+            } else {
+                // 热门：按热度排序
+                url = '/api/graph/search?page=0&size=8&sortBy=hot';
+                if (domain) url += '&domain=' + encodeURIComponent(domain);
+            }
+
+            const response = await fetch(url, {
                 method: 'GET',
                 credentials: 'include'
             });
-            
+
             if (!response.ok) {
                 throw new Error('加载失败');
             }
-            
+
             const data = await response.json();
             const graphs = data.content || [];
-            
+
             if (graphs.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full flex flex-col items-center justify-center py-16">
@@ -51,9 +109,9 @@ console.log('=== home.js v4 loaded ===');
                 `;
                 return;
             }
-            
+
             container.innerHTML = graphs.map(graph => createGraphCardHTML(graph)).join('');
-            
+
         } catch (error) {
             console.error('加载推荐图谱失败:', error);
             container.innerHTML = `
@@ -75,7 +133,7 @@ console.log('=== home.js v4 loaded ===');
         var graphId = graph.graphId;
         var graphName = (graph.name || '').replace(/'/g, "\\'");
         var favorited = isFavorited(graphId);
-        
+
         return `
             <div data-repeatable="true" data-type="card" class="card bg-base-100 shadow-soft hover-lift cursor-pointer academic-border" onclick="viewGraphDetail(${graphId})">
                 <figure class="relative">
@@ -85,6 +143,9 @@ console.log('=== home.js v4 loaded ===');
                     </button>
                 </figure>
                 <div class="card-body p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="badge badge-primary badge-sm">${graph.domain || '未分类'}</span>
+                    </div>
                     <h3 class="card-title text-lg font-semibold mb-3">${graph.name}</h3>
                     <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed mb-4">${description}</p>
                     <div class="flex items-center justify-between text-xs text-base-content/60">
@@ -104,7 +165,7 @@ console.log('=== home.js v4 loaded ===');
     }
 
     // Navigate to graph detail page
-    window.viewGraphDetail = function(graphId) {
+    window.viewGraphDetail = function (graphId) {
         window.location.href = '/graph/graph_detail.html?id=' + graphId;
     };
 
@@ -117,12 +178,12 @@ console.log('=== home.js v4 loaded ===');
         if (!searchInput) return;
 
         // Show suggestions on input focus
-        searchInput.addEventListener('focus', function() {
+        searchInput.addEventListener('focus', function () {
             showSearchSuggestions();
         });
 
         // Hide suggestions when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
                 hideSearchSuggestions();
             }
@@ -130,10 +191,10 @@ console.log('=== home.js v4 loaded ===');
 
         // Handle input changes with debouncing
         let searchTimeout;
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             const query = this.value.trim();
-            
+
             searchTimeout = setTimeout(() => {
                 if (query.length > 0) {
                     updateSearchSuggestions(query);
@@ -145,7 +206,7 @@ console.log('=== home.js v4 loaded ===');
         });
 
         // Handle Enter key
-        searchInput.addEventListener('keydown', function(event) {
+        searchInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 performSearch();
@@ -153,7 +214,7 @@ console.log('=== home.js v4 loaded ===');
         });
 
         // Handle arrow key navigation
-        searchInput.addEventListener('keydown', function(event) {
+        searchInput.addEventListener('keydown', function (event) {
             const suggestions = suggestionsList.querySelectorAll('.suggestion-item');
             let currentIndex = Array.from(suggestions).findIndex(item => item.classList.contains('active'));
 
@@ -204,7 +265,7 @@ console.log('=== home.js v4 loaded ===');
     function showDefaultSuggestions() {
         const suggestionsList = document.getElementById('suggestionsList');
         if (!suggestionsList || !window.APP_GLOBALS || !window.APP_GLOBALS.search) return;
-        
+
         const suggestions = window.APP_GLOBALS.search.getSearchSuggestions();
 
         suggestionsList.innerHTML = '';
@@ -219,12 +280,12 @@ console.log('=== home.js v4 loaded ===');
     function updateSearchSuggestions(query) {
         const suggestionsList = document.getElementById('suggestionsList');
         if (!suggestionsList || !window.APP_GLOBALS || !window.APP_GLOBALS.search) return;
-        
+
         const allSuggestions = [
             ...window.APP_GLOBALS.search.history,
             ...window.APP_GLOBALS.search.recommendations
         ];
-        const filtered = allSuggestions.filter(item => 
+        const filtered = allSuggestions.filter(item =>
             item.toLowerCase().includes(query.toLowerCase())
         ).slice(0, 5);
 
@@ -251,7 +312,7 @@ console.log('=== home.js v4 loaded ===');
         return item;
     }
 
-    window.performSearch = function() {
+    window.performSearch = function () {
         const query = document.getElementById('searchInput').value.trim();
         if (query && window.APP_GLOBALS && window.APP_GLOBALS.search) {
             window.APP_GLOBALS.search.performSearch(query);
@@ -259,21 +320,22 @@ console.log('=== home.js v4 loaded ===');
         }
     };
 
-    window.searchTag = function(tag) {
+    window.searchTag = function (tag) {
         document.getElementById('searchInput').value = tag;
         performSearch();
     };
 
     // ========== 收藏功能 - 完全照搬探索页 graph-list.js ==========
-    window.toggleFavorite = async function(graphId, graphName, event) {
-        console.log('[home.js] toggleFavorite called:', graphId, graphName);
+    window.toggleFavorite = async function (graphId, graphName, event) {
         event.stopPropagation();
-        
+        if (!requireLogin('收藏')) return;
+        console.log('[home.js] toggleFavorite called:', graphId, graphName);
+
         var id = String(graphId);
         var btn = event.target.closest('.favorite-btn');
         var icon = btn.querySelector('.iconify');
         var wasFavorited = isFavorited(graphId);
-        
+
         // 立即更新UI
         if (wasFavorited) {
             btn.classList.remove('favorited');
@@ -282,13 +344,13 @@ console.log('=== home.js v4 loaded ===');
             btn.classList.add('favorited');
             icon.setAttribute('data-icon', 'heroicons:heart-solid');
         }
-        
+
         // 后台执行API和localStorage操作
         try {
             await fetch('/api/graph/' + graphId + '/favorite', { method: 'POST', credentials: 'include' });
             var favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
             if (wasFavorited) {
-                favorites = favorites.filter(function(item) { return String(item.id) !== id; });
+                favorites = favorites.filter(function (item) { return String(item.id) !== id; });
                 localStorage.setItem('favorites', JSON.stringify(favorites));
                 showNotification('已取消收藏', 'info');
             } else {
@@ -325,92 +387,32 @@ console.log('=== home.js v4 loaded ===');
         };
     }
 
-    window.applyFilter = function(filterType, value) {
+    window.applyFilter = function (filterType, value) {
         window.APP_GLOBALS.filters[filterType] = value;
-        
-        updateFilterButtonText(filterType, value);
-        
-        const filterLabels = {
-            domain: '领域',
-            time: '时间',
-            popularity: '热门程度'
-        };
-        
+
         const valueLabels = {
-            all: '全部',
+            all: '全部领域',
             ai: '人工智能',
             medical: '医学健康',
             finance: '金融经济',
-            education: '教育学习',
-            week: '最近一周',
-            month: '最近一月',
-            year: '最近一年',
-            hot: '最热门',
-            views: '最多浏览',
-            favorites: '最多收藏'
+            education: '教育学习'
         };
-        
-        const filterLabel = filterLabels[filterType];
+
         const valueLabel = valueLabels[value] || value;
-        
+
         if (window.showNotification) {
-            window.showNotification(`已应用${filterLabel}筛选: ${valueLabel}`, 'info');
+            window.showNotification('已应用领域筛选: ' + valueLabel, 'info');
         }
-        
-        animateFilterResults();
+
+        // Reload data with new domain filter
+        loadRecommendedGraphs();
     };
 
-    function updateFilterButtonText(filterType, value) {
-        const filterButtons = document.querySelectorAll('.dropdown button');
-        const filterTypeMap = {
-            domain: 0,
-            time: 1,
-            popularity: 2
-        };
-        
-        const buttonIndex = filterTypeMap[filterType];
-        if (buttonIndex !== undefined && filterButtons[buttonIndex]) {
-            const button = filterButtons[buttonIndex];
-            const textNodes = Array.from(button.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
-            
-            const valueLabels = {
-                all: filterType === 'domain' ? '领域筛选' : filterType === 'time' ? '时间筛选' : '热门程度',
-                ai: '人工智能',
-                medical: '医学健康',
-                finance: '金融经济',
-                education: '教育学习',
-                week: '最近一周',
-                month: '最近一月',
-                year: '最近一年',
-                hot: '最热门',
-                views: '最多浏览',
-                favorites: '最多收藏'
-            };
-            
-            if (textNodes.length > 0) {
-                textNodes[0].textContent = valueLabels[value] || value;
-            }
-        }
-    }
-
-    function animateFilterResults() {
-        const cards = document.querySelectorAll('.card');
-        cards.forEach((card, index) => {
-            card.style.opacity = '0.6';
-            card.style.transform = 'scale(0.98)';
-            
-            setTimeout(() => {
-                card.style.opacity = '1';
-                card.style.transform = 'scale(1)';
-            }, index * 30 + 150);
-        });
-    }
-
     // Accessibility - ESC key to close dropdowns
-    document.addEventListener('keydown', function(event) {
+    document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             hideSearchSuggestions();
-            
+
             const openDropdowns = document.querySelectorAll('.dropdown[open]');
             openDropdowns.forEach(dropdown => {
                 dropdown.removeAttribute('open');

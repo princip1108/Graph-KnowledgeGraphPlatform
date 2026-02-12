@@ -1,18 +1,21 @@
 # 生产环境配置
 # 使用方式：java -jar demo.jar --spring.profiles.active=prod
+# 所有敏感信息通过服务器环境变量注入
 
 spring:
   datasource:
-    url: jdbc:mysql://生产数据库地址:3306/graph_db?serverTimezone=UTC
-    username: 生产用户名
-    password: 生产密码
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/graph_db?serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
   neo4j:
-    uri: bolt://生产Neo4j地址:7687
+    uri: bolt://${NEO4J_HOST:localhost}:7687
     authentication:
       username: neo4j
-      password: 生产密码
+      password: ${NEO4J_PASSWORD}
+  jpa:
+    show-sql: false
 
 # 生产环境上传目录（Linux 服务器）
 app:
   upload:
-    base-path: /data/uploads
+    base-path: ${APP_UPLOAD_BASE_PATH:/data/uploads}

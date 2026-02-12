@@ -36,6 +36,11 @@ public class GraphSpecification {
                 predicates.add(cb.equal(root.get("categoryId"), criteria.getCategoryId()));
             }
 
+            // Domain (领域筛选)
+            if (StringUtils.hasText(criteria.getDomain())) {
+                predicates.add(cb.equal(root.get("domain"), criteria.getDomain()));
+            }
+
             // Date Range
             if (criteria.getStartDate() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("uploadDate"), criteria.getStartDate()));

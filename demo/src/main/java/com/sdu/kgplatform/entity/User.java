@@ -77,6 +77,15 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "banned_until")
+    private LocalDateTime bannedUntil;
+
+    @Column(name = "github_id", unique = true)
+    private String githubId;
+
+    @Column(name = "oauth_provider", length = 20)
+    private String oauthProvider;
+
     /**
      * 创建时自动设置时间
      */

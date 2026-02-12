@@ -6,6 +6,10 @@ import com.sdu.kgplatform.entity.Role;
 import com.sdu.kgplatform.entity.User;
 import com.sdu.kgplatform.entity.UserStatus;
 import com.sdu.kgplatform.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,6 +29,8 @@ import java.util.Optional;
  */
 @Service
 public class UserService implements UserDetailsService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -55,11 +61,36 @@ public class UserService implements UserDetailsService {
             user = userRepository.findByPhone(account).orElse(null);
         }
 
+        // 如果手机号也没找到，尝试用用户名查找
+        if (user == null) {
+            user = userRepository.findByUserName(account).orElse(null);
+        }
+
         if (user == null) {
             throw new UsernameNotFoundException("账号不存在: " + account);
         }
 
-        // 返回的用户名使用实际查询的账号
+        if (user.getUserStatus() == UserStatus.DELETED) {
+            throw new DisabledException("该账号已注销");
+        }
+        if (user.getUserStatus() == UserStatus.BANNED) {
+            if (user.getBannedUntil() != null && user.getBannedUntil().isBefore(java.time.LocalDateTime.now())) {
+                // 封禁已到期，自动解封
+                user.setUserStatus(UserStatus.OFFLINE);
+                user.setBannedUntil(null);
+                userRepository.save(user);
+            } else if (user.getBannedUntil() != null) {
+                // 临时封禁，提示剩余时间
+                java.time.Duration remaining = java.time.Duration.between(java.time.LocalDateTime.now(), user.getBannedUntil());
+                long hours = remaining.toHours();
+                String msg = hours > 24 ? "该账号已被封禁，剩余" + (hours / 24) + "天" : "该账号已被封禁，剩余" + Math.max(1, hours) + "小时";
+                throw new LockedException(msg);
+            } else {
+                // 永久封禁
+                throw new LockedException("该账号已被永久封禁");
+            }
+        }
+
         // 返回的用户名使用实际查询的账号
         return new CustomUserDetails(
                 user.getUserId(),
@@ -82,9 +113,13 @@ public class UserService implements UserDetailsService {
         String phone = dto.getPhone();
         String password = dto.getPassword();
 
-        // 邮箱和手机号至少提供一个
-        if ((email == null || email.isEmpty()) && (phone == null || phone.isEmpty())) {
-            throw new IllegalArgumentException("邮箱和手机号至少提供一个");
+        log.info("[注册] 用户名={}, 邮箱={}, 密码是否为空={}, 密码长度={}",
+                username, email, (password == null || password.isEmpty()),
+                password != null ? password.length() : 0);
+
+        // 邮箱为必填项
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("邮箱为必填项");
         }
 
         // 检查用户名是否已存在
@@ -105,12 +140,14 @@ public class UserService implements UserDetailsService {
         // 创建新用户
         User user = new User();
         user.setUserName(username);
-        user.setPasswordHash(passwordEncoder.encode(password)); // 密码加密存储
+        String encodedPwd = passwordEncoder.encode(password);
+        log.info("[注册] BCrypt hash 前10位={}", encodedPwd.substring(0, Math.min(10, encodedPwd.length())));
+        user.setPasswordHash(encodedPwd); // 密码加密存储
         user.setEmail(email);
         user.setPhone(phone);
         user.setRole(Role.USER); // 默认角色
         user.setUserStatus(UserStatus.ONLINE); // 默认状态
-        user.setEmailVerified(false); // 邮箱未验证
+        user.setEmailVerified(true); // 邮箱已通过验证码验证
         user.setPhoneVerified(false); // 手机未验证
         // createdAt 和 updateAt 由 @PrePersist 自动设置
 
@@ -158,20 +195,33 @@ public class UserService implements UserDetailsService {
             user = userRepository.findByPhone(account).orElse(null);
         }
 
+        // 尝试用户名查找
+        if (user == null) {
+            user = userRepository.findByUserName(account).orElse(null);
+        }
+
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在: " + account);
         }
 
-        return convertToProfileDto(user);
+        return convertToProfileDto(user, false);
+    }
+
+    /**
+     * 根据用户ID获取用户资料（默认脱敏，用于查看他人资料）
+     */
+    public UserProfileDto getUserProfileById(Integer userId) {
+        return getUserProfileById(userId, true);
     }
 
     /**
      * 根据用户ID获取用户资料
+     * @param mask 是否脱敏（查看自己资料时传false）
      */
-    public UserProfileDto getUserProfileById(Integer userId) {
+    public UserProfileDto getUserProfileById(Integer userId, boolean mask) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + userId));
-        return convertToProfileDto(user);
+        return convertToProfileDto(user, mask);
     }
 
     /**
@@ -188,6 +238,9 @@ public class UserService implements UserDetailsService {
         }
         if (user == null) {
             user = userRepository.findByPhone(account).orElse(null);
+        }
+        if (user == null) {
+            user = userRepository.findByUserName(account).orElse(null);
         }
         if (user != null) {
             user.setLastLoginAt(LocalDateTime.now());
@@ -267,7 +320,94 @@ public class UserService implements UserDetailsService {
         }
 
         User savedUser = userRepository.save(user);
-        return convertToProfileDto(savedUser);
+        return convertToProfileDto(savedUser, false);
+    }
+
+    /**
+     * 根据用户ID更新用户资料（兼容 OAuth2 登录用户）
+     */
+    @Transactional
+    public UserProfileDto updateUserProfileById(Integer userId, UserProfileDto profileDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + userId));
+
+        if (profileDto.getUserName() != null && !profileDto.getUserName().trim().isEmpty()) {
+            user.setUserName(profileDto.getUserName().trim());
+        }
+        if (profileDto.getBio() != null) {
+            user.setBio(profileDto.getBio().trim());
+        }
+        if (profileDto.getInstitution() != null) {
+            user.setInstitution(profileDto.getInstitution().trim());
+        }
+        if (profileDto.getBirthday() != null) {
+            user.setBirthday(profileDto.getBirthday());
+        }
+        if (profileDto.getAvatar() != null) {
+            user.setAvatar(profileDto.getAvatar().trim());
+        }
+        if (profileDto.getGender() != null && !profileDto.getGender().trim().isEmpty()) {
+            try {
+                user.setGender(Gender.valueOf(profileDto.getGender().trim().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // 忽略无效的性别值
+            }
+        }
+        if (profileDto.getPhone() != null && !profileDto.getPhone().trim().isEmpty()) {
+            String newPhone = profileDto.getPhone().trim();
+            if (user.getPhone() == null || user.getPhone().trim().isEmpty()) {
+                if (userRepository.existsByPhone(newPhone)) {
+                    throw new IllegalArgumentException("该手机号已被其他用户使用");
+                }
+                user.setPhone(newPhone);
+                user.setPhoneVerified(false);
+            }
+        }
+        if (profileDto.getEmail() != null && !profileDto.getEmail().trim().isEmpty()) {
+            String newEmail = profileDto.getEmail().trim();
+            if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+                if (userRepository.existsByEmail(newEmail)) {
+                    throw new IllegalArgumentException("该邮箱已被其他用户使用");
+                }
+                user.setEmail(newEmail);
+                user.setEmailVerified(false);
+            }
+        }
+
+        User saved = userRepository.save(user);
+        return convertToProfileDto(saved, false);
+    }
+
+
+    /**
+     * 通过邮箱重置密码
+     */
+    @Transactional
+    public void resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("该邮箱未注册: " + email));
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        log.info("[密码重置] 用户 {} 密码已重置", email);
+    }
+
+    /**
+     * 修改密码（需验证旧密码）
+     */
+    @Transactional
+    public void changePassword(String account, String oldPassword, String newPassword) {
+        User user = userRepository.findByEmail(account)
+                .or(() -> userRepository.findByPhone(account))
+                .or(() -> userRepository.findByUserName(account))
+                .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + account));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("当前密码错误");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        log.info("[修改密码] 用户 {} 密码已修改", account);
     }
 
     /**
@@ -301,14 +441,22 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * 将 User 实体转换为 UserProfileDto
+     * 将 User 实体转换为 UserProfileDto（默认脱敏，用于查看他人资料）
      */
     private UserProfileDto convertToProfileDto(User user) {
+        return convertToProfileDto(user, true);
+    }
+
+    /**
+     * 将 User 实体转换为 UserProfileDto
+     * @param mask 是否脱敏邮箱和手机号（查看他人资料时为true，查看自己资料时为false）
+     */
+    private UserProfileDto convertToProfileDto(User user, boolean mask) {
         return UserProfileDto.builder()
                 .userId(user.getUserId())
                 .userName(user.getUserName())
-                .email(maskEmail(user.getEmail()))
-                .phone(maskPhone(user.getPhone()))
+                .email(mask ? maskEmail(user.getEmail()) : user.getEmail())
+                .phone(mask ? maskPhone(user.getPhone()) : user.getPhone())
                 .avatar(user.getAvatar())
                 .gender(user.getGender() != null ? user.getGender().name() : null)
                 .birthday(user.getBirthday())

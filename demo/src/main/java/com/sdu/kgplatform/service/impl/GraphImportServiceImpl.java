@@ -26,7 +26,7 @@ public class GraphImportServiceImpl implements GraphImportService {
 
     @Override
     public GraphDetailDto importGraph(MultipartFile file, String name, String description, String status,
-            MultipartFile coverFile, Integer userId) {
+            String domain, MultipartFile coverFile, Integer userId) {
         // 1. 验证文件
         if (file.isEmpty()) {
             throw new IllegalArgumentException("请选择要上传的图谱文件");
@@ -72,6 +72,7 @@ public class GraphImportServiceImpl implements GraphImportService {
             createDto.setStatus(status);
             createDto.setCoverImage(coverUrl);
             createDto.setIsCustomCover(isCustomCover);
+            createDto.setDomain(domain != null ? domain : "other");
 
             GraphDetailDto createdGraph = graphService.createGraph(userId, createDto);
             Integer graphId = createdGraph.getGraphId();

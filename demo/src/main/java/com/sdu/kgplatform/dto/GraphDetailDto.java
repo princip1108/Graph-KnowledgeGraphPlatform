@@ -52,4 +52,5 @@ public class GraphDetailDto {
     // 分类信息
     private Integer categoryId;
     private String categoryName;
+    private String domain;
 }

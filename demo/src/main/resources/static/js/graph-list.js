@@ -11,9 +11,8 @@
     let allGraphs = [];
 
     document.addEventListener('DOMContentLoaded', function () {
-        loadGraphs();
-        bindEvents();
         handleUrlParams();
+        bindEvents();
     });
 
     function bindEvents() {
@@ -25,7 +24,7 @@
                 if (valueDisplay) {
                     let val = this.value;
                     if (this.id.includes('Density')) {
-                        val = (parseFloat(val) / 10).toFixed(1);
+                        val = (parseFloat(val) / 100).toFixed(2);
                     }
                     valueDisplay.textContent = val;
                 }
@@ -59,7 +58,7 @@
         if (valueDisplay) {
             let val = input.value;
             if (format === 'decimal') {
-                val = (parseFloat(val) / 10).toFixed(1);
+                val = (parseFloat(val) / 100).toFixed(2);
             }
             valueDisplay.textContent = val;
         }
@@ -68,31 +67,80 @@
     function handleUrlParams() {
         const params = new URLSearchParams(window.location.search);
         const q = params.get('q');
+        loadCategories(); // Load categories first
         if (q) {
             const searchInput = document.getElementById('searchInput');
             if (searchInput) searchInput.value = q;
-            performSearch();
+            loadGraphs(q);
+        } else {
+            loadGraphs();
         }
     }
 
-    async function loadGraphs() {
+    // Load categories from API
+    async function loadCategories() {
+        try {
+            const res = await fetch('/api/categories');
+            const categories = await res.json();
+            const container = document.getElementById('categoryFilters');
+            if (container && categories.length > 0) {
+                categories.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.setAttribute('data-filter', c.code);
+                    btn.className = 'btn btn-ghost btn-xs justify-start filter-btn';
+                    btn.onclick = () => filterGraphs(c.code);
+                    btn.innerHTML = `<span class="iconify" data-icon="${c.icon || 'heroicons:folder'}" data-width="12"></span>${c.name}`;
+                    container.appendChild(btn);
+                });
+            }
+        } catch (e) {
+            console.error('Failed to load categories:', e);
+        }
+    }
+
+    async function loadGraphs(query) {
         const grid = document.getElementById('graphGrid');
         if (!grid) return;
 
         grid.innerHTML = '<div class="col-span-full text-center py-12"><span class="loading loading-spinner loading-lg text-primary"></span><p class="mt-4 text-base-content/60">加载图谱中...</p></div>';
 
         try {
-            const response = await fetch('/api/graph/public?page=0&size=20&sortBy=' + currentView);
+            let url;
+            if (query) {
+                // 搜索模式：使用搜索接口
+                let sortBy = 'viewCount';
+                if (currentView === 'latest') sortBy = 'date';
+                else if (currentView === 'popular') sortBy = 'hot';
+                url = '/api/graph/search?page=0&size=20&sortBy=' + sortBy + '&keyword=' + encodeURIComponent(query);
+            } else if (currentView === 'recommended') {
+                // 推荐模式：使用个性化推荐接口
+                url = '/api/graph/recommend?page=0&size=20';
+            } else {
+                // 热门/最新模式
+                let sortBy = 'viewCount';
+                if (currentView === 'latest') sortBy = 'date';
+                else if (currentView === 'popular') sortBy = 'hot';
+                url = '/api/graph/public?page=0&size=20&sortBy=' + sortBy;
+            }
+
+            const response = await fetch(url, { credentials: 'include' });
             const data = await response.json();
 
             if (data.content && data.content.length > 0) {
                 allGraphs = data.content;
                 renderGraphs(allGraphs);
-                document.getElementById('resultCount').textContent = '共找到 ' + data.totalElements + ' 个图谱';
+
+                if (query) {
+                    document.getElementById('resultCount').textContent = '搜索 "' + query + '" 找到 ' + data.totalElements + ' 个图谱';
+                } else {
+                    document.getElementById('resultCount').textContent = '共找到 ' + data.totalElements + ' 个图谱';
+                }
             } else {
                 grid.innerHTML = '<div class="col-span-full text-center py-12"><span class="iconify text-base-content/30" data-icon="heroicons:cube-transparent" data-width="48"></span><p class="mt-4 text-base-content/60">暂无图谱</p></div>';
+                document.getElementById('resultCount').textContent = '共找到 0 个图谱';
             }
         } catch (e) {
+            console.error('加载图谱失败:', e);
             grid.innerHTML = '<div class="col-span-full text-center py-12"><span class="iconify text-error" data-icon="heroicons:exclamation-circle" data-width="48"></span><p class="mt-4 text-base-content/60">加载失败，请刷新重试</p></div>';
         }
     }
@@ -152,11 +200,11 @@
 
         // Get range filter values
         const minNodes = parseInt(document.getElementById('minNodesRange')?.value || 0);
-        const maxNodes = parseInt(document.getElementById('maxNodesRange')?.value || 10000);
+        const maxNodes = parseInt(document.getElementById('maxNodesRange')?.value || 1000);
         const minEdges = parseInt(document.getElementById('minEdgesRange')?.value || 0);
-        const maxEdges = parseInt(document.getElementById('maxEdgesRange')?.value || 20000);
-        const minDensity = parseFloat(document.getElementById('minDensityRange')?.value || 0) / 10;
-        const maxDensity = parseFloat(document.getElementById('maxDensityRange')?.value || 100) / 10;
+        const maxEdges = parseInt(document.getElementById('maxEdgesRange')?.value || 2000);
+        const minDensity = parseFloat(document.getElementById('minDensityRange')?.value || 0) / 100;
+        const maxDensity = parseFloat(document.getElementById('maxDensityRange')?.value || 100) / 100;
         const minViewCount = parseInt(document.getElementById('minViewCountRange')?.value || 0);
         const maxViewCount = parseInt(document.getElementById('maxViewCountRange')?.value || 30000);
         const minDownloadCount = parseInt(document.getElementById('minDownloadCountRange')?.value || 0);
@@ -177,8 +225,11 @@
             const relationCount = graph.relationCount || 0;
             if (relationCount < minEdges || relationCount > maxEdges) return false;
 
-            // Density filter
-            const density = graph.density || 0;
+            // Density filter (动态计算，与详情页公式一致)
+            const nc = graph.nodeCount || 0;
+            const rc = graph.relationCount || 0;
+            const maxE = nc * (nc - 1) / 2;
+            const density = maxE > 0 ? rc / maxE : 0;
             if (density < minDensity || density > maxDensity) return false;
 
             // View count filter
@@ -231,23 +282,10 @@
         // Save to backend history
         fetch('/api/history/search?type=graph&keyword=' + encodeURIComponent(query), { method: 'POST' });
 
-        // Local storage backup (optional, or remove if fully relying on backend)
-        // let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-        // if (!history.includes(query)) {
-        //    history.unshift(query);
-        //    history = history.slice(0, 10);
-        //    localStorage.setItem('searchHistory', JSON.stringify(history));
-        // }
-
         hideSearchSuggestions();
 
-        // Filter graphs
-        const filtered = allGraphs.filter(graph =>
-            graph.name?.toLowerCase().includes(query.toLowerCase()) ||
-            graph.description?.toLowerCase().includes(query.toLowerCase())
-        );
-        renderGraphs(filtered);
-        document.getElementById('resultCount').textContent = '搜索 "' + query + '" 找到 ' + filtered.length + ' 个图谱';
+        // Use loadGraphs to fetch from backend
+        loadGraphs(query);
     };
 
     window.selectSuggestion = function (query) {
@@ -289,11 +327,11 @@
         // Reset range sliders with correct display values
         const sliderDefaults = {
             'minNodesRange': { value: 0, display: '0' },
-            'maxNodesRange': { value: 10000, display: '10000' },
+            'maxNodesRange': { value: 1000, display: '1000' },
             'minEdgesRange': { value: 0, display: '0' },
-            'maxEdgesRange': { value: 20000, display: '20000' },
-            'minDensityRange': { value: 0, display: '0.0' },
-            'maxDensityRange': { value: 100, display: '10.0' },
+            'maxEdgesRange': { value: 2000, display: '2000' },
+            'minDensityRange': { value: 0, display: '0.00' },
+            'maxDensityRange': { value: 100, display: '1.00' },
             'minViewCountRange': { value: 0, display: '0' },
             'maxViewCountRange': { value: 30000, display: '30000' },
             'minDownloadCountRange': { value: 0, display: '0' },
@@ -317,6 +355,7 @@
 
     window.toggleFavorite = async function (graphId, graphName, event) {
         event.stopPropagation();
+        if (!requireLogin('收藏')) return;
 
         const btn = event.target.closest('.favorite-btn');
         const icon = btn.querySelector('.iconify');

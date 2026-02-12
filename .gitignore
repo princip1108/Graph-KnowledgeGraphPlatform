@@ -1,0 +1,28 @@
+# ====== IDE ======
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# ====== Build ======
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+
+# ====== Logs ======
+*.log
+
+# ====== OS ======
+.DS_Store
+Thumbs.db
+
+# ====== 敏感配置文件（不提交到 Git） ======
+**/application-local.yaml
+**/application-local.yml
+
+# ====== 上传文件目录 ======
+uploads/

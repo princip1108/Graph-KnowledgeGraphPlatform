@@ -58,4 +58,7 @@ public class Post {
 
     @Column(name = "category_id")
     private Integer categoryId;
+
+    @Column(name = "category", length = 50)
+    private String category = "other";
 }

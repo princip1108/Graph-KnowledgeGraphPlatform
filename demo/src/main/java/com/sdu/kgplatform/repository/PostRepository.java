@@ -94,4 +94,21 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
         * 查询用户草稿帖子
         */
        List<Post> findByAuthorIdAndPostStatus(Integer authorId, PostStatus status);
+
+       /**
+        * 根据关联图谱ID查询已发布帖子
+        */
+       List<Post> findByGraphIdAndPostStatusOrderByUploadTimeDesc(Integer graphId, PostStatus status);
+
+       /**
+        * 根据领域分类查询已发布帖子（排除指定图谱关联的帖子）
+        */
+       @Query("SELECT p FROM Post p WHERE p.category = :category AND p.postStatus = :status AND (p.graphId IS NULL OR p.graphId <> :excludeGraphId) ORDER BY p.likeCount DESC")
+       List<Post> findByCategoryAndPostStatusExcludingGraph(@Param("category") String category,
+                     @Param("status") PostStatus status,
+                     @Param("excludeGraphId") Integer excludeGraphId,
+                     Pageable pageable);
+
+       List<Post> findByPostStatusAndUploadTimeAfter(PostStatus status, LocalDateTime since);
+
 }

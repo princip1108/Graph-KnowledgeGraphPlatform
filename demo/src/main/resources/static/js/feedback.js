@@ -227,26 +227,50 @@
             submitBtn.classList.add('btn-loading');
             submitBtn.disabled = true;
 
-            setTimeout(() => {
+            // 收集表单数据
+            const payload = {
+                feedbackType: feedbackType.value,
+                subject: form.querySelector('[name="subject"]').value.trim(),
+                content: form.querySelector('[name="content"]').value.trim(),
+                email: form.querySelector('[name="email"]').value.trim()
+            };
+
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
                 submitBtn.classList.remove('btn-loading');
                 submitBtn.disabled = false;
 
-                showSuccessMessage();
-                form.reset();
-                selectedFiles = [];
-                document.getElementById('fileList').innerHTML = '';
+                if (data.success) {
+                    showSuccessMessage();
+                    form.reset();
+                    selectedFiles = [];
+                    document.getElementById('fileList').innerHTML = '';
 
-                // Reset dropdown
-                const dropdown = document.querySelector('.custom-dropdown');
-                if (dropdown) {
-                    const selectedText = dropdown.querySelector('.selected-text');
-                    selectedText.innerHTML = '请选择反馈类型';
-                    selectedText.classList.add('placeholder');
-                    dropdown.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+                    // Reset dropdown
+                    const dropdown = document.querySelector('.custom-dropdown');
+                    if (dropdown) {
+                        const selectedText = dropdown.querySelector('.selected-text');
+                        selectedText.innerHTML = '请选择反馈类型';
+                        selectedText.classList.add('placeholder');
+                        dropdown.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+                    }
+
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    showNotification(data.error || '提交失败，请稍后重试', 'error');
                 }
-
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 2000);
+            })
+            .catch(err => {
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.disabled = false;
+                showNotification('网络错误，请稍后重试', 'error');
+                console.error('反馈提交失败:', err);
+            });
         });
     }
 

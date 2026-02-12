@@ -1,6 +1,7 @@
 package com.sdu.kgplatform.repository;
 
 import com.sdu.kgplatform.entity.Comment;
+import com.sdu.kgplatform.entity.PostStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -46,6 +47,12 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
      */
     @Query("SELECT COUNT(c) FROM Comment c")
     long countAllComments();
+
+    /**
+     * 统计已发布帖子的评论总数
+     */
+    @Query("SELECT COUNT(c) FROM Comment c WHERE c.postId IN (SELECT p.postId FROM Post p WHERE p.postStatus = :status)")
+    long countByPostStatus(@Param("status") PostStatus status);
 
     /**
      * 根据用户ID查询评论

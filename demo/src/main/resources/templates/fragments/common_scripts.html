@@ -11,6 +11,7 @@
     <th:block th:fragment="scripts">
         <!-- 图谱 API 模块 -->
         <script src="/assets/js/graph-api.js"></script>
+        <script src="/js/guest-utils.js"></script>
         <script>
             (function () {
                 'use strict';
@@ -95,9 +96,46 @@
                                     localStorage.removeItem('userState');
                                 }
                             })
-                            .catch(() => {
+                            .catch(function() {
                                 console.warn('Auth check failed');
                             });
+                        // 如果已登录，立即检查未读私信并启动轮询
+                        var self = this;
+                        setTimeout(function() {
+                            if (self.isLoggedIn) {
+                                self.checkUnreadMessages();
+                                self._unreadTimer = setInterval(function() { self.checkUnreadMessages(); }, 30000);
+                            }
+                        }, 1000);
+                    },
+
+                    checkUnreadMessages: function () {
+                        fetch('/api/messages/unread-count', { credentials: 'include' })
+                            .then(function(res) { return res.json(); })
+                            .then(function(data) {
+                                if (data.success) {
+                                    var count = data.count || 0;
+                                    var headerBadge = document.getElementById('header-inbox-badge');
+                                    if (headerBadge) {
+                                        if (count > 0) {
+                                            headerBadge.textContent = count > 99 ? '99+' : count;
+                                            headerBadge.classList.remove('hidden');
+                                        } else {
+                                            headerBadge.classList.add('hidden');
+                                        }
+                                    }
+                                    var inboxBadge = document.getElementById('inbox-badge');
+                                    if (inboxBadge) {
+                                        if (count > 0) {
+                                            inboxBadge.textContent = count;
+                                            inboxBadge.classList.remove('hidden');
+                                        } else {
+                                            inboxBadge.classList.add('hidden');
+                                        }
+                                    }
+                                }
+                            })
+                            .catch(function() { /* ignore */ });
                     }
                 };
 
@@ -120,7 +158,12 @@
 
                     performSearch: function (query, targetPage = 'graph_list_page') {
                         this.addToHistory(query);
-                        navigateTo(targetPage);
+                        if (targetPage === 'graph_list_page') {
+                            const targetUrl = pageRoutes[targetPage];
+                            window.location.href = targetUrl + '?q=' + encodeURIComponent(query);
+                        } else {
+                            navigateTo(targetPage);
+                        }
                     }
                 };
 
