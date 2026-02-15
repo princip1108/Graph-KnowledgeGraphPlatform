@@ -31,7 +31,7 @@ public class Post {
     private String postAbstract;
 
     @Lob
-    @Column(name = "post_text", columnDefinition = "LONGTEXT")
+    @Column(name = "post_text", columnDefinition = "TEXT")
     private String postText;
 
     @Enumerated(EnumType.STRING)
