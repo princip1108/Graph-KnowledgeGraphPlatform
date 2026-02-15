@@ -2,6 +2,9 @@
 # 使用方式：java -jar demo.jar --spring.profiles.active=prod
 # 所有敏感信息通过服务器环境变量注入
 
+server:
+  port: ${PORT:8080}
+
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
