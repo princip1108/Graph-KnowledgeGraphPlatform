@@ -38,10 +38,10 @@ spring:
             client-secret: ${GITHUB_CLIENT_SECRET}
             scope: read:user,user:email
 
-  # Spring Mail 邮件服务配置 (163邮箱 SMTP)
+  # Spring Mail 邮件服务配置（通过环境变量切换服务商，默认163邮箱）
   mail:
-    host: smtp.163.com
-    port: 465
+    host: ${MAIL_HOST:smtp.163.com}
+    port: ${MAIL_PORT:465}
     username: ${MAIL_USERNAME}
     password: ${MAIL_AUTH_CODE}
     properties:
@@ -49,9 +49,9 @@ spring:
         smtp:
           auth: true
           ssl:
-            enable: true
-          socketFactory:
-            class: javax.net.ssl.SSLSocketFactory
+            enable: ${MAIL_SSL:true}
+          starttls:
+            enable: ${MAIL_STARTTLS:false}
 
 # 文件上传配置
 app:
