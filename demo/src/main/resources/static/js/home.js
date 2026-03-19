@@ -390,15 +390,18 @@ console.log('=== home.js v5 loaded ===');
     window.applyFilter = function (filterType, value) {
         window.APP_GLOBALS.filters[filterType] = value;
 
-        const valueLabels = {
-            all: '全部领域',
-            ai: '人工智能',
-            medical: '医学健康',
-            finance: '金融经济',
-            education: '教育学习'
-        };
-
-        const valueLabel = valueLabels[value] || value;
+        // 从已加载的分类数据中查找名称，若未找到则显示原始值
+        const filterItems = document.querySelectorAll('#homeDomainFilter li a');
+        let valueLabel = value === 'all' ? '全部领域' : value;
+        filterItems.forEach(item => {
+            if (item.textContent && item.onclick && item.textContent.trim() !== '全部领域') {
+                // 匹配 onclick 中的 code 值
+                const onclickStr = item.getAttribute('onclick') || '';
+                if (onclickStr.includes("'" + value + "'")) {
+                    valueLabel = item.textContent.trim();
+                }
+            }
+        });
 
         if (window.showNotification) {
             window.showNotification('已应用领域筛选: ' + valueLabel, 'info');

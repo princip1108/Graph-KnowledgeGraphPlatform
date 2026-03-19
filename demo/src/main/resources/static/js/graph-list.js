@@ -89,7 +89,7 @@
                     btn.setAttribute('data-filter', c.code);
                     btn.className = 'btn btn-ghost btn-xs justify-start filter-btn';
                     btn.onclick = () => filterGraphs(c.code);
-                    btn.innerHTML = `<span class="iconify" data-icon="${c.icon || 'heroicons:folder'}" data-width="12"></span>${c.name}`;
+                    btn.innerHTML = `<span class="iconify" data-icon="heroicons:tag" data-width="12"></span>${c.name}`;
                     container.appendChild(btn);
                 });
             }
