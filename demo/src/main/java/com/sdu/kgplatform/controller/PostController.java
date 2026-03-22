@@ -68,9 +68,9 @@ public class PostController {
                 if (currentUser != null) {
                     historyService.recordSearch(currentUser.getUserId(), keyword.trim(), "forum");
                 }
-                postPage = postService.searchPosts(keyword.trim(), page, size, categoryId);
+                postPage = postService.searchPosts(keyword.trim(), page, size, category);
             } else {
-                postPage = postService.getPostList(page, size, sort, categoryId);
+                postPage = postService.getPostList(page, size, sort, category);
             }
 
             // 为每个帖子添加作者信息
