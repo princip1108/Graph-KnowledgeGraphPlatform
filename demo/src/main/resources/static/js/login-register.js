@@ -48,23 +48,16 @@
         }
         
         showNotification('正在登录...', 'info');
-        
-        const remember = document.getElementById('login-remember')?.checked;
-        const params = new URLSearchParams({
-            username: account,
-            password: password
-        });
-        if (remember) {
-            params.append('remember-me', 'true');
-        }
-
         fetch('/api/auth/login', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: params
+            body: new URLSearchParams({
+                username: account,
+                password: password
+            })
         })
         .then(response => {
             if (response.ok) {

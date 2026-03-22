@@ -592,7 +592,7 @@
         if (!container) return;
         container.innerHTML = '<div class="text-center py-8 text-base-content/70"><span class="loading loading-spinner loading-md"></span><p class="mt-2">加载中...</p></div>';
         
-        fetch('/api/posts/user/favorites', { credentials: 'include' })
+        fetch('/api/user/favorites', { credentials: 'include' })
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.favorites && data.favorites.length > 0) {

@@ -152,11 +152,6 @@ public class SecurityConfig {
                                                 .successHandler(loginSuccessHandler)
                                                 .failureHandler(loginFailureHandler)
                                                 .permitAll())
-                                // 配置记住我
-                                .rememberMe(remember -> remember
-                                                .key("graphWisdomSecret")
-                                                .tokenValiditySeconds(7 * 24 * 60 * 60) // 7天有效
-                                                .rememberMeParameter("remember-me"))
                                 // 配置 GitHub OAuth2 登录
                                 .oauth2Login(oauth2 -> oauth2
                                                 .loginPage("/login")

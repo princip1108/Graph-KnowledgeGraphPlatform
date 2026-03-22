@@ -68,6 +68,14 @@
             });
         }
 
+        const domainFilter = document.getElementById('domainFilter');
+        if (domainFilter) {
+            domainFilter.addEventListener('change', function () {
+                currentPage = 0;
+                loadPosts(true);
+            });
+        }
+
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('keypress', function (e) {
@@ -118,6 +126,10 @@
         try {
             let url = '/api/posts?page=' + currentPage + '&size=10&sort=' + currentSort;
             if (currentKeyword) url += '&keyword=' + encodeURIComponent(currentKeyword);
+            const domainFilter = document.getElementById('domainFilter');
+            if (domainFilter && domainFilter.value) {
+                url += '&categoryId=' + encodeURIComponent(domainFilter.value);
+            }
 
             const response = await fetch(url);
             const data = await response.json();
@@ -260,7 +272,7 @@
             const response = await fetch('/api/posts/' + currentPostId + '/comments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: content }),
+                body: JSON.stringify({ text: content }),
                 credentials: 'include'
             });
             const data = await response.json();
