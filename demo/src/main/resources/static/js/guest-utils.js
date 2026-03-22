@@ -27,6 +27,7 @@
      */
     window.requireLogin = function (action) {
         if (window._isLoggedIn) return true;
+        if (window.APP_GLOBALS && window.APP_GLOBALS.user && window.APP_GLOBALS.user.isLoggedIn) return true;
         showLoginModal(action);
         return false;
     };

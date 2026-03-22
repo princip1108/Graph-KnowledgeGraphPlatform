@@ -545,7 +545,82 @@
         });
     };
 
-    // ... (favorites logic unchanged) ...
+    function loadFavorites() {
+        if (currentSection !== 'favorites') return;
+        loadGraphFavorites();
+        loadPostFavorites();
+    }
+
+    function loadGraphFavorites() {
+        const container = document.getElementById('graph-favorites-container');
+        if (!container) return;
+        container.innerHTML = '<div class="text-center py-8 text-base-content/70"><span class="loading loading-spinner loading-md"></span><p class="mt-2">加载中...</p></div>';
+        
+        // Use user/favorites to get post favorites, graph favorites are through api/graph/favorites
+        fetch('/api/graph/favorites', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.favorites && data.favorites.length > 0) {
+                    container.innerHTML = data.favorites.map(item => `
+                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift group">
+                            <div class="flex items-center gap-3">
+                                <span class="iconify text-base-content/70" data-icon="heroicons:squares-2x2" data-width="20"></span>
+                                <div>
+                                    <p class="font-medium">${item.name || '未命名图谱'}</p>
+                                    <p class="text-sm text-base-content/70">${item.uploadDate ? new Date(item.uploadDate).toLocaleString() : ''}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="/graph/graph_detail.html?id=${item.graphId}" class="btn btn-ghost btn-sm">
+                                    <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>查看
+                                </a>
+                                <button class="btn btn-ghost btn-sm text-error" onclick="unfavoriteGraph(${item.graphId})">
+                                    <span class="iconify" data-icon="heroicons:heart-slash" data-width="16"></span>取消收藏
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="text-center py-8 text-base-content/70">暂无收藏的图谱</div>';
+                }
+            })
+            .catch(() => container.innerHTML = '<div class="text-center py-8 text-error">加载失败</div>');
+    }
+
+    function loadPostFavorites() {
+        const container = document.getElementById('post-favorites-container');
+        if (!container) return;
+        container.innerHTML = '<div class="text-center py-8 text-base-content/70"><span class="loading loading-spinner loading-md"></span><p class="mt-2">加载中...</p></div>';
+        
+        fetch('/api/posts/user/favorites', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.favorites && data.favorites.length > 0) {
+                    container.innerHTML = data.favorites.map(item => `
+                        <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift group">
+                            <div class="flex items-center gap-3">
+                                <span class="iconify text-base-content/70" data-icon="heroicons:document-text" data-width="20"></span>
+                                <div>
+                                    <p class="font-medium">${item.postTitle || '无标题'}</p>
+                                    <p class="text-sm text-base-content/70">${item.uploadTime ? new Date(item.uploadTime).toLocaleString() : ''}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="/community/post_detail.html?id=${item.postId}" class="btn btn-ghost btn-sm">
+                                    <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>查看
+                                </a>
+                                <button class="btn btn-ghost btn-sm text-error" onclick="unfavoritePost(${item.postId})">
+                                    <span class="iconify" data-icon="heroicons:heart-slash" data-width="16"></span>取消收藏
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="text-center py-8 text-base-content/70">暂无收藏的帖子</div>';
+                }
+            })
+            .catch(() => container.innerHTML = '<div class="text-center py-8 text-error">加载失败</div>');
+    }
 
     window.switchFavoriteTab = function (tabType) {
         // (unchanged)
@@ -676,11 +751,21 @@
         const form = document.getElementById('profile-form');
         form?.addEventListener('submit', function (e) {
             e.preventDefault();
-            const data = { userName: document.getElementById('form-username')?.value, email: document.getElementById('form-email')?.value, phone: document.getElementById('form-phone')?.value, gender: document.getElementById('form-gender')?.value, birthday: document.getElementById('form-birthday')?.value, institution: document.getElementById('form-institution')?.value, bio: document.getElementById('form-bio')?.value };
+            const birthdayVal = document.getElementById('form-birthday')?.value;
+            const genderVal = document.getElementById('form-gender')?.value;
+            const data = { 
+                userName: document.getElementById('form-username')?.value, 
+                email: document.getElementById('form-email')?.value, 
+                phone: document.getElementById('form-phone')?.value, 
+                gender: genderVal ? genderVal : null, 
+                birthday: birthdayVal ? birthdayVal : null, 
+                institution: document.getElementById('form-institution')?.value, 
+                bio: document.getElementById('form-bio')?.value 
+            };
             fetch('/user/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' })
-                .then(res => res.json())
-                .then(d => { if (d.success) { showNotification('保存成功', 'success'); loadUserProfile(); } else showNotification(d.message || '保存失败', 'error'); })
-                .catch(() => showNotification('保存失败', 'error'));
+                .then(res => res.json().then(d => ({ok: res.ok, data: d})))
+                .then(result => { if (result.ok) { showNotification('保存成功', 'success'); loadUserProfile(); } else showNotification(result.data.message || result.data.error || '保存失败', 'error'); })
+                .catch(() => showNotification('网络错误保存失败', 'error'));
         });
     }
 
