@@ -28,7 +28,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
         */
        Page<Post> findByPostStatus(PostStatus status, Pageable pageable);
 
-       Page<Post> findByPostStatusAndCategoryId(PostStatus status, Integer categoryId, Pageable pageable);
+       Page<Post> findByPostStatusAndCategory(PostStatus status, String category, Pageable pageable);
 
        /**
         * 查询已发布的帖子（分页）
@@ -45,12 +45,12 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
                      @Param("keyword") String keyword,
                      Pageable pageable);
 
-       @Query("SELECT p FROM Post p WHERE p.postStatus = :status AND p.categoryId = :categoryId AND " +
+       @Query("SELECT p FROM Post p WHERE p.postStatus = :status AND p.category = :category AND " +
                      "(LOWER(p.postTitle) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
                      "LOWER(p.postAbstract) LIKE LOWER(CONCAT('%', :keyword, '%')))")
        Page<Post> searchByKeywordAndCategory(@Param("status") PostStatus status,
                      @Param("keyword") String keyword,
-                     @Param("categoryId") Integer categoryId,
+                     @Param("category") String category,
                      Pageable pageable);
 
        /**

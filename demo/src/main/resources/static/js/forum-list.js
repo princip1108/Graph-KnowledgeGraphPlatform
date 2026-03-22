@@ -48,7 +48,7 @@
             if (select && categories.length > 0) {
                 categories.forEach(c => {
                     const option = document.createElement('option');
-                    option.value = c.id;
+                    option.value = c.code;
                     option.textContent = c.name;
                     select.appendChild(option);
                 });
@@ -128,7 +128,7 @@
             if (currentKeyword) url += '&keyword=' + encodeURIComponent(currentKeyword);
             const domainFilter = document.getElementById('domainFilter');
             if (domainFilter && domainFilter.value) {
-                url += '&categoryId=' + encodeURIComponent(domainFilter.value);
+                url += '&category=' + encodeURIComponent(domainFilter.value);
             }
 
             const response = await fetch(url);

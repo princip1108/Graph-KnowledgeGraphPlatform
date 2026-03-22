@@ -63,6 +63,7 @@ public class AdminController {
                 postMap.put("likeCount", post.getLikeCount());
                 postMap.put("isPinned", post.getIsPinned());
                 postMap.put("authorId", post.getAuthorId());
+                postMap.put("category", post.getCategory());
 
                 userRepository.findById(post.getAuthorId()).ifPresent(author -> {
                     postMap.put("authorName", author.getUserName());

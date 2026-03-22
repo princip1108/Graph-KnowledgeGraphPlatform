@@ -58,7 +58,7 @@ public class PostController {
 
             @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Integer categoryId) {
+            @RequestParam(required = false) String category) {
         Map<String, Object> response = new HashMap<>();
         try {
             Page<Post> postPage;

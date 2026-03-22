@@ -308,9 +308,13 @@
                                 <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
                             </button>
                         </div>
-                        <select id="forumPinFilter" class="select select-bordered w-48"
+                        <select id="forumCategoryFilter" class="select select-bordered w-36"
+                            onchange="filterForumByCategory(this.value)">
+                            <option value="all">全部分类</option>
+                        </select>
+                        <select id="forumPinFilter" class="select select-bordered w-36"
                             onchange="filterForumByPin(this.value)">
-                            <option value="all">全部帖子</option>
+                            <option value="all">全部置顶状态</option>
                             <option value="pinned">仅置顶</option>
                             <option value="unpinned">未置顶</option>
                         </select>

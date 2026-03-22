@@ -8,10 +8,15 @@
 
     // State
     let allGraphs = [], filteredGraphs = [], allPosts = [], filteredPosts = [];
-    let allForumPosts = [], filteredForumPosts = [];
+    let allForumPosts = [];
+    let filteredForumPosts = [];
     let currentPage = 1, postCurrentPage = 1, pageSize = 10, postPageSize = 10;
     let statusFilter = 'all', postStatusFilter = 'all';
-    let searchQuery = '', postSearchQuery = '', forumSearchQuery = '', forumPinFilter = 'all';
+    let searchQuery = '', postSearchQuery = '';
+    let forumSearchQuery = '';
+    let forumPinFilter = 'all';
+    let forumCategoryFilter = 'all';
+    let isForumCategoryLoaded = false;
 
     document.addEventListener('DOMContentLoaded', function () {
         checkAdminAccess();
@@ -587,6 +592,23 @@
 
     async function loadAllForumPosts() {
         try {
+            if (!isForumCategoryLoaded) {
+                fetch('/api/categories')
+                    .then(res => res.json())
+                    .then(categories => {
+                        const select = document.getElementById('forumCategoryFilter');
+                        if (select) {
+                            categories.forEach(c => {
+                                const option = document.createElement('option');
+                                option.value = c.code;
+                                option.textContent = c.name;
+                                select.appendChild(option);
+                            });
+                        }
+                        isForumCategoryLoaded = true;
+                    }).catch(e => console.error(e));
+            }
+
             const response = await fetch('/api/admin/posts?page=0&size=200', { credentials: 'include' });
             const data = await response.json();
             if (data.success) {
@@ -604,11 +626,17 @@
         filteredForumPosts = allForumPosts.filter(function (p) {
             if (forumPinFilter === 'pinned' && p.isPinned !== true) return false;
             if (forumPinFilter === 'unpinned' && p.isPinned === true) return false;
+            if (forumCategoryFilter !== 'all' && p.category !== forumCategoryFilter) return false;
             if (forumSearchQuery && !(p.postTitle || '').toLowerCase().includes(forumSearchQuery.toLowerCase())) return false;
             return true;
         });
         renderForumTable();
     }
+
+    window.filterForumByCategory = function (value) {
+        forumCategoryFilter = value;
+        applyForumFilters();
+    };
 
     window.performForumSearch = function () {
         forumSearchQuery = document.getElementById('forumSearchInput').value.trim();

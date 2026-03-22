@@ -62,7 +62,7 @@ public class PostService {
         return getPostList(page, size, sortBy, null);
     }
 
-    public Page<Post> getPostList(int page, int size, String sortBy, Integer categoryId) {
+    public Page<Post> getPostList(int page, int size, String sortBy, String category) {
         Sort sort;
         switch (sortBy) {
             case "popular":
@@ -75,8 +75,8 @@ public class PostService {
         }
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        if (categoryId != null) {
-            return postRepository.findByPostStatusAndCategoryId(PostStatus.已发布, categoryId, pageable);
+        if (category != null) {
+            return postRepository.findByPostStatusAndCategory(PostStatus.已发布, category, pageable);
         } else {
             return postRepository.findByPostStatus(PostStatus.已发布, pageable);
         }
@@ -89,10 +89,10 @@ public class PostService {
         return searchPosts(keyword, page, size, null);
     }
 
-    public Page<Post> searchPosts(String keyword, int page, int size, Integer categoryId) {
+    public Page<Post> searchPosts(String keyword, int page, int size, String category) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadTime"));
-        if (categoryId != null) {
-            return postRepository.searchByKeywordAndCategory(PostStatus.已发布, keyword, categoryId, pageable);
+        if (category != null) {
+            return postRepository.searchByKeywordAndCategory(PostStatus.已发布, keyword, category, pageable);
         } else {
             return postRepository.searchByKeyword(PostStatus.已发布, keyword, pageable);
         }
