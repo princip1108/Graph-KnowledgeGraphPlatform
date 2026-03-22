@@ -277,6 +277,13 @@
                                 <input type="radio" name="banDuration" value="0" class="radio radio-error">
                                 <span class="text-error">永久封禁</span>
                             </label>
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input type="radio" name="banDuration" value="custom" class="radio radio-warning">
+                                <span>自定义时间(小时)</span>
+                            </label>
+                            <label id="customBanContainer" class="label hidden">
+                                <input type="number" id="customBanHours" placeholder="请输入小时数" class="input input-bordered input-sm w-full" min="1">
+                            </label>
                         </div>
                         <div class="modal-action">
                             <button class="btn btn-ghost btn-sm" onclick="document.getElementById(&#39;banModal&#39;).close()">取消</button>

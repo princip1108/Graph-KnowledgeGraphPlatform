@@ -48,7 +48,7 @@
             if (select && categories.length > 0) {
                 categories.forEach(c => {
                     const option = document.createElement('option');
-                    option.value = c.code;
+                    option.value = c.id;
                     option.textContent = c.name;
                     select.appendChild(option);
                 });

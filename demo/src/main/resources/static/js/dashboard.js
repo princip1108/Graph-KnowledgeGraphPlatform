@@ -17,6 +17,20 @@
         checkAdminAccess();
         showSection('graph-batch');
         loadUserGraphs();
+
+        // Bind radio change event to toggle custom duration logic
+        document.body.addEventListener('change', function (e) {
+            if (e.target && e.target.name === 'banDuration') {
+                const container = document.getElementById('customBanContainer');
+                if (container) {
+                    if (e.target.value === 'custom') {
+                        container.classList.remove('hidden');
+                    } else {
+                        container.classList.add('hidden');
+                    }
+                }
+            }
+        });
     });
 
     function checkAdminAccess() {
@@ -835,12 +849,28 @@
     window.openBanModal = function (userId) {
         document.getElementById('banTargetUserId').value = userId;
         document.querySelector('input[name="banDuration"][value="1"]').checked = true;
+        const container = document.getElementById('customBanContainer');
+        if (container) container.classList.add('hidden');
+        const customHours = document.getElementById('customBanHours');
+        if (customHours) customHours.value = '';
         document.getElementById('banModal').showModal();
     };
 
     window.confirmBanUser = function () {
         const userId = document.getElementById('banTargetUserId').value;
-        const hours = parseInt(document.querySelector('input[name="banDuration"]:checked').value);
+        const selectedRadio = document.querySelector('input[name="banDuration"]:checked');
+        let hours;
+        
+        if (selectedRadio.value === 'custom') {
+            hours = parseInt(document.getElementById('customBanHours').value);
+            if (!hours || hours <= 0) {
+                showNotification('请输入有效的封禁小时数', 'warning');
+                return;
+            }
+        } else {
+            hours = parseInt(selectedRadio.value);
+        }
+
         document.getElementById('banModal').close();
         fetch('/api/admin/users/' + userId + '/ban', {
             method: 'PUT',
