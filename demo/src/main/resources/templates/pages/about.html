@@ -19,7 +19,7 @@
                 <div class="hero-content text-center text-primary-content">
                     <div class="max-w-4xl">
                         <h1 class="mb-8 text-5xl font-bold">关于我们</h1>
-                        <p class="mb-8 text-xl">深入了解我们的愿景、团队和旅程</p>
+                        <p class="mb-8 text-xl">深入了解我们的愿景和旅程</p>
                     </div>
                 </div>
             </section>
@@ -52,45 +52,6 @@
             </section>
 
 
-            <!-- Team Section -->
-            <section class="py-16 bg-base-100">
-                <div class="container mx-auto px-4 max-w-6xl">
-                    <div class="text-center mb-12">
-                        <h2 class="text-3xl font-bold text-base-content mb-4">我们的团队</h2>
-                        <p class="text-xl text-base-content/70">遇见推动知识的力量</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal('member1')">
-                            <figure class="px-8 pt-8">
-                                <img loading="lazy" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/7f0b60f9-2ecb-4583-9974-a6ac1c86ba3f.png" alt="张博士" class="rounded-full w-32 h-32 object-cover">
-                            </figure>
-                            <div class="card-body items-center text-center">
-                                <h3 class="card-title text-lg">张博士</h3>
-                                <p class="text-base-content/70">首席技术官</p>
-                            </div>
-                        </div>
-                        <div class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal('member2')">
-                            <figure class="px-8 pt-8">
-                                <img loading="lazy" src="https://images.unsplash.com/photo-1675904581137-baf52052e6ce?w=200&amp;h=200" alt="李经理" class="rounded-full w-32 h-32 object-cover">
-                            </figure>
-                            <div class="card-body items-center text-center">
-                                <h3 class="card-title text-lg">李经理</h3>
-                                <p class="text-base-content/70">产品总监</p>
-                            </div>
-                        </div>
-                        <div class="card bg-base-100 shadow-soft hover-lift cursor-pointer" onclick="openTeamMemberModal('member3')">
-                            <figure class="px-8 pt-8">
-                                <img loading="lazy" src="https://images.unsplash.com/photo-1681070909604-f555aa006564?w=200&amp;h=200" alt="王工程师" class="rounded-full w-32 h-32 object-cover">
-                            </figure>
-                            <div class="card-body items-center text-center">
-                                <h3 class="card-title text-lg">王工程师</h3>
-                                <p class="text-base-content/70">前端架构师</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Contact Section -->
             <section class="py-16 bg-base-200">
                 <div class="container mx-auto px-4 max-w-6xl">
@@ -98,15 +59,8 @@
                         <h2 class="text-3xl font-bold text-base-content mb-4">联系我们</h2>
                         <p class="text-xl text-base-content/70">与我们取得联系或留下您的宝贵意见</p>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        <div class="space-y-8">
-                            <div class="flex items-start gap-4">
-                                <span class="iconify text-primary" data-icon="heroicons:map-pin" data-width="24"></span>
-                                <div>
-                                    <h3 class="font-semibold text-base-content mb-2">公司地址</h3>
-                                    <p class="text-base-content/80">北京市海淀区中关村软件园二期</p>
-                                </div>
-                            </div>
+                    <div class="flex justify-center">
+                        <div class="space-y-8 max-w-md w-full">
                             <div class="flex items-start gap-4">
                                 <span class="iconify text-primary" data-icon="heroicons:envelope" data-width="24"></span>
                                 <div>
@@ -128,28 +82,11 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="bg-base-100 rounded-lg p-8 shadow-soft">
-                            <img loading="lazy" src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2025/10/28/d80a94a5-0449-4100-bca7-096f95629404.png" alt="公司位置地图" class="w-full h-64 object-cover rounded-lg">
-                        </div>
                     </div>
                 </div>
             </section>
         </main>
-
-        <!-- Team Member Modal -->
-        <dialog id="teamMemberModal" class="modal">
-            <div class="modal-box max-w-2xl">
-                <form method="dialog">
-                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                </form>
-                <div id="modalContent" class="pt-4"></div>
-            </div>
-        </dialog>
     </div>
-
-    <th:block layout:fragment="js">
-        <script th:src="@{/js/about.js}"></script>
-    </th:block>
 </body>
 
 </html>
