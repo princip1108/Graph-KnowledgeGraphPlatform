@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.neo4j.core.DatabaseSelectionProvider;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.data.neo4j.core.Neo4jTemplate;
@@ -21,6 +22,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
  * 显式配置 Neo4j 驱动和事务管理器
  */
 @Configuration
+@Profile("!local-no-neo4j")
 @EnableNeo4jRepositories(
     basePackages = "com.sdu.kgplatform.repository",
     transactionManagerRef = "neo4jTransactionManager",
@@ -67,8 +69,7 @@ public class Neo4jConfig {
             
             return driver;
         } catch (Exception e) {
-            log.error("Neo4j 连接失败: {}", e.getMessage());
-            e.printStackTrace();
+            log.error("Neo4j 连接失败: {}", e.getMessage(), e);
             throw e;
         }
     }

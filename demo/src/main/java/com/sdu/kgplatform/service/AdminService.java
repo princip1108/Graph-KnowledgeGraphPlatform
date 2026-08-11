@@ -58,13 +58,6 @@ public class AdminService {
     }
 
     /**
-     * 获取所有用户
-     */
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    /**
      * 获取用户统计信息
      */
     public Map<String, Object> getUserStats() {
@@ -87,7 +80,7 @@ public class AdminService {
      * 搜索用户（支持关键词 + 角色/状态筛选 + 分页）
      */
     public Page<User> searchUsers(String keyword, String filter, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(normalizePage(page), normalizeSize(size), Sort.by(Sort.Direction.DESC, "createdAt"));
         boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
         String kw = hasKeyword ? keyword.trim() : "";
 
@@ -187,14 +180,22 @@ public class AdminService {
         // ===== 第二阶段：清理草稿内容 =====
 
         // 删除草稿图谱（含 Neo4j 节点）
-        List<KnowledgeGraph> draftGraphs = knowledgeGraphRepository
-                .findByUploaderIdAndStatus(userId, GraphStatus.DRAFT, Pageable.unpaged())
-                .getContent();
-        for (KnowledgeGraph g : draftGraphs) {
-            try {
-                graphService.adminDeleteGraph(g.getGraphId());
-            } catch (Exception e) {
-                // 单个图谱删除失败不影响整体流程
+        while (true) {
+            List<Integer> draftGraphIds = knowledgeGraphRepository
+                    .findByUploaderIdAndStatus(userId, GraphStatus.DRAFT, Pageable.ofSize(100))
+                    .getContent()
+                    .stream()
+                    .map(KnowledgeGraph::getGraphId)
+                    .toList();
+            if (draftGraphIds.isEmpty()) {
+                break;
+            }
+            for (Integer graphId : draftGraphIds) {
+                try {
+                    graphService.adminDeleteGraph(graphId);
+                } catch (Exception e) {
+                    // 单个图谱删除失败不影响整体流程
+                }
             }
         }
 
@@ -220,5 +221,16 @@ public class AdminService {
         user.setGithubId(null);
         user.setOauthProvider(null);
         userRepository.save(user);
+    }
+
+    private int normalizePage(int page) {
+        return Math.max(page, 0);
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            return 20;
+        }
+        return Math.min(size, 100);
     }
 }

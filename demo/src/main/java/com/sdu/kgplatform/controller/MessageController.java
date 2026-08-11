@@ -52,7 +52,7 @@ public class MessageController {
         if (userId == null)
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(normalizePage(page), normalizeSize(size));
         Page<Message> history = messageService.getHistory(userId, otherUserId, pageable);
 
         // 自动标记已读
@@ -72,15 +72,19 @@ public class MessageController {
         if (userId == null)
             return ResponseEntity.status(401).body(Map.of("error", "未登录"));
 
-        Integer receiverId = (Integer) payload.get("receiverId");
-        String content = (String) payload.get("content");
+        Integer receiverId = asInteger(payload.get("receiverId"));
+        String content = asString(payload.get("content"));
 
         if (receiverId == null || content == null || content.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "参数错误"));
         }
 
-        Message msg = messageService.sendMessage(userId, receiverId, content);
-        return ResponseEntity.ok(Map.of("success", true, "message", msg));
+        try {
+            Message msg = messageService.sendMessage(userId, receiverId, content);
+            return ResponseEntity.ok(Map.of("success", true, "message", msg));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
+        }
     }
 
     /**
@@ -111,5 +115,42 @@ public class MessageController {
 
     private Integer getCurrentUserId() {
         return com.sdu.kgplatform.common.SecurityUtils.getCurrentUserId();
+    }
+
+    private int normalizePage(int page) {
+        return Math.max(page, 0);
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            return 20;
+        }
+        return Math.min(size, 100);
+    }
+
+    private Integer asInteger(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        String text = String.valueOf(value).trim();
+        if (text.isEmpty() || "null".equalsIgnoreCase(text)) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(text);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String asString(Object value) {
+        if (value == null) {
+            return null;
+        }
+        String text = String.valueOf(value).trim();
+        return text.isEmpty() ? null : text;
     }
 }

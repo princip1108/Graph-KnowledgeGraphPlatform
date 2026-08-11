@@ -3,6 +3,20 @@
  * 登录注册页面样式
  */
 
+.auth-section {
+    min-height: calc(100vh - 64px);
+}
+
+.auth-grid {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+    .auth-grid {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+}
+
 /* Tab active state */
 .tab-active {
     background-color: var(--color-primary) !important;

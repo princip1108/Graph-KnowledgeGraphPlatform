@@ -28,8 +28,8 @@ public class GraphHotScoreTask {
     public void refreshHotScores() {
         log.info("开始更新图谱热度分...");
         try {
-            graphService.updateAllHotScores();
-            log.info("图谱热度分更新完成");
+            int updatedCount = graphService.updateAllHotScores();
+            log.info("图谱热度分更新完成，updatedCount={}", updatedCount);
         } catch (Exception e) {
             log.error("图谱热度分更新失败", e);
         }

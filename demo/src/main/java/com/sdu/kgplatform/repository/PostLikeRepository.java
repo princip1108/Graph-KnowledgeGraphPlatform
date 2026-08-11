@@ -32,9 +32,13 @@ public interface PostLikeRepository extends JpaRepository<PostLike, PostLikeId> 
     @Query("SELECT pl.id.postId FROM PostLike pl WHERE pl.id.userId = :userId")
     List<Integer> findPostIdsByUserId(@Param("userId") Integer userId);
 
+    @Query("SELECT pl.id.postId FROM PostLike pl WHERE pl.id.userId = :userId AND pl.id.postId IN :postIds")
+    List<Integer> findLikedPostIds(@Param("userId") Integer userId, @Param("postIds") List<Integer> postIds);
+
     /**
      * 删除帖子的所有点赞
      */
+    @org.springframework.data.jpa.repository.Modifying
     @Query("DELETE FROM PostLike pl WHERE pl.id.postId = :postId")
     void deleteByPostId(@Param("postId") Integer postId);
 }

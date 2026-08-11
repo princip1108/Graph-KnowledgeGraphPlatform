@@ -1,51 +1,27 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
-
+      layout:decorate="~{layout/base}">
 <head>
     <title>注册成功</title>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/registration-success.css}">
     </th:block>
 </head>
-
 <body>
-    <div layout:fragment="content">
-        <main class="flex-1 flex flex-col items-center justify-center px-4 py-16">
-            <!-- Success Message Section -->
-            <section class="text-center mb-16 max-w-2xl">
-                <div class="mb-8">
-                    <div class="w-24 h-24 mx-auto bg-success/10 rounded-full flex items-center justify-center success-icon-wrapper">
-                        <span class="iconify text-success" data-icon="heroicons:check-circle-solid" data-width="48"></span>
-                    </div>
+<div layout:fragment="content">
+    <section class="container mx-auto px-4 py-16 max-w-xl">
+        <div class="card bg-base-100 border border-base-300 shadow-soft">
+            <div class="card-body text-center">
+                <span class="iconify mx-auto text-success" data-icon="heroicons:check-circle" data-width="80"></span>
+                <h1 class="text-2xl font-bold mt-4">注册成功</h1>
+                <p class="text-base-content/60 mt-2">账号已创建，可以开始浏览和上传知识图谱。</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+                    <a th:href="@{/graph/home.html}" class="btn btn-primary">进入首页</a>
+                    <a th:href="@{/user/profile}" class="btn btn-outline">完善资料</a>
                 </div>
-                <h1 class="text-4xl font-bold text-base-content mb-4">注册成功！</h1>
-                <p class="text-lg text-base-content/70 leading-relaxed">
-                    欢迎加入Graph+知识图谱平台，您的专属智慧世界已开启。
-                </p>
-            </section>
-            
-            <!-- Call To Action Section -->
-            <section class="w-full max-w-md">
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a th:href="@{/graph/home.html}" class="btn btn-primary btn-lg flex-1 hover-lift">
-                        <span class="iconify" data-icon="heroicons:rocket-launch" data-width="20"></span>
-                        开始探索
-                    </a>
-                    <a th:href="@{/user/profile.html}" class="btn btn-outline btn-lg flex-1 hover-lift">
-                        <span class="iconify" data-icon="heroicons:user-circle" data-width="20"></span>
-                        完善资料
-                    </a>
-                </div>
-                <div class="text-center mt-8">
-                    <p class="text-sm text-base-content/60">您可以随时在个人中心完善资料信息</p>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <th:block layout:fragment="js">
-    </th:block>
+            </div>
+        </div>
+    </section>
+</div>
 </body>
-
 </html>

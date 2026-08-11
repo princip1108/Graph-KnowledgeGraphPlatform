@@ -1,852 +1,294 @@
 package com.sdu.kgplatform.controller;
 
-import com.sdu.kgplatform.common.SecurityUtils;
-import com.sdu.kgplatform.entity.*;
-import com.sdu.kgplatform.repository.CommentRepository;
-import com.sdu.kgplatform.repository.PostFavoriteRepository;
-import com.sdu.kgplatform.repository.PostRepository;
-import com.sdu.kgplatform.repository.UserFollowRepository;
-import com.sdu.kgplatform.repository.UserRepository;
+import com.sdu.kgplatform.entity.Post;
+import com.sdu.kgplatform.entity.PostStatus;
+import com.sdu.kgplatform.security.CustomOAuth2User;
+import com.sdu.kgplatform.security.CustomUserDetails;
+import com.sdu.kgplatform.service.CommentService;
 import com.sdu.kgplatform.service.PostService;
-
-import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/posts")
 public class PostController {
 
+    private static final int MAX_BATCH_SIZE = 200;
+
     private final PostService postService;
-    private final UserRepository userRepository;
-    private final PostFavoriteRepository postFavoriteRepository;
-    private final UserFollowRepository userFollowRepository;
-    private final PostRepository postRepository;
-    private final CommentRepository commentRepository;
-    private final com.sdu.kgplatform.service.HistoryService historyService;
+    private final CommentService commentService;
 
-    public PostController(PostService postService,
-            UserRepository userRepository,
-            PostFavoriteRepository postFavoriteRepository,
-            UserFollowRepository userFollowRepository,
-            PostRepository postRepository,
-            CommentRepository commentRepository,
-            com.sdu.kgplatform.service.HistoryService historyService) {
+    public PostController(PostService postService, CommentService commentService) {
         this.postService = postService;
-        this.userRepository = userRepository;
-        this.postFavoriteRepository = postFavoriteRepository;
-        this.userFollowRepository = userFollowRepository;
-        this.postRepository = postRepository;
-        this.commentRepository = commentRepository;
-        this.historyService = historyService;
+        this.commentService = commentService;
     }
 
-    private User getCurrentUser() {
-        return SecurityUtils.getCurrentUser(userRepository);
+    @GetMapping
+    public ResponseEntity<?> listPosts(@RequestParam(defaultValue = "") String keyword,
+                                       @RequestParam(defaultValue = "latest") String sort,
+                                       @RequestParam(defaultValue = "") String category,
+                                       @RequestParam(defaultValue = "") String domain,
+                                       @RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size) {
+        String categoryFilter = !category.isBlank() ? category : domain;
+        var posts = postService.listPosts(keyword, sort, categoryFilter, page, size, getCurrentUserId());
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "posts", posts.getContent(),
+                "hasNext", posts.hasNext(),
+                "totalElements", posts.getTotalElements()));
     }
 
-    @GetMapping("/posts")
-    public ResponseEntity<Map<String, Object>> getPostList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+    @GetMapping("/pinned")
+    public ResponseEntity<?> pinnedPosts() {
+        return ResponseEntity.ok(Map.of("success", true, "posts", postService.listPinnedPosts(getCurrentUserId())));
+    }
 
-            @RequestParam(defaultValue = "latest") String sort,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String category) {
-        Map<String, Object> response = new HashMap<>();
+    @GetMapping("/stats")
+    public ResponseEntity<?> stats() {
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("success", true);
+        payload.putAll(postService.getForumStats());
+        return ResponseEntity.ok(payload);
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<?> getPost(@PathVariable Integer postId) {
         try {
-            Page<Post> postPage;
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                // 记录搜索历史 (仅登录用户)
-                User currentUser = getCurrentUser();
-                if (currentUser != null) {
-                    historyService.recordSearch(currentUser.getUserId(), keyword.trim(), "forum");
-                }
-                postPage = postService.searchPosts(keyword.trim(), page, size, category);
-            } else {
-                postPage = postService.getPostList(page, size, sort, category);
-            }
-
-            // 为每个帖子添加作者信息
-            List<Map<String, Object>> postsWithAuthor = new ArrayList<>();
-            for (Post post : postPage.getContent()) {
-                Map<String, Object> postMap = new HashMap<>();
-                postMap.put("postId", post.getPostId());
-                postMap.put("postTitle", post.getPostTitle());
-                postMap.put("postAbstract", post.getPostAbstract());
-                postMap.put("postText", post.getPostText());
-                postMap.put("uploadTime", post.getUploadTime());
-                postMap.put("likeCount", post.getLikeCount());
-                postMap.put("authorId", post.getAuthorId());
-                postMap.put("authorId", post.getAuthorId());
-                postMap.put("isPinned", post.getIsPinned());
-                postMap.put("categoryId", post.getCategoryId());
-                postMap.put("createdAt", post.getUploadTime());
-
-                // 获取评论数
-                long commentCount = commentRepository.countByPostId(post.getPostId());
-                postMap.put("commentCount", commentCount);
-
-                // 获取作者信息
-                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
-                    postMap.put("authorName", author.getUserName());
-                    postMap.put("authorAvatar", author.getAvatar());
-                });
-
-                postsWithAuthor.add(postMap);
-            }
-
-            response.put("success", true);
-            response.put("posts", postsWithAuthor);
-            response.put("totalPages", postPage.getTotalPages());
-            response.put("totalElements", postPage.getTotalElements());
-            response.put("currentPage", page);
-            response.put("hasNext", postPage.hasNext());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(postService.getPostDetail(postId, getCurrentUserId(), isAdmin()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @GetMapping("/posts/{id}")
-    public ResponseEntity<Map<String, Object>> getPostDetail(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
+    @PostMapping
+    public ResponseEntity<?> createPost(@RequestBody Map<String, Object> body) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
         try {
-            Integer currentUserId = null;
-            User user = getCurrentUser();
-            if (user != null) {
-                currentUserId = user.getUserId();
-            }
-            Map<String, Object> detail = postService.getPostDetail(id, currentUserId);
-            if (detail == null) {
-                response.put("success", false);
-                response.put("error", "帖子不存在");
-                return ResponseEntity.status(404).body(response);
-            }
-            response.put("success", true);
-            response.putAll(detail);
-
-            // 记录浏览历史 (仅登录用户)
-            if (currentUserId != null) {
-                historyService.recordBrowsing(currentUserId, com.sdu.kgplatform.entity.ResourceType.post, id);
-            }
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(postService.createPost(userId, body));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @PostMapping("/posts")
-    public ResponseEntity<Map<String, Object>> createPost(@RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>();
+    @PutMapping("/{postId}")
+    public ResponseEntity<?> updatePost(@PathVariable Integer postId, @RequestBody Map<String, Object> body) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
         try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-            String title = (String) request.get("title");
-            String postAbstract = (String) request.get("abstract");
-            String content = (String) request.get("content");
-            @SuppressWarnings("unchecked")
-            List<String> tags = (List<String>) request.get("tags");
-            // 获取关联图谱ID
-            Integer graphId = null;
-            Object graphIdObj = request.get("graphId");
-            if (graphIdObj != null) {
-                if (graphIdObj instanceof Integer) {
-                    graphId = (Integer) graphIdObj;
-                } else if (graphIdObj instanceof String && !((String) graphIdObj).isEmpty()) {
-                    graphId = Integer.parseInt((String) graphIdObj);
-                }
-            }
-            Integer categoryId = null;
-            Object categoryIdObj = request.get("categoryId");
-            if (categoryIdObj != null) {
-                if (categoryIdObj instanceof Integer) {
-                    categoryId = (Integer) categoryIdObj;
-                } else if (categoryIdObj instanceof String && !((String) categoryIdObj).isEmpty()) {
-                    categoryId = Integer.parseInt((String) categoryIdObj);
-                }
-            }
-
-            // Get category code string (from frontend)
-            String category = (String) request.get("category");
-            if (category == null || category.isEmpty()) {
-                category = "other";
-            }
-
-            if (title == null || title.trim().isEmpty()) {
-                response.put("success", false);
-                response.put("error", "标题不能为空");
-                return ResponseEntity.badRequest().body(response);
-            }
-            if (content == null || content.trim().isEmpty()) {
-                response.put("success", false);
-                response.put("error", "内容不能为空");
-                return ResponseEntity.badRequest().body(response);
-            }
-            Post post = postService.createPost(user.getUserId(), title.trim(),
-                    postAbstract != null ? postAbstract.trim() : "", content.trim(), tags, graphId, categoryId,
-                    category);
-            response.put("success", true);
-            response.put("post", post);
-            response.put("message", "发布成功");
-            return ResponseEntity.ok(response);
-        } catch (
-
-        Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(postService.updatePost(postId, userId, body, isAdmin()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @PutMapping("/posts/{id}")
-    public ResponseEntity<Map<String, Object>> updatePost(@PathVariable Integer id,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>();
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<?> deletePost(@PathVariable Integer postId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
         try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-            String title = (String) request.get("title");
-            String postAbstract = (String) request.get("abstract");
-            String content = (String) request.get("content");
-            String status = (String) request.get("status");
-            @SuppressWarnings("unchecked")
-            List<String> tags = (List<String>) request.get("tags");
-            // 获取关联图谱ID
-            Integer graphId = null;
-            Object graphIdObj = request.get("graphId");
-            if (graphIdObj != null) {
-                if (graphIdObj instanceof Integer) {
-                    graphId = (Integer) graphIdObj;
-                } else if (graphIdObj instanceof String && !((String) graphIdObj).isEmpty()) {
-                    graphId = Integer.parseInt((String) graphIdObj);
-                }
-            }
-
-            Post post = postService.updatePost(id, user.getUserId(), title, postAbstract, content, tags);
-
-            // 处理关联图谱
-            post.setGraphId(graphId);
-            postRepository.save(post);
-
-            // 处理状态修改
-            if (status != null && !status.isEmpty()) {
-                try {
-                    PostStatus newStatus = PostStatus.valueOf(status);
-                    post.setPostStatus(newStatus);
-                    postRepository.save(post);
-                } catch (IllegalArgumentException e) {
-                    // 忽略无效的状态值
-                }
-            }
-
-            response.put("success", true);
-            response.put("post", post);
-            response.put("message", "更新成功");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(403).body(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            postService.deletePost(postId, userId, isAdmin());
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @DeleteMapping("/posts/{id}")
-    public ResponseEntity<Map<String, Object>> deletePost(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<Post>> postsByUser(@PathVariable Integer userId,
+                                                  @RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "20") int size,
+                                                  @RequestParam(required = false) String status,
+                                                  @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(postService.getPostsByUser(userId, page, size, status, keyword, getCurrentUserId(), isAdmin()));
+    }
+
+    @GetMapping("/related")
+    public ResponseEntity<?> relatedPosts(@RequestParam Integer graphId,
+                                          @RequestParam(defaultValue = "8") int size) {
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "posts", postService.getRelatedPosts(graphId, size, getCurrentUserId())));
+    }
+
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<?> toggleLike(@PathVariable Integer postId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
         try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-            postService.deletePost(id, user.getUserId());
-            response.put("success", true);
-            response.put("message", "删除成功");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(403).body(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(postService.toggleLike(postId, userId));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @PostMapping("/posts/{id}/like")
-    public ResponseEntity<Map<String, Object>> toggleLike(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
+    @PostMapping("/{postId}/favorite")
+    public ResponseEntity<?> toggleFavorite(@PathVariable Integer postId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
         try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-            boolean liked = postService.toggleLike(id, user.getUserId());
-            response.put("success", true);
-            response.put("liked", liked);
-            response.put("message", liked ? "点赞成功" : "取消点赞");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(404).body(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(postService.toggleFavorite(postId, userId));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @GetMapping("/posts/stats")
-    public ResponseEntity<Map<String, Object>> getForumStats() {
-        Map<String, Object> response = new HashMap<>();
+    @GetMapping("/{postId}/favorite/status")
+    public ResponseEntity<?> favoriteStatus(@PathVariable Integer postId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.ok(Map.of("success", true, "favorited", false));
+        }
         try {
-            Map<String, Object> stats = postService.getForumStats();
-            response.put("success", true);
-            response.putAll(stats);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(postService.getFavoriteStatus(postId, userId, isAdmin()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @GetMapping("/posts/user/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserPosts(@PathVariable Integer userId,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        Map<String, Object> response = new HashMap<>();
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<?> listComments(@PathVariable Integer postId) {
         try {
-            Page<Post> postPage = postService.getUserPosts(userId, page, size);
-            response.put("success", true);
-            response.put("posts", postPage.getContent());
-            response.put("totalPages", postPage.getTotalPages());
-            response.put("totalElements", postPage.getTotalElements());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "comments", commentService.getCommentsByPostId(postId, getCurrentUserId(), isAdmin())));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @GetMapping("/tags/hot")
-    public ResponseEntity<Map<String, Object>> getHotTags() {
-        Map<String, Object> response = new HashMap<>();
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<?> createComment(@PathVariable Integer postId, @RequestBody Map<String, Object> body) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
+        String content = asString(body.containsKey("content") ? body.get("content") : body.get("text"));
+        Integer parentId = asInteger(body.get("parentCommentId"));
         try {
-            List<Tag> tags = postService.getHotTags();
-            response.put("success", true);
-            response.put("tags", tags);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            var comment = commentService.createComment(postId, userId, content, parentId);
+            return ResponseEntity.ok(Map.of("success", true, "comment", comment));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    @GetMapping("/posts/hot")
-    public ResponseEntity<Map<String, Object>> getHotPosts(
-            @RequestParam(defaultValue = "5") int size) {
-        Map<String, Object> response = new HashMap<>();
+    @PostMapping("/{postId}/pin")
+    public ResponseEntity<?> togglePin(@PathVariable Integer postId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
         try {
-            List<Map<String, Object>> hotPosts = postService.getHotPosts(Math.min(size, 10));
-            response.put("success", true);
-            response.put("posts", hotPosts);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", "获取热门帖子失败");
-            return ResponseEntity.status(500).body(response);
+            return ResponseEntity.ok(postService.togglePin(postId, userId, isAdmin()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    /**
-     * 获取置顶帖子
-     */
-    @GetMapping("/posts/pinned")
-    public ResponseEntity<Map<String, Object>> getPinnedPosts() {
-        Map<String, Object> response = new HashMap<>();
+    @PostMapping("/batch/online")
+    public ResponseEntity<?> batchOnline(@RequestBody Map<String, List<Integer>> body) {
+        return batchUpdate(body.get("postIds"), PostStatus.已发布);
+    }
+
+    @PostMapping("/batch/offline")
+    public ResponseEntity<?> batchOffline(@RequestBody Map<String, List<Integer>> body) {
+        return batchUpdate(body.get("postIds"), PostStatus.已下架);
+    }
+
+    @PostMapping("/batch/delete")
+    public ResponseEntity<?> batchDelete(@RequestBody Map<String, List<Integer>> body) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
+        List<Integer> postIds = body.getOrDefault("postIds", List.of());
+        if (postIds.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "未提供帖子ID"));
+        }
+        if (postIds.size() > MAX_BATCH_SIZE) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "单次最多处理 " + MAX_BATCH_SIZE + " 个帖子"));
+        }
+        int count = postService.batchDelete(postIds, userId, isAdmin());
+        return ResponseEntity.ok(Map.of("success", true, "message", "成功删除 " + count + " 个帖子"));
+    }
+
+    private ResponseEntity<?> batchUpdate(List<Integer> postIds, PostStatus status) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
+        List<Integer> safePostIds = postIds == null ? List.of() : postIds;
+        if (safePostIds.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "未提供帖子ID"));
+        }
+        if (safePostIds.size() > MAX_BATCH_SIZE) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "单次最多处理 " + MAX_BATCH_SIZE + " 个帖子"));
+        }
+        int count = postService.batchUpdateStatus(safePostIds, status, userId, isAdmin());
+        return ResponseEntity.ok(Map.of("success", true, "message", "成功处理 " + count + " 个帖子"));
+    }
+
+    private Integer getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails userDetails) {
+            return userDetails.getUserId();
+        }
+        if (principal instanceof CustomOAuth2User oauth2User) {
+            return oauth2User.getUserId();
+        }
+        return null;
+    }
+
+    private boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
+
+    private Integer asInteger(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        String text = String.valueOf(value).trim();
+        if (text.isEmpty() || "null".equalsIgnoreCase(text)) {
+            return null;
+        }
         try {
-            List<Post> posts = postService.getPinnedPosts();
-            List<Map<String, Object>> postsWithAuthor = new ArrayList<>();
-            for (Post post : posts) {
-                Map<String, Object> postMap = new HashMap<>();
-                postMap.put("postId", post.getPostId());
-                postMap.put("postTitle", post.getPostTitle());
-                postMap.put("postAbstract", post.getPostAbstract());
-                postMap.put("uploadTime", post.getUploadTime());
-                postMap.put("likeCount", post.getLikeCount());
-                postMap.put("authorId", post.getAuthorId());
-                postMap.put("isPinned", post.getIsPinned());
-                postMap.put("categoryId", post.getCategoryId());
-                postMap.put("createdAt", post.getUploadTime());
-                postMap.put("viewCount", post.getViewCount());
-                postMap.put("favoriteCount", post.getFavoriteCount());
-                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
-                    postMap.put("authorName", author.getUserName());
-                    postMap.put("authorAvatar", author.getAvatar());
-                });
-                postsWithAuthor.add(postMap);
-            }
-            response.put("success", true);
-            response.put("posts", postsWithAuthor);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return Integer.valueOf(text);
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 
-    /**
-     * 收藏/取消收藏帖子
-     */
-    @PostMapping("/posts/{id}/favorite")
-    public ResponseEntity<Map<String, Object>> toggleFavorite(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            PostFavoriteId favoriteId = new PostFavoriteId(user.getUserId(), id);
-            boolean isFavorited;
-
-            if (postFavoriteRepository.existsById(favoriteId)) {
-                postFavoriteRepository.deleteById(favoriteId);
-                isFavorited = false;
-            } else {
-                PostFavorite favorite = new PostFavorite();
-                favorite.setId(favoriteId);
-                favorite.setFavoriteTime(LocalDateTime.now());
-                postFavoriteRepository.save(favorite);
-                isFavorited = true;
-            }
-
-            response.put("success", true);
-            response.put("favorited", isFavorited);
-            response.put("message", isFavorited ? "收藏成功" : "取消收藏");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+    private String asString(Object value) {
+        if (value == null) {
+            return null;
         }
-    }
-
-    /**
-     * 关注/取消关注用户
-     */
-    @PostMapping("/users/{id}/follow")
-    public ResponseEntity<Map<String, Object>> toggleFollow(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            if (user.getUserId().equals(id)) {
-                response.put("success", false);
-                response.put("error", "不能关注自己");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            UserFollowId followId = new UserFollowId(user.getUserId(), id);
-            boolean isFollowing;
-
-            if (userFollowRepository.existsById(followId)) {
-                userFollowRepository.deleteById(followId);
-                isFollowing = false;
-            } else {
-                UserFollow follow = new UserFollow();
-                follow.setId(followId);
-                follow.setFollowTime(LocalDateTime.now());
-                userFollowRepository.save(follow);
-                isFollowing = true;
-            }
-
-            response.put("success", true);
-            response.put("following", isFollowing);
-            response.put("message", isFollowing ? "关注成功" : "取消关注");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 置顶/取消置顶帖子（管理员）
-     */
-    @PostMapping("/admin/posts/{id}/pin")
-    public ResponseEntity<Map<String, Object>> togglePin(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            if (user.getRole() != Role.ADMIN) {
-                response.put("success", false);
-                response.put("error", "权限不足");
-                return ResponseEntity.status(403).body(response);
-            }
-
-            boolean isPinned = postService.togglePin(id);
-            response.put("success", true);
-            response.put("pinned", isPinned);
-            response.put("message", isPinned ? "置顶成功" : "取消置顶");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 检查收藏状态
-     */
-    @GetMapping("/posts/{id}/favorite/status")
-    public ResponseEntity<Map<String, Object>> checkFavoriteStatus(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            boolean isFavorited = false;
-            if (user != null) {
-                PostFavoriteId favoriteId = new PostFavoriteId(user.getUserId(), id);
-                isFavorited = postFavoriteRepository.existsById(favoriteId);
-            }
-            response.put("success", true);
-            response.put("favorited", isFavorited);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 检查关注状态
-     */
-    @GetMapping("/users/{id}/follow/status")
-    public ResponseEntity<Map<String, Object>> checkFollowStatus(@PathVariable Integer id) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            boolean isFollowing = false;
-            if (user != null) {
-                UserFollowId followId = new UserFollowId(user.getUserId(), id);
-                isFollowing = userFollowRepository.existsById(followId);
-            }
-            response.put("success", true);
-            response.put("following", isFollowing);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 获取用户收藏的帖子
-     */
-    @GetMapping("/user/favorites")
-    public ResponseEntity<Map<String, Object>> getUserFavorites() {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-            List<PostFavorite> favorites = postFavoriteRepository.findByUserId(user.getUserId());
-            List<Map<String, Object>> posts = new ArrayList<>();
-            for (PostFavorite fav : favorites) {
-                postRepository.findById(fav.getId().getPostId()).ifPresent(post -> {
-                    Map<String, Object> postMap = new HashMap<>();
-                    postMap.put("postId", post.getPostId());
-                    postMap.put("postTitle", post.getPostTitle());
-                    postMap.put("postAbstract", post.getPostAbstract());
-                    postMap.put("uploadTime", post.getUploadTime());
-                    postMap.put("likeCount", post.getLikeCount());
-                    posts.add(postMap);
-                });
-            }
-            response.put("success", true);
-            response.put("favorites", posts);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 获取用户关注的人
-     */
-    @GetMapping("/user/following")
-    public ResponseEntity<Map<String, Object>> getUserFollowing() {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-            List<UserFollow> follows = userFollowRepository.findByFollowerId(user.getUserId());
-            List<Map<String, Object>> users = new ArrayList<>();
-            for (UserFollow follow : follows) {
-                userRepository.findById(follow.getId().getFollowedId()).ifPresent(u -> {
-                    Map<String, Object> userMap = new HashMap<>();
-                    userMap.put("userId", u.getUserId());
-                    userMap.put("userName", u.getUserName());
-                    userMap.put("avatar", u.getAvatar());
-                    users.add(userMap);
-                });
-            }
-            response.put("success", true);
-            response.put("following", users);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 批量上线帖子（草稿/仅自己可见 -> 已发布）
-     */
-    @PostMapping("/posts/batch/online")
-    public ResponseEntity<Map<String, Object>> batchOnlinePosts(@RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Integer> postIds = (List<Integer>) request.get("postIds");
-            if (postIds == null || postIds.isEmpty()) {
-                response.put("success", false);
-                response.put("error", "请选择要上线的帖子");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            int successCount = 0;
-            for (Integer postId : postIds) {
-                try {
-                    Post post = postRepository.findById(postId).orElse(null);
-                    if (post != null && post.getAuthorId().equals(user.getUserId())) {
-                        post.setPostStatus(PostStatus.已发布);
-                        postRepository.save(post);
-                        successCount++;
-                    }
-                } catch (Exception e) {
-                    System.err.println("上线帖子失败，postId=" + postId + ": " + e.getMessage());
-                }
-            }
-
-            response.put("success", true);
-            response.put("message", "成功上线 " + successCount + " 个帖子");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 批量下线帖子（已发布 -> 仅自己可见）
-     */
-    @PostMapping("/posts/batch/offline")
-    public ResponseEntity<Map<String, Object>> batchOfflinePosts(@RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Integer> postIds = (List<Integer>) request.get("postIds");
-            if (postIds == null || postIds.isEmpty()) {
-                response.put("success", false);
-                response.put("error", "请选择要下线的帖子");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            int successCount = 0;
-            for (Integer postId : postIds) {
-                try {
-                    Post post = postRepository.findById(postId).orElse(null);
-                    if (post != null && post.getAuthorId().equals(user.getUserId())) {
-                        post.setPostStatus(PostStatus.仅自己可见);
-                        postRepository.save(post);
-                        successCount++;
-                    }
-                } catch (Exception e) {
-                    System.err.println("下线帖子失败，postId=" + postId + ": " + e.getMessage());
-                }
-            }
-
-            response.put("success", true);
-            response.put("message", "成功下线 " + successCount + " 个帖子");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 批量删除帖子
-     */
-    @PostMapping("/posts/batch/delete")
-    public ResponseEntity<Map<String, Object>> batchDeletePosts(@RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Integer> postIds = (List<Integer>) request.get("postIds");
-            if (postIds == null || postIds.isEmpty()) {
-                response.put("success", false);
-                response.put("error", "请选择要删除的帖子");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            int successCount = 0;
-            for (Integer postId : postIds) {
-                try {
-                    postService.deletePost(postId, user.getUserId());
-                    successCount++;
-                } catch (Exception e) {
-                    // 单个失败不影响其他
-                    System.err.println("删除帖子失败，postId=" + postId + ": " + e.getMessage());
-                }
-            }
-
-            response.put("success", true);
-            response.put("message", "成功删除 " + successCount + " 个帖子");
-            response.put("deletedCount", successCount);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 获取用户草稿帖子
-     */
-    @GetMapping("/user/drafts")
-    public ResponseEntity<Map<String, Object>> getUserDrafts() {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-            List<Post> drafts = postRepository.findByAuthorIdAndPostStatus(user.getUserId(), PostStatus.草稿);
-            List<Map<String, Object>> posts = new ArrayList<>();
-            for (Post post : drafts) {
-                Map<String, Object> postMap = new HashMap<>();
-                postMap.put("postId", post.getPostId());
-                postMap.put("postTitle", post.getPostTitle());
-                postMap.put("postAbstract", post.getPostAbstract());
-                postMap.put("uploadTime", post.getUploadTime());
-                posts.add(postMap);
-            }
-            response.put("success", true);
-            response.put("drafts", posts);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * 获取图谱的相关帖子推荐
-     * GET /api/posts/related?graphId=xxx&size=10
-     */
-    @GetMapping("/posts/related")
-    public ResponseEntity<Map<String, Object>> getRelatedPosts(
-            @RequestParam Integer graphId,
-            @RequestParam(defaultValue = "10") int size) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            List<Map<String, Object>> posts = postService.getRelatedPostsForGraph(graphId, Math.min(size, 20));
-            response.put("success", true);
-            response.put("posts", posts);
-            response.put("total", posts.size());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+        String text = String.valueOf(value).trim();
+        return text.isEmpty() ? null : text;
     }
 }

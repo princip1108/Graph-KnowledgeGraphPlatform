@@ -31,6 +31,13 @@ public class GraphSpecification {
                 predicates.add(cb.or(nameLike, descLike));
             }
 
+            if (StringUtils.hasText(criteria.getRefineKeyword())) {
+                String refineKeyword = "%" + criteria.getRefineKeyword().trim().toLowerCase() + "%";
+                Predicate nameLike = cb.like(cb.lower(root.get("name")), refineKeyword);
+                Predicate descLike = cb.like(cb.lower(root.get("description")), refineKeyword);
+                predicates.add(cb.or(nameLike, descLike));
+            }
+
             // Category
             if (criteria.getCategoryId() != null) {
                 predicates.add(cb.equal(root.get("categoryId"), criteria.getCategoryId()));

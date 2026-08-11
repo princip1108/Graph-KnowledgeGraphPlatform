@@ -4,6 +4,15 @@
  */
 
 /* Hero overlay gradient */
+.about-hero {
+    background:
+        radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.28), transparent 32%),
+        radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.24), transparent 30%),
+        linear-gradient(135deg, #0f172a 0%, #1e3a8a 48%, #164e63 100%);
+    background-size: cover;
+    background-position: center;
+}
+
 .hero-overlay {
     background: linear-gradient(135deg, var(--color-primary) 0%, rgba(30, 58, 138, 0.8) 100%);
 }

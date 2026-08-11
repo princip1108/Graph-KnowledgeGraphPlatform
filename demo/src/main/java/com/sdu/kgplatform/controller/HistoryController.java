@@ -1,22 +1,28 @@
 package com.sdu.kgplatform.controller;
 
 import com.sdu.kgplatform.entity.BrowsingHistory;
+import com.sdu.kgplatform.entity.KnowledgeGraph;
+import com.sdu.kgplatform.entity.Post;
 import com.sdu.kgplatform.entity.ResourceType;
 import com.sdu.kgplatform.entity.SearchHistory;
 import com.sdu.kgplatform.service.HistoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/history")
 public class HistoryController {
+
+    private static final Logger log = LoggerFactory.getLogger(HistoryController.class);
 
     private final HistoryService historyService;
     private final com.sdu.kgplatform.repository.KnowledgeGraphRepository knowledgeGraphRepository;
@@ -46,7 +52,7 @@ public class HistoryController {
         }
 
         try {
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(normalizePage(page), normalizeSize(size));
             Page<SearchHistory> history = historyService.getUserSearchHistory(userId, type, pageable);
 
             return ResponseEntity.ok(Map.of(
@@ -131,10 +137,11 @@ public class HistoryController {
                 resourceType = ResourceType.valueOf(type.toLowerCase().trim());
             }
 
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(normalizePage(page), normalizeSize(size));
             Page<BrowsingHistory> historyPage = historyService.getUserBrowsingHistory(userId, resourceType, pageable);
 
             final ResourceType finalResourceType = resourceType;
+            Map<Integer, String> resourceNames = loadResourceNames(historyPage.getContent(), finalResourceType);
 
             // 转换为 DTO 并填充名称
             Page<com.sdu.kgplatform.domain.dto.BrowsingHistoryDto> dtoPage = historyPage.map(history -> {
@@ -146,16 +153,10 @@ public class HistoryController {
 
                 if (finalResourceType == ResourceType.graph) {
                     dto.setResourceId(history.getGraphId());
-                    if (history.getGraphId() != null) {
-                        knowledgeGraphRepository.findById(history.getGraphId())
-                                .ifPresent(graph -> dto.setResourceName(graph.getName()));
-                    }
+                    dto.setResourceName(resourceNames.get(history.getGraphId()));
                 } else {
                     dto.setResourceId(history.getPostId());
-                    if (history.getPostId() != null) {
-                        postRepository.findById(history.getPostId())
-                                .ifPresent(post -> dto.setResourceName(post.getPostTitle()));
-                    }
+                    dto.setResourceName(resourceNames.get(history.getPostId()));
                 }
 
                 if (dto.getResourceName() == null) {
@@ -170,7 +171,7 @@ public class HistoryController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "无效的资源类型: " + type));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to get browsing history, type={}", type, e);
             return ResponseEntity.internalServerError().body(Map.of("error", "获取历史记录失败"));
         }
     }
@@ -211,11 +212,51 @@ public class HistoryController {
     }
 
     private Integer getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()
-                && auth.getPrincipal() instanceof com.sdu.kgplatform.security.CustomUserDetails) {
-            return ((com.sdu.kgplatform.security.CustomUserDetails) auth.getPrincipal()).getUserId();
+        return com.sdu.kgplatform.common.SecurityUtils.getCurrentUserId();
+    }
+
+    private int normalizePage(int page) {
+        return Math.max(page, 0);
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            return 20;
         }
-        return null;
+        return Math.min(size, 100);
+    }
+
+    private Map<Integer, String> loadResourceNames(List<BrowsingHistory> histories, ResourceType resourceType) {
+        if (histories.isEmpty()) {
+            return Map.of();
+        }
+
+        if (resourceType == ResourceType.graph) {
+            List<Integer> graphIds = histories.stream()
+                    .map(BrowsingHistory::getGraphId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+            Map<Integer, String> names = new java.util.HashMap<>();
+            knowledgeGraphRepository.findAllById(graphIds).forEach(graph -> {
+                if (graph.getName() != null) {
+                    names.put(graph.getGraphId(), graph.getName());
+                }
+            });
+            return names;
+        }
+
+        List<Integer> postIds = histories.stream()
+                .map(BrowsingHistory::getPostId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Integer, String> names = new java.util.HashMap<>();
+        postRepository.findAllById(postIds).forEach(post -> {
+            if (post.getPostTitle() != null) {
+                names.put(post.getPostId(), post.getPostTitle());
+            }
+        });
+        return names;
     }
 }

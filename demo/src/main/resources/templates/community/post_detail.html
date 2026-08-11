@@ -1,256 +1,149 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
-
+      layout:decorate="~{layout/base}">
 <head>
     <title>帖子详情</title>
-    <!-- Page Specific Libs -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/post-detail.css}">
     </th:block>
 </head>
-
-<body class="bg-base-200 min-h-screen flex flex-col">
-
-    <div layout:fragment="content" class="flex-1 flex flex-col h-full">
-
-        <!-- Three Column Layout -->
-        <div class="flex-1 flex relative" style="height: calc(100vh - 64px);">
-            <!-- Left Sidebar: TOC -->
-            <div id="leftSidebar" class="bg-base-100 border-r border-base-300 flex flex-col relative">
-                <div class="p-4 border-b border-base-300">
-                    <h3 class="font-bold text-base-content/70 text-sm uppercase tracking-wider flex items-center gap-2">
-                        <span class="iconify" data-icon="heroicons:list-bullet" data-width="16"></span>
-                        文章目录
-                    </h3>
-                </div>
-                <div id="toc" class="flex-1 overflow-y-auto p-2">
-                    <p class="text-base-content/40 italic text-sm p-3">加载中...</p>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <div class="flex-1 overflow-y-auto bg-base-200" id="mainContent">
-                <div class="max-w-4xl mx-auto px-6 py-8">
-                    <!-- Loading -->
-                    <div id="postLoading" class="text-center py-20">
-                        <span class="loading loading-spinner loading-lg text-primary"></span>
-                        <p class="mt-4 text-base-content/60">加载中...</p>
-                    </div>
-
-                    <div id="postContent" class="hidden space-y-6">
-                        <!-- Post Card -->
-                        <div class="card bg-base-100 shadow-sm border border-base-300">
-                            <div class="card-body p-8">
-                                <!-- Tags & Meta -->
-                                <div class="flex items-center gap-2 mb-4 flex-wrap">
-                                    <div class="badge badge-primary" id="postCategory">讨论</div>
-                                    <div id="postTags" class="flex gap-2 flex-wrap"></div>
-                                    <div class="flex-1"></div>
-                                    <span class="text-sm text-base-content/50" id="postViewCount">0 阅读</span>
-                                </div>
-
-                                <!-- Title -->
-                                <h1 id="postTitle" class="text-3xl font-extrabold text-base-content mb-6 leading-tight">
-                                </h1>
-
-                                <!-- Author & Actions -->
-                                <div class="flex items-center justify-between mb-6 pb-6 border-b border-base-200">
-                                    <div class="flex items-center gap-3">
-                                        <a id="authorLink" href="#"
-                                            class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                                            <div id="authorAvatar"
-                                                class="w-10 h-10 rounded-full bg-neutral text-neutral-content flex items-center justify-center text-lg font-bold">
-                                            </div>
-                                            <div>
-                                                <div class="font-semibold" id="authorName"></div>
-                                                <div class="text-xs text-base-content/60" id="postTime"></div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                    <!-- Permission Buttons -->
-                                    <div class="flex gap-2">
-                                        <!-- User Actions -->
-                                        <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="收藏"
-                                            id="favoriteBtn" onclick="toggleFavorite()">
-                                            <span class="iconify" data-icon="heroicons:bookmark" data-width="18"
-                                                id="favoriteIcon"></span>
-                                        </button>
-                                        <!-- Author Actions -->
-                                        <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="编辑"
-                                            id="editBtn" style="display:none" onclick="editPost()">
-                                            <span class="iconify" data-icon="heroicons:pencil" data-width="18"></span>
-                                        </button>
-                                        <button class="btn btn-ghost btn-sm btn-circle tooltip text-error" data-tip="删除"
-                                            id="deleteBtn" style="display:none" onclick="deletePost()">
-                                            <span class="iconify" data-icon="heroicons:trash" data-width="18"></span>
-                                        </button>
-                                        <!-- Admin Actions -->
-                                        <button class="btn btn-ghost btn-sm btn-circle tooltip" data-tip="置顶"
-                                            id="pinBtn" style="display:none" onclick="togglePin()">
-                                            <span class="iconify" data-icon="heroicons:arrow-up-circle" data-width="18"
-                                                id="pinIcon"></span>
-                                        </button>
-                                        <button class="btn btn-ghost btn-sm btn-circle tooltip text-warning"
-                                            data-tip="下架" id="unpublishBtn" style="display:none"
-                                            onclick="unpublishPost()">
-                                            <span class="iconify" data-icon="heroicons:eye-slash"
-                                                data-width="18"></span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Post Body -->
-                                <div id="postBody" class="markdown-body min-h-[200px]"></div>
-
-                                <!-- Post Footer -->
-                                <div class="flex items-center justify-between mt-8 pt-6 border-t border-base-200">
-                                    <div class="flex gap-3">
-                                        <button class="btn btn-outline gap-2" id="likeBtn" onclick="toggleLike()">
-                                            <span class="iconify" data-icon="heroicons:heart" data-width="20"></span>
-                                            <span id="likeCount">0</span>
-                                        </button>
-                                        <button class="btn btn-ghost gap-2" onclick="scrollToComments()">
-                                            <span class="iconify" data-icon="heroicons:chat-bubble-left"
-                                                data-width="20"></span>
-                                            <span id="commentCount">0</span>
-                                        </button>
-                                        <button class="btn btn-ghost gap-2" onclick="sharePost()">
-                                            <span class="iconify" data-icon="heroicons:share" data-width="20"></span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Comments Section -->
-                        <div class="card bg-base-100 shadow-sm border border-base-300" id="commentsSection">
-                            <div class="card-body p-6">
-                                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                                    <span class="iconify" data-icon="heroicons:chat-bubble-left-right"
-                                        data-width="20"></span>
-                                    评论区 <span class="text-base-content/50 font-normal text-sm">(<span
-                                            id="totalComments">0</span>)</span>
-                                </h3>
-
-                                <!-- Comment Input -->
-                                <div class="flex gap-4 mb-6" id="commentInputArea">
-                                    <div class="w-10 h-10 rounded-full bg-base-200 flex-shrink-0 flex items-center justify-center font-bold"
-                                        id="currentUserAvatar">我</div>
-                                    <div class="flex-1">
-                                        <textarea id="commentText" class="textarea textarea-bordered w-full"
-                                            placeholder="写下你的想法..." rows="3"></textarea>
-                                        <div class="flex justify-between items-center mt-2">
-                                            <div id="replyingTo" class="text-sm text-base-content/60 hidden">
-                                                回复 <span id="replyingToName"></span>
-                                                <button class="btn btn-ghost btn-xs" onclick="cancelReply()">取消</button>
-                                            </div>
-                                            <div class="flex-1"></div>
-                                            <button class="btn btn-primary btn-sm"
-                                                onclick="submitComment()">发表评论</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="loginPrompt" class="hidden alert alert-info mb-6">
-                                    <span class="iconify" data-icon="heroicons:information-circle"
-                                        data-width="20"></span>
-                                    <span>请<a th:href="@{/user/login_register.html}"
-                                            class="link link-primary">登录</a>后发表评论</span>
-                                </div>
-
-                                <!-- Comments List -->
-                                <div id="commentsList" class="space-y-4"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Sidebar: Author & Related -->
-            <div id="rightSidebar" class="bg-base-100 border-l border-base-300 flex flex-col">
-                <div class="p-4 overflow-y-auto flex-1 space-y-4">
-                    <!-- Author Card -->
-                    <div class="card bg-base-200/50 border border-base-300">
-                        <div class="card-body p-4">
-                            <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">作者信息</h4>
-                            <a id="sidebarAuthorLink" href="#"
-                                class="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity">
-                                <div id="sidebarAuthorAvatar"
-                                    class="w-12 h-12 rounded-full bg-neutral text-neutral-content flex items-center justify-center text-xl font-bold">
-                                </div>
-                                <div>
-                                    <div class="font-bold" id="sidebarAuthorName"></div>
-                                    <div class="text-xs text-base-content/60" id="sidebarAuthorBio">图谱爱好者</div>
-                                </div>
-                            </a>
-                            <button class="btn btn-outline btn-sm w-full" id="followBtn" onclick="toggleFollow()">
-                                <span class="iconify" data-icon="heroicons:user-plus" data-width="16"></span>
-                                关注作者
-                            </button>
-                            <button class="btn btn-outline btn-sm w-full mt-2 flex items-center justify-center gap-2" id="messageBtn"
-                                onclick="sendPrivateMessage()" style="display:none">
-                                <span class="iconify" data-icon="heroicons:envelope" data-width="16"></span>
-                                <span style="line-height: 1;">私信作者</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Related Graph -->
-                    <div class="card bg-base-200/50 border border-base-300" id="relatedGraphCard" style="display:none;">
-                        <div class="card-body p-4">
-                            <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">关联图谱</h4>
-                            <a id="relatedGraphLink" href="#"
-                                class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                                <div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
-                                    <span class="iconify text-primary" data-icon="heroicons:cube-transparent"
-                                        data-width="20"></span>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-medium truncate" id="relatedGraphName">图谱名称</div>
-                                    <div class="text-xs text-base-content/50">点击查看详情</div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Post Stats -->
-                    <div class="card bg-base-200/50 border border-base-300">
-                        <div class="card-body p-4">
-                            <h4 class="text-xs font-bold text-base-content/50 uppercase mb-3">帖子统计</h4>
-                            <div class="grid grid-cols-3 gap-2 text-center">
-                                <div>
-                                    <div class="text-lg font-bold text-primary" id="statLikes">0</div>
-                                    <div class="text-xs text-base-content/50">点赞</div>
-                                </div>
-                                <div>
-                                    <div class="text-lg font-bold text-primary" id="statComments">0</div>
-                                    <div class="text-xs text-base-content/50">评论</div>
-                                </div>
-                                <div>
-                                    <div class="text-lg font-bold text-primary" id="statViews">0</div>
-                                    <div class="text-xs text-base-content/50">阅读</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<body>
+<div layout:fragment="content">
+    <section class="bg-base-200 border-b border-base-300">
+        <div class="container mx-auto px-4 py-6 max-w-7xl">
+            <div class="flex items-center justify-between gap-4">
+                <a th:href="@{/community/forum_list.html}" class="btn btn-ghost btn-sm">
+                    <span class="iconify" data-icon="heroicons:arrow-left" data-width="16"></span>
+                    返回论坛
+                </a>
+                <h1 id="headerTitle" class="text-lg font-semibold truncate">帖子详情</h1>
+                <div class="flex gap-2">
+                    <button id="editBtn" class="btn btn-ghost btn-sm hidden" type="button" onclick="editPost()">编辑</button>
+                    <button id="deleteBtn" class="btn btn-ghost btn-sm text-error hidden" type="button" onclick="deletePost()">删除</button>
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- Toast -->
-        <div id="toast" class="toast toast-top toast-end z-50 hidden">
-            <div class="alert"><span id="toastMessage"></span></div>
+    <section class="container mx-auto px-4 py-8 max-w-7xl">
+        <div id="postLoading" class="text-center py-20">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="mt-3 text-base-content/60">加载帖子中...</p>
+        </div>
+
+        <div id="postContent" class="hidden grid post-detail-layout gap-8">
+            <main id="mainContent" class="min-w-0 space-y-6">
+                <article class="bg-base-100 border border-base-300 rounded-box p-6 shadow-soft">
+                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                        <span id="postCategory" class="badge badge-primary badge-outline">未分类</span>
+                        <span id="postTime" class="text-sm text-base-content/50"></span>
+                    </div>
+                    <h1 id="postTitle" class="text-3xl font-bold leading-tight">帖子标题</h1>
+                    <div id="postTags" class="flex flex-wrap gap-2 mt-4"></div>
+                    <div class="flex flex-wrap items-center gap-4 mt-5 text-sm text-base-content/60">
+                        <span><span id="postViewCount">0</span> 浏览</span>
+                        <span><span id="commentCount">0</span> 评论</span>
+                        <span><span id="likeCount">0</span> 点赞</span>
+                    </div>
+                    <div id="postBody" class="prose max-w-none mt-8"></div>
+                    <div class="flex flex-wrap gap-2 mt-8">
+                        <button id="likeBtn" class="btn btn-outline btn-sm" type="button" onclick="toggleLike()">
+                            <span class="iconify" data-icon="heroicons:heart" data-width="16"></span>
+                            点赞
+                        </button>
+                        <button class="btn btn-outline btn-sm" type="button" onclick="toggleFavorite()">
+                            <span id="favoriteIcon" class="iconify" data-icon="heroicons:bookmark" data-width="16"></span>
+                            收藏
+                        </button>
+                        <button class="btn btn-outline btn-sm" type="button" onclick="sharePost()">分享</button>
+                        <button id="pinBtn" class="btn btn-outline btn-sm hidden" type="button" onclick="togglePin()">
+                            <span id="pinIcon" class="iconify" data-icon="heroicons:bookmark-square" data-width="16"></span>
+                            置顶
+                        </button>
+                        <button id="unpublishBtn" class="btn btn-outline btn-sm hidden" type="button" onclick="unpublishPost()">下架</button>
+                    </div>
+                </article>
+
+                <section id="commentsSection" class="bg-base-100 border border-base-300 rounded-box p-6 shadow-soft">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-semibold">评论 <span id="totalComments">0</span></h2>
+                        <button class="btn btn-ghost btn-sm" type="button" onclick="scrollToComments()">定位评论</button>
+                    </div>
+                    <div id="commentInputArea" class="mt-5">
+                        <div class="flex gap-3">
+                            <div id="currentUserAvatar" class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center">我</div>
+                            <div class="flex-1">
+                                <div id="replyingTo" class="hidden text-sm text-base-content/60 mb-2">
+                                    回复 <span id="replyingToName"></span>
+                                    <button class="link link-primary ml-2" type="button" onclick="cancelReply()">取消</button>
+                                </div>
+                                <textarea id="commentText" class="textarea textarea-bordered w-full" rows="3" placeholder="写下你的想法..."></textarea>
+                                <div class="text-right mt-2">
+                                    <button class="btn btn-primary btn-sm" type="button" onclick="submitComment()">发布评论</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="loginPrompt" class="hidden mt-5 text-center text-base-content/60">
+                        <a th:href="@{/login}" class="link link-primary">登录后参与评论</a>
+                    </div>
+                    <div id="commentsList" class="space-y-4 mt-6"></div>
+                </section>
+            </main>
+
+            <aside class="space-y-6">
+                <div class="bg-base-100 border border-base-300 rounded-box p-5 shadow-soft">
+                    <div class="flex items-center gap-3">
+                        <a id="authorLink" href="#">
+                            <div id="authorAvatar" class="w-12 h-12 rounded-full bg-primary text-primary-content flex items-center justify-center">作</div>
+                        </a>
+                        <div>
+                            <a id="sidebarAuthorLink" href="#" class="font-semibold">
+                                <span id="authorName">作者</span>
+                            </a>
+                            <div id="sidebarAuthorName" class="text-sm text-base-content/60">作者</div>
+                        </div>
+                    </div>
+                    <div id="sidebarAuthorAvatar" class="hidden"></div>
+                    <div class="flex gap-2 mt-4">
+                        <button id="followBtn" class="btn btn-outline btn-sm flex-1" type="button" onclick="toggleFollow()">关注</button>
+                        <button id="messageBtn" class="btn btn-outline btn-sm flex-1" type="button" onclick="sendPrivateMessage()">私信</button>
+                    </div>
+                </div>
+
+                <div id="relatedGraphCard" class="bg-base-100 border border-base-300 rounded-box p-5 shadow-soft hidden">
+                    <h3 class="font-semibold mb-2">关联图谱</h3>
+                    <a id="relatedGraphLink" href="#" class="link link-primary">
+                        <span id="relatedGraphName">图谱</span>
+                    </a>
+                </div>
+
+                <div class="bg-base-100 border border-base-300 rounded-box p-5 shadow-soft">
+                    <h3 class="font-semibold mb-3">统计</h3>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div><div id="statLikes" class="font-bold">0</div><div class="text-xs text-base-content/50">点赞</div></div>
+                        <div><div id="statComments" class="font-bold">0</div><div class="text-xs text-base-content/50">评论</div></div>
+                        <div><div id="statViews" class="font-bold">0</div><div class="text-xs text-base-content/50">浏览</div></div>
+                    </div>
+                </div>
+
+                <div class="bg-base-100 border border-base-300 rounded-box p-5 shadow-soft">
+                    <h3 class="font-semibold mb-3">目录</h3>
+                    <div id="toc" class="space-y-1 text-sm"></div>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <div id="toast" class="toast toast-top toast-end hidden">
+        <div class="alert">
+            <span id="toastMessage"></span>
         </div>
     </div>
 
     <th:block layout:fragment="js">
         <script th:src="@{/js/post-detail.js}"></script>
     </th:block>
+</div>
 </body>
-
 </html>

@@ -1,337 +1,89 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <title>Common Scripts Fragment</title>
 </head>
-
 <body>
-    <!-- 公共脚本片段 -->
-    <th:block th:fragment="scripts">
-        <!-- 图谱 API 模块 -->
-        <script src="/assets/js/graph-api.js"></script>
-        <script src="/js/guest-utils.js"></script>
-        <script>
-            (function () {
-                'use strict';
+<th:block th:fragment="scripts">
+    <script>
+        window.APP_GLOBALS = window.APP_GLOBALS || {};
+        window.APP_GLOBALS.user = window.APP_GLOBALS.user || { isLoggedIn: false };
+        window.APP_GLOBALS.search = window.APP_GLOBALS.search || {
+            history: [],
+            recommendations: ['知识图谱', '人工智能', '医学知识', '金融风控', '教育数据'],
+            getSearchSuggestions() {
+                return [...this.history, ...this.recommendations].filter((item, index, arr) => arr.indexOf(item) === index);
+            },
+            performSearch(query) {
+                if (!query) {
+                    return;
+                }
+                this.history = [query, ...this.history.filter((item) => item !== query)].slice(0, 8);
+                window.location.href = '/graph/graph_list.html?keyword=' + encodeURIComponent(query);
+            }
+        };
+        window.APP_GLOBALS.favorites = window.APP_GLOBALS.favorites || {
+            load() {
+                try {
+                    return JSON.parse(localStorage.getItem('favorites') || '[]');
+                } catch (error) {
+                    return [];
+                }
+            },
+            save(items) {
+                localStorage.setItem('favorites', JSON.stringify(items));
+            },
+            isFavorited(graphId) {
+                return this.load().some((item) => String(item.id) === String(graphId));
+            },
+            add(graphId, graph) {
+                const items = this.load();
+                if (!this.isFavorited(graphId)) {
+                    items.push({ id: String(graphId), name: graph?.name || '未命名图谱', addedAt: new Date().toISOString() });
+                    this.save(items);
+                }
+            },
+            remove(graphId) {
+                this.save(this.load().filter((item) => String(item.id) !== String(graphId)));
+            }
+        };
 
-                // 初始化全局命名空间
-                window.APP_GLOBALS = window.APP_GLOBALS || {};
+        window.showNotification = function(message, type) {
+            const toast = document.getElementById('globalToast');
+            const content = document.getElementById('globalToastMessage');
+            if (!toast || !content) {
+                console.log('[' + (type || 'info') + ']', message);
+                return;
+            }
 
-                // 页面路由映射
-                const pageRoutes = {
-                    'home_page': '/graph/home.html',
-                    'login_register_page': '/user/login_register.html',
-                    'registration_success_page': '/user/registration_success.html',
-                    'password_reset_page': '/user/password_reset.html',
-                    'graph_list_page': '/graph/graph_list.html',
-                    'graph_detail_page': '/graph/graph_detail.html',
-                    'user_profile_page': '/user/profile.html',
-                    'documentation_page': '/pages/documentation.html',
-                    'about_page': '/pages/about.html',
-                    'feedback_page': '/community/feedback.html',
-                    'page_998124': '/admin/dashboard.html',
-                    'page_998125': '/community/forum_list.html'
-                };
+            const tone = type || 'info';
+            const alertClass = tone === 'error'
+                ? 'alert-error'
+                : tone === 'success'
+                    ? 'alert-success'
+                    : tone === 'warning'
+                        ? 'alert-warning'
+                        : 'alert-info';
 
-                // 全局导航函数
-                window.navigateTo = function (targetPageId) {
-                    const targetUrl = pageRoutes[targetPageId];
-                    if (targetUrl) {
-                        window.location.href = targetUrl;
-                    } else {
-                        console.warn('Unknown page ID:', targetPageId);
-                    }
-                };
+            content.textContent = message;
+            toast.className = 'toast toast-top toast-end z-50';
+            const alert = toast.querySelector('.alert');
+            alert.className = 'alert shadow-soft ' + alertClass;
+            toast.classList.remove('hidden');
 
-                // 用户认证状态管理
-                window.APP_GLOBALS.user = {
-                    isLoggedIn: false,
-                    userInfo: null,
-
-                    login: function (userInfo) {
-                        this.isLoggedIn = true;
-                        this.userInfo = userInfo;
-                        localStorage.setItem('userState', JSON.stringify({
-                            isLoggedIn: true,
-                            userInfo: userInfo
-                        }));
-                        this.updateUserInterface();
-                    },
-
-                    logout: function () {
-                        this.isLoggedIn = false;
-                        this.userInfo = null;
-                        localStorage.removeItem('userState');
-                        // 调用后端登出
-                        fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-                            .finally(() => {
-                                this.updateUserInterface();
-                                window.location.href = '/graph/home.html';
-                            });
-                    },
-
-                    updateUserInterface: function () {
-                        // 前端仅负责更新非首屏的动态状态
-                        // 实际上由于使用了SSR，大部分初始状态已由HTML决定
-                        // 这里主要用于处理无刷新操作后的状态变更
-                    },
-
-                    init: function () {
-                        // 从服务端检查登录状态，主要用于同步本地状态或处理 session 过期
-                        fetch('/user/api/check-auth', { credentials: 'include' })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.authenticated) {
-                                    this.isLoggedIn = true;
-                                    this.userInfo = data.user || { userName: data.username };
-                                    localStorage.setItem('userState', JSON.stringify({
-                                        isLoggedIn: true,
-                                        userInfo: this.userInfo
-                                    }));
-                                } else {
-                                    this.isLoggedIn = false;
-                                    this.userInfo = null;
-                                    localStorage.removeItem('userState');
-                                }
-                            })
-                            .catch(function() {
-                                console.warn('Auth check failed');
-                            });
-                        // 如果已登录，立即检查未读私信并启动轮询
-                        var self = this;
-                        setTimeout(function() {
-                            if (self.isLoggedIn) {
-                                self.checkUnreadMessages();
-                                self._unreadTimer = setInterval(function() { self.checkUnreadMessages(); }, 30000);
-                            }
-                        }, 1000);
-                    },
-
-                    checkUnreadMessages: function () {
-                        fetch('/api/messages/unread-count', { credentials: 'include' })
-                            .then(function(res) { return res.json(); })
-                            .then(function(data) {
-                                if (data.success) {
-                                    var count = data.count || 0;
-                                    var headerBadge = document.getElementById('header-inbox-badge');
-                                    if (headerBadge) {
-                                        if (count > 0) {
-                                            headerBadge.textContent = count > 99 ? '99+' : count;
-                                            headerBadge.classList.remove('hidden');
-                                        } else {
-                                            headerBadge.classList.add('hidden');
-                                        }
-                                    }
-                                    var inboxBadge = document.getElementById('inbox-badge');
-                                    if (inboxBadge) {
-                                        if (count > 0) {
-                                            inboxBadge.textContent = count;
-                                            inboxBadge.classList.remove('hidden');
-                                        } else {
-                                            inboxBadge.classList.add('hidden');
-                                        }
-                                    }
-                                }
-                            })
-                            .catch(function() { /* ignore */ });
-                    }
-                };
-
-                // 搜索功能
-                window.APP_GLOBALS.search = {
-                    history: JSON.parse(localStorage.getItem('searchHistory') || '[]'),
-                    recommendations: ['人工智能', '机器学习', '自然语言处理', '计算机视觉', '深度学习'],
-
-                    addToHistory: function (query) {
-                        if (query && !this.history.includes(query)) {
-                            this.history.unshift(query);
-                            this.history = this.history.slice(0, 10);
-                            localStorage.setItem('searchHistory', JSON.stringify(this.history));
-                        }
-                    },
-
-                    getSearchSuggestions: function () {
-                        return this.history.length > 0 ? this.history : this.recommendations;
-                    },
-
-                    performSearch: function (query, targetPage = 'graph_list_page') {
-                        this.addToHistory(query);
-                        if (targetPage === 'graph_list_page') {
-                            const targetUrl = pageRoutes[targetPage];
-                            window.location.href = targetUrl + '?q=' + encodeURIComponent(query);
-                        } else {
-                            navigateTo(targetPage);
-                        }
-                    }
-                };
-
-                // 通知功能
-                window.showNotification = function (message, type = 'info') {
-                    const notification = document.createElement('div');
-                    notification.className = `alert alert-${type} fixed top-4 right-4 w-96 z-50 shadow-lg`;
-                    notification.innerHTML = `
-            <div class="flex items-center gap-2">
-                <span class="iconify" data-icon="heroicons:information-circle-solid" data-width="20"></span>
-                <span>${message}</span>
-            </div>
-        `;
-                    document.body.appendChild(notification);
-                    setTimeout(() => notification.remove(), 5000);
-                };
-
-                // 缩略图生成工具
-                window.APP_GLOBALS.thumbnail = {
-                    // 节点颜色映射
-                    nodeColors: {
-                        '人物': '#3b82f6',
-                        '组织': '#10b981',
-                        '地点': '#f59e0b',
-                        '事件': '#ef4444',
-                        '概念': '#8b5cf6',
-                        '作品': '#ec4899',
-                        '时间': '#06b6d4',
-                        'default': '#6b7280'
-                    },
-
-                    getNodeColor: function (type) {
-                        return this.nodeColors[type] || this.nodeColors['default'];
-                    },
-
-                    // 生成 SVG 缩略图字符串
-                    generateSVG: function (nodes, edges, width, height) {
-                        width = width || 300;
-                        height = height || 200;
-
-                        if (!nodes || nodes.length === 0) {
-                            return '<svg viewBox="0 0 ' + width + ' ' + height + '"><text x="50%" y="50%" text-anchor="middle" fill="#9ca3af">暂无数据</text></svg>';
-                        }
-
-                        var nodePositions = {};
-                        var centerX = width / 2, centerY = height / 2;
-                        var radius = Math.min(width, height) / 2 - 20;
-                        var self = this;
-
-                        // 计算节点位置（环形布局）
-                        nodes.forEach(function (n, i) {
-                            var angle = (2 * Math.PI * i) / nodes.length;
-                            var nodeId = n.nodeId || n.name;
-                            nodePositions[nodeId] = {
-                                x: centerX + radius * Math.cos(angle),
-                                y: centerY + radius * Math.sin(angle)
-                            };
-                        });
-
-                        var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '" style="background:#f8fafc">';
-
-                        // 绘制边
-                        if (edges && edges.length > 0) {
-                            edges.forEach(function (e) {
-                                var sourceId = e.sourceNodeId || e.source;
-                                var targetId = e.targetNodeId || e.target;
-                                var src = nodePositions[sourceId];
-                                var tgt = nodePositions[targetId];
-                                if (src && tgt) {
-                                    svg += '<line x1="' + src.x + '" y1="' + src.y + '" x2="' + tgt.x + '" y2="' + tgt.y + '" stroke="#cbd5e1" stroke-width="1" opacity="0.6"/>';
-                                }
-                            });
-                        }
-
-                        // 绘制节点
-                        nodes.forEach(function (n) {
-                            var nodeId = n.nodeId || n.name;
-                            var pos = nodePositions[nodeId];
-                            var color = self.getNodeColor(n.type || 'default');
-                            svg += '<circle cx="' + pos.x + '" cy="' + pos.y + '" r="5" fill="' + color + '"/>';
-                        });
-
-                        svg += '</svg>';
-                        return svg;
-                    },
-
-                    // 将 SVG 转换为 Blob（用于上传）
-                    svgToBlob: function (svgString) {
-                        return new Blob([svgString], { type: 'image/svg+xml' });
-                    },
-
-                    // 将 SVG 转换为 PNG Blob（通过 Canvas）
-                    svgToPngBlob: function (svgString, width, height, callback) {
-                        width = width || 300;
-                        height = height || 200;
-
-                        var canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        var ctx = canvas.getContext('2d');
-
-                        var img = new Image();
-                        var svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-                        var url = URL.createObjectURL(svgBlob);
-
-                        img.onload = function () {
-                            ctx.fillStyle = '#f8fafc';
-                            ctx.fillRect(0, 0, width, height);
-                            ctx.drawImage(img, 0, 0, width, height);
-                            URL.revokeObjectURL(url);
-
-                            canvas.toBlob(function (blob) {
-                                callback(blob);
-                            }, 'image/png');
-                        };
-
-                        img.onerror = function () {
-                            URL.revokeObjectURL(url);
-                            callback(null);
-                        };
-
-                        img.src = url;
-                    }
-                };
-
-                // 收藏管理
-                window.APP_GLOBALS.favorites = {
-                    items: JSON.parse(localStorage.getItem('favorites') || '[]'),
-
-                    add: function (graphId, graphData) {
-                        if (!this.items.find(item => item.id === graphId)) {
-                            this.items.push({
-                                id: graphId,
-                                data: graphData,
-                                addedAt: new Date().toISOString()
-                            });
-                            localStorage.setItem('favorites', JSON.stringify(this.items));
-                            showNotification('已添加到收藏', 'success');
-                        }
-                    },
-
-                    remove: function (graphId) {
-                        this.items = this.items.filter(item => item.id !== graphId);
-                        localStorage.setItem('favorites', JSON.stringify(this.items));
-                        showNotification('已从收藏中移除', 'info');
-                    },
-
-                    isFavorited: function (graphId) {
-                        return this.items.some(item => item.id === graphId);
-                    },
-
-                    toggle: function (graphId, graphData) {
-                        if (this.isFavorited(graphId)) {
-                            this.remove(graphId);
-                        } else {
-                            this.add(graphId, graphData);
-                        }
-                    }
-                };
-
-                // DOM 加载完成后初始化
-                document.addEventListener('DOMContentLoaded', function () {
-                    window.APP_GLOBALS.user.init();
-                });
-
-            })();
-        </script>
-    </th:block>
+            clearTimeout(window.__globalToastTimer);
+            window.__globalToastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        };
+    </script>
+    <script th:src="@{/js/guest-utils.js}"></script>
+    <div id="globalToast" class="toast toast-top toast-end z-50 hidden">
+        <div class="alert alert-info shadow-soft">
+            <span id="globalToastMessage"></span>
+        </div>
+    </div>
+</th:block>
 </body>
-
 </html>

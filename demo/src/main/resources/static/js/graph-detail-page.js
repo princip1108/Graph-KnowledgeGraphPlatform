@@ -11,6 +11,9 @@
         selectedNode: null,
         nodeCount: 0,
         relationCount: 0,
+        loadedNodeCount: 0,
+        loadedRelationCount: 0,
+        visualizationLimited: false,
         isCustomCover: false
     };
     var currentGraphData = window.currentGraphData;
@@ -128,8 +131,11 @@
                 description: graphInfo.description || '',
                 nodes: nodesData.nodes || [],
                 edges: relationsData.relations || [],
-                nodeCount: graphInfo.nodeCount || 0,
-                relationCount: graphInfo.relationCount || 0,
+                nodeCount: (vizData.totalCount && vizData.totalCount.nodes) || graphInfo.nodeCount || 0,
+                relationCount: (vizData.totalCount && vizData.totalCount.links) || graphInfo.relationCount || 0,
+                loadedNodeCount: (vizData.count && vizData.count.nodes) || (nodesData.nodes || []).length,
+                loadedRelationCount: (vizData.count && vizData.count.links) || (relationsData.relations || []).length,
+                visualizationLimited: vizData.limited === true,
                 viewCount: graphInfo.viewCount || 0,
                 collectCount: graphInfo.collectCount || 0,
                 shareLink: graphInfo.shareLink || '',
@@ -137,6 +143,7 @@
                 uploaderId: graphInfo.uploaderId,
                 uploaderName: graphInfo.uploaderName,
                 uploaderAvatar: graphInfo.uploaderAvatar,
+                coverImage: graphInfo.coverImage || '',
                 isCustomCover: graphInfo.isCustomCover || false,
                 // 添加分类信息
                 categoryId: vizData.categoryId || graphInfo.categoryId,
@@ -785,7 +792,7 @@
             html += '<span class="w-5 text-xs text-base-content/50">' + (i + 1) + '</span>';
             html += '<div class="flex-1">';
             html += '<div class="flex justify-between text-xs mb-1">';
-            html += '<span class="truncate max-w-[120px]">' + (n.name || '未命名') + '</span>';
+            html += '<span class="truncate core-node-name">' + (n.name || '未命名') + '</span>';
             html += '<span class="text-base-content/50">' + degree + '</span>';
             html += '</div>';
             html += '<div class="h-1.5 bg-base-200 rounded-full overflow-hidden">';
@@ -826,64 +833,109 @@
         container.innerHTML = html;
     }
 
+    function getPositionList(nodes, positions) {
+        return nodes
+            .map(function (n) { return positions[n.nodeId]; })
+            .filter(function (pos) {
+                return pos && Number.isFinite(pos.x) && Number.isFinite(pos.y);
+            });
+    }
+
+    function hasUsablePositions(nodes, positions) {
+        return getPositionList(nodes, positions || {}).length > 0;
+    }
+
+    function scalePositionsToSize(nodes, sourcePositions, width, height, padding) {
+        const sourceList = getPositionList(nodes, sourcePositions);
+        if (sourceList.length === 0) return {};
+
+        const xs = sourceList.map(function (p) { return p.x; });
+        const ys = sourceList.map(function (p) { return p.y; });
+        const minX = Math.min.apply(null, xs);
+        const maxX = Math.max.apply(null, xs);
+        const minY = Math.min.apply(null, ys);
+        const maxY = Math.max.apply(null, ys);
+        const graphWidth = maxX - minX || 1;
+        const graphHeight = maxY - minY || 1;
+        const availWidth = Math.max(width - padding * 2, 1);
+        const availHeight = Math.max(height - padding * 2, 1);
+        const scale = Math.min(availWidth / graphWidth, availHeight / graphHeight);
+        const offsetX = padding + (availWidth - graphWidth * scale) / 2;
+        const offsetY = padding + (availHeight - graphHeight * scale) / 2;
+
+        const scaled = {};
+        nodes.forEach(function (n) {
+            const pos = sourcePositions[n.nodeId];
+            if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+                scaled[n.nodeId] = {
+                    x: (pos.x - minX) * scale + offsetX,
+                    y: (pos.y - minY) * scale + offsetY
+                };
+            }
+        });
+        return scaled;
+    }
+
+    function createFallbackPositions(nodes, width, height, padding) {
+        const positions = {};
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const radius = Math.max(Math.min(width, height) / 2 - padding, 1);
+        nodes.forEach(function (n, i) {
+            const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1);
+            positions[n.nodeId] = {
+                x: centerX + radius * Math.cos(angle),
+                y: centerY + radius * Math.sin(angle)
+            };
+        });
+        return positions;
+    }
+
+    function resolveThumbnailPositions(nodes, edges, width, height, padding) {
+        let sourcePositions = currentGraphData.nodePositions || {};
+
+        if (!hasUsablePositions(nodes, sourcePositions) && typeof window.layoutGraph === 'function') {
+            try {
+                const layoutResult = window.layoutGraph(nodes, edges || []);
+                if (layoutResult && layoutResult.positions) {
+                    sourcePositions = layoutResult.positions;
+                    currentGraphData.nodePositions = sourcePositions;
+                    if (layoutResult.viewBox && !currentGraphData.initialViewBox) {
+                        currentGraphData.initialViewBox = { ...layoutResult.viewBox };
+                    }
+                }
+            } catch (e) {
+                sourcePositions = {};
+            }
+        }
+
+        if (hasUsablePositions(nodes, sourcePositions)) {
+            return scalePositionsToSize(nodes, sourcePositions, width, height, padding);
+        }
+
+        return createFallbackPositions(nodes, width, height, padding);
+    }
+
+    function scheduleGraphCoverUpdate(delay) {
+        if (!window.updateGraphCover) return;
+        window.clearTimeout(window.__graphCoverUpdateTimer);
+        window.__graphCoverUpdateTimer = window.setTimeout(function () {
+            window.updateGraphCover();
+        }, delay || 0);
+    }
+
     // 5. 图谱缩略图 - 与主图谱布局一致
     function renderThumbnail(container) {
         const nodes = currentGraphData.nodes || [];
         const edges = currentGraphData.edges || [];
-        const mainPositions = currentGraphData.nodePositions || {};
 
         if (nodes.length === 0) {
             container.innerHTML = '<div class="flex items-center justify-center h-full text-base-content/50">暂无图谱数据</div>';
             return;
         }
 
-        // 使用主图谱的布局位置，如果没有则使用圆形布局
-        let nodePositions = {};
-        const hasMainPositions = Object.keys(mainPositions).length > 0;
         const thumbWidth = 280, thumbHeight = 160;
-
-        if (hasMainPositions) {
-            // 计算主图谱的边界
-            const xs = Object.values(mainPositions).map(function (p) { return p.x; });
-            const ys = Object.values(mainPositions).map(function (p) { return p.y; });
-            const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
-            const minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
-            const graphWidth = maxX - minX || 1;
-            const graphHeight = maxY - minY || 1;
-
-            // 缩略图边距
-            const padding = 15;
-            const availWidth = thumbWidth - padding * 2;
-            const availHeight = thumbHeight - padding * 2;
-
-            // 计算缩放比例（保持宽高比）
-            const scale = Math.min(availWidth / graphWidth, availHeight / graphHeight);
-
-            // 缩放并居中
-            const offsetX = padding + (availWidth - graphWidth * scale) / 2;
-            const offsetY = padding + (availHeight - graphHeight * scale) / 2;
-
-            nodes.forEach(function (n) {
-                const pos = mainPositions[n.nodeId];
-                if (pos) {
-                    nodePositions[n.nodeId] = {
-                        x: (pos.x - minX) * scale + offsetX,
-                        y: (pos.y - minY) * scale + offsetY
-                    };
-                }
-            });
-        } else {
-            // 回退到圆形布局
-            const centerX = thumbWidth / 2, centerY = thumbHeight / 2;
-            const radius = Math.min(thumbWidth, thumbHeight) / 2 - 20;
-            nodes.forEach(function (n, i) {
-                const angle = (2 * Math.PI * i) / nodes.length;
-                nodePositions[n.nodeId] = {
-                    x: centerX + radius * Math.cos(angle),
-                    y: centerY + radius * Math.sin(angle)
-                };
-            });
-        }
+        const nodePositions = resolveThumbnailPositions(nodes, edges, thumbWidth, thumbHeight, 15);
 
         let svg = '<svg viewBox="0 0 ' + thumbWidth + ' ' + thumbHeight + '" class="w-full h-full">';
 
@@ -934,6 +986,7 @@
 
             if (currentGraphData.nodes && currentGraphData.nodes.length > 0) {
                 bindaoRenderGraph();
+                scheduleGraphCoverUpdate(300);
             } else if (!currentGraphData.id) {
                 // No graph ID, show demo graph
                 canvas.innerHTML = `
@@ -2325,11 +2378,7 @@
                     updatePageWithGraphData(data);
                     bindaoRenderGraph();
                     // 同步更新封面
-                    setTimeout(function () {
-                        if (window.updateGraphCover) {
-                            window.updateGraphCover();
-                        }
-                    }, 500);
+                    scheduleGraphCoverUpdate(500);
                 }
             } else {
                 window.showNotification(result.error || '操作失败', 'error');
@@ -2448,7 +2497,7 @@
                     updatePageWithGraphData(data);
                     bindaoRenderGraph();
                     // 同步更新封面
-                    setTimeout(function () { window.updateGraphCover(); }, 500);
+                    scheduleGraphCoverUpdate(500);
                 }
             } else {
                 window.showNotification(result.error || '删除失败', 'error');
@@ -2671,7 +2720,7 @@
                     updatePageWithGraphData(data);
                     bindaoRenderGraph();
                     // 同步更新封面
-                    setTimeout(function () { window.updateGraphCover(); }, 500);
+                    scheduleGraphCoverUpdate(500);
                 }
             } else {
                 window.showNotification(result.error || '创建失败', 'error');
@@ -2805,25 +2854,23 @@
         let successCount = 0;
         let failCount = 0;
 
-        for (const rel of relations) {
-            try {
-                const response = await fetch(`/api/graph/${graphId}/relations`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(rel)
-                });
+        try {
+            const response = await fetch(`/api/graph/${graphId}/relations/batch`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(relations)
+            });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) successCount++;
-                    else failCount++;
-                } else {
-                    failCount++;
-                }
-            } catch (error) {
-                failCount++;
+            if (response.ok) {
+                const result = await response.json();
+                successCount = result.successCount ?? result.count ?? 0;
+                failCount = result.failedCount ?? Math.max(relations.length - successCount, 0);
+            } else {
+                failCount = relations.length;
             }
+        } catch (error) {
+            failCount = relations.length;
         }
 
         if (successCount > 0) {
@@ -2837,7 +2884,7 @@
                 updatePageWithGraphData(data);
                 bindaoRenderGraph();
                 // 同步更新封面
-                setTimeout(function () { window.updateGraphCover(); }, 500);
+                scheduleGraphCoverUpdate(500);
             }
         } else {
             window.showNotification('批量添加失败', 'error');
@@ -3001,7 +3048,7 @@
                 updatePageWithGraphData(data);
                 bindaoRenderGraph();
                 // 同步更新封面
-                setTimeout(function () { window.updateGraphCover(); }, 500);
+                scheduleGraphCoverUpdate(500);
             }
         } else {
             window.showNotification('删除失败', 'error');
@@ -3198,7 +3245,7 @@
                         });
                     }
                     // 同步更新封面
-                    setTimeout(function () { window.updateGraphCover(); }, 500);
+                    scheduleGraphCoverUpdate(500);
                 }
             } else {
                 window.showNotification(result.error || '更新失败', 'error');
@@ -3219,52 +3266,12 @@
 
         const nodes = currentGraphData.nodes || [];
         const edges = currentGraphData.edges || [];
-        const mainPositions = currentGraphData.nodePositions || {};
 
         if (nodes.length === 0) {
             return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '"><rect width="100%" height="100%" fill="#f8fafc"/><text x="50%" y="50%" text-anchor="middle" fill="#9ca3af">暂无数据</text></svg>';
         }
 
-        let nodePositions = {};
-        const hasMainPositions = Object.keys(mainPositions).length > 0;
-
-        if (hasMainPositions) {
-            // 使用主图谱布局，缩放到缩略图尺寸
-            const xs = Object.values(mainPositions).map(function (p) { return p.x; });
-            const ys = Object.values(mainPositions).map(function (p) { return p.y; });
-            const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
-            const minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
-            const graphWidth = maxX - minX || 1;
-            const graphHeight = maxY - minY || 1;
-
-            const padding = 30;
-            const availWidth = width - padding * 2;
-            const availHeight = height - padding * 2;
-            const scale = Math.min(availWidth / graphWidth, availHeight / graphHeight);
-            const offsetX = padding + (availWidth - graphWidth * scale) / 2;
-            const offsetY = padding + (availHeight - graphHeight * scale) / 2;
-
-            nodes.forEach(function (n) {
-                const pos = mainPositions[n.nodeId];
-                if (pos) {
-                    nodePositions[n.nodeId] = {
-                        x: (pos.x - minX) * scale + offsetX,
-                        y: (pos.y - minY) * scale + offsetY
-                    };
-                }
-            });
-        } else {
-            // 圆形布局回退
-            const centerX = width / 2, centerY = height / 2;
-            const radius = Math.min(width, height) / 2 - 30;
-            nodes.forEach(function (n, i) {
-                const angle = (2 * Math.PI * i) / nodes.length;
-                nodePositions[n.nodeId] = {
-                    x: centerX + radius * Math.cos(angle),
-                    y: centerY + radius * Math.sin(angle)
-                };
-            });
-        }
+        const nodePositions = resolveThumbnailPositions(nodes, edges, width, height, 30);
 
         let svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '">';
         svg += '<rect width="100%" height="100%" fill="#f8fafc"/>';
@@ -3336,11 +3343,14 @@
         const graphId = getCurrentGraphId();
         if (!graphId) return;
 
-        // 如果是用户自定义封面，不自动更新
-        if (currentGraphData.isCustomCover) {
+        if (window.__graphCoverUpdating) return;
+
+        // 如果是用户自定义封面，或当前用户无编辑权限，不自动更新
+        if (currentGraphData.isCustomCover || currentGraphData.canEdit !== true) {
             return;
         }
 
+        window.__graphCoverUpdating = true;
         try {
             const svgString = generateThumbnailSVG(400, 300);
             const pngBlob = await svgToPngBlob(svgString, 400, 300);
@@ -3351,23 +3361,30 @@
             formData.append('file', pngBlob, 'cover.png');
             formData.append('isCustom', 'false'); // 自动生成的缩略图
 
-            await fetch('/api/graph/' + graphId + '/cover', {
+            const response = await fetch('/api/graph/' + graphId + '/cover', {
                 method: 'PUT',
                 credentials: 'include',
                 body: formData
             });
+
+            if (response.ok) {
+                const result = await response.json().catch(function () { return null; });
+                currentGraphData.isCustomCover = false;
+                if (result && result.url) {
+                    currentGraphData.coverImage = result.url;
+                }
+            }
         } catch (e) {
             // 封面更新失败，静默处理
+        } finally {
+            window.__graphCoverUpdating = false;
         }
     };
 
     // 首次加载后自动更新封面（仅当非用户自定义封面时）
     setTimeout(function () {
-        if (window.updateGraphCover && currentGraphData.nodePositions && Object.keys(currentGraphData.nodePositions).length > 0) {
-            // 只有非自定义封面才自动更新
-            if (!currentGraphData.isCustomCover) {
-                window.updateGraphCover();
-            }
+        if (window.updateGraphCover && !currentGraphData.isCustomCover && currentGraphData.canEdit === true) {
+            window.updateGraphCover();
         }
     }, 3000);
 

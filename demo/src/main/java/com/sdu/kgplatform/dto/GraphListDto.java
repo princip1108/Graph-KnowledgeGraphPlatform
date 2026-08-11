@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 图谱列表项 DTO - 用于列表展示的简化信息
@@ -24,6 +25,7 @@ public class GraphListDto {
     private String coverImage;
     private Boolean isCustomCover;
     private LocalDate uploadDate;
+    private LocalDateTime lastModified;
 
     // 上传者信息
     private Integer uploaderId;

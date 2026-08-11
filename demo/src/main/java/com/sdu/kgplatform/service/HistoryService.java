@@ -16,6 +16,8 @@ import java.util.Optional;
 @Service
 public class HistoryService {
 
+    private static final java.time.Duration VIEW_DEDUP_WINDOW = java.time.Duration.ofMinutes(30);
+
     private final SearchHistoryRepository searchHistoryRepository;
     private final BrowsingHistoryRepository browsingHistoryRepository;
 
@@ -96,8 +98,16 @@ public class HistoryService {
      */
     @Transactional
     public void recordBrowsing(Integer userId, ResourceType resourceType, Integer resourceId) {
+        recordBrowsingIfStale(userId, resourceType, resourceId);
+    }
+
+    /**
+     * 记录浏览历史，并返回本次是否应计入浏览量。
+     */
+    @Transactional
+    public boolean recordBrowsingIfStale(Integer userId, ResourceType resourceType, Integer resourceId) {
         if (userId == null || resourceId == null) {
-            return;
+            return true;
         }
 
         Optional<BrowsingHistory> existing;
@@ -111,6 +121,10 @@ public class HistoryService {
         if (existing.isPresent()) {
             // 更新时间
             BrowsingHistory history = existing.get();
+            if (history.getViewTime() != null
+                    && history.getViewTime().isAfter(LocalDateTime.now().minus(VIEW_DEDUP_WINDOW))) {
+                return false;
+            }
             history.setViewTime(LocalDateTime.now());
             browsingHistoryRepository.save(history);
         } else {
@@ -128,6 +142,7 @@ public class HistoryService {
 
             browsingHistoryRepository.save(history);
         }
+        return true;
     }
 
     /**

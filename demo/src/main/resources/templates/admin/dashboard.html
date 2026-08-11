@@ -1,478 +1,216 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
-
+      layout:decorate="~{layout/base}">
 <head>
     <title>管理中心</title>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     </th:block>
 </head>
-
 <body>
-    <div layout:fragment="content">
-        <!-- Main Layout -->
-        <div class="flex min-h-screen">
-            <!-- Sidebar -->
-            <div class="w-64 bg-base-200 border-r academic-border">
-                <div class="p-6">
-                    <h2 class="text-lg font-semibold text-base-content mb-6">管理中心</h2>
-                    <div class="mb-8">
-                        <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">用户管理</h3>
-                        <nav class="space-y-2 sidebar-nav">
-                            <a data-section="graph-batch"
-                                class="nav-item active flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
-                                onclick="showSection('graph-batch')">
-                                <span class="iconify text-primary" data-icon="heroicons:squares-2x2"
-                                    data-width="20"></span>
-                                <span>图谱批量管理</span>
-                            </a>
-                            <a data-section="post-batch"
-                                class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
-                                onclick="showSection('post-batch')">
-                                <span class="iconify text-primary" data-icon="heroicons:document-text"
-                                    data-width="20"></span>
-                                <span>帖子批量管理</span>
-                            </a>
-                        </nav>
-                    </div>
-                    <div id="admin-section" class="mb-8" style="display: none;">
-                        <h3 class="text-sm font-medium text-base-content/70 uppercase tracking-wide mb-3">管理员管理</h3>
-                        <nav class="space-y-2 sidebar-nav">
-                            <a data-section="user-permission"
-                                class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
-                                onclick="showSection('user-permission')">
-                                <span class="iconify text-primary" data-icon="heroicons:user-group"
-                                    data-width="20"></span>
-                                <span>用户权限管理</span>
-                            </a>
-                            <a data-section="forum-management"
-                                class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-base-content cursor-pointer"
-                                onclick="showSection('forum-management')">
-                                <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left-right"
-                                    data-width="20"></span>
-                                <span>论坛管理</span>
-                            </a>
-                        </nav>
-                    </div>
+<div layout:fragment="content">
+    <section class="bg-base-200 border-b border-base-300">
+        <div class="container mx-auto px-4 py-8 max-w-7xl">
+            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold">管理中心</h1>
+                    <p class="text-base-content/60 mt-2">管理自己的图谱、帖子和批量操作。</p>
                 </div>
-            </div>
-
-            <!-- Content Area -->
-            <div class="flex-1 p-8">
-                <!-- Graph Batch Section -->
-                <div id="graph-batch-section" class="content-section active">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-base-content mb-2">图谱批量管理</h1>
-                        <p class="text-base-content/70">批量管理您的知识图谱，包括上线、下线、删除、上传和修改操作</p>
-                    </div>
-                    <div class="flex flex-wrap gap-3 mb-6">
-                        <button class="btn btn-primary gap-2" onclick="openUploadModal()">
-                            <span class="iconify" data-icon="heroicons:arrow-up-tray" data-width="20"></span>上传图谱
-                        </button>
-                        <button class="btn btn-secondary gap-2" onclick="handleBatchOperation('online')">
-                            <span class="iconify" data-icon="heroicons:arrow-up-circle" data-width="20"></span>批量上线
-                        </button>
-                        <button class="btn btn-warning gap-2" onclick="handleBatchOperation('offline')">
-                            <span class="iconify" data-icon="heroicons:arrow-down-circle" data-width="20"></span>批量下线
-                        </button>
-                        <button class="btn btn-error gap-2" onclick="handleBatchOperation('delete')">
-                            <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>批量删除
-                        </button>
-                    </div>
-                    <div class="flex gap-4 mb-6">
-                        <div class="join flex-1">
-                            <input id="searchInput" type="text" placeholder="搜索图谱名称..."
-                                class="input input-bordered join-item flex-1"
-                                onkeypress="if(event.key==='Enter') performSearch()">
-                            <button class="btn join-item btn-primary" onclick="performSearch()">
-                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                            </button>
-                        </div>
-                        <select id="statusFilter" class="select select-bordered w-48"
-                            onchange="filterByStatus(this.value)">
-                            <option value="all">全部状态</option>
-                            <option value="PUBLISHED">已上线</option>
-                            <option value="DRAFT">草稿</option>
-                            <option value="PRIVATE">私有</option>
-                        </select>
-                    </div>
-                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
-                        <table class="table">
-                            <thead>
-                                <tr class="bg-base-200">
-                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="selectAll"
-                                            onchange="toggleSelectAll(this)"></th>
-                                    <th>图谱信息</th>
-                                    <th>状态</th>
-                                    <th>上传日期</th>
-                                    <th>最后修改</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="graphTableBody">
-                                <tr>
-                                    <td colspan="6" class="text-center py-8 text-base-content/60"><span
-                                            class="loading loading-spinner loading-md"></span><span
-                                            class="ml-2">加载中...</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="flex justify-between items-center mt-6">
-                        <div id="paginationInfo" class="text-sm text-base-content/70">加载中...</div>
-                        <div id="paginationButtons" class="join"></div>
-                    </div>
-                </div>
-
-                <!-- Post Batch Section -->
-                <div id="post-batch-section" class="content-section">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-base-content mb-2">帖子批量管理</h1>
-                        <p class="text-base-content/70">管理您发布的帖子</p>
-                    </div>
-                    <div class="flex flex-wrap gap-3 mb-6">
-                        <button class="btn btn-primary gap-2" onclick="goToCreatePost()">
-                            <span class="iconify" data-icon="heroicons:plus" data-width="20"></span>发布帖子
-                        </button>
-                        <button class="btn btn-success gap-2" onclick="handlePostBatchOnline()">
-                            <span class="iconify" data-icon="heroicons:eye" data-width="20"></span>批量上线
-                        </button>
-                        <button class="btn btn-warning gap-2" onclick="handlePostBatchOffline()">
-                            <span class="iconify" data-icon="heroicons:eye-slash" data-width="20"></span>批量下线
-                        </button>
-                        <button class="btn btn-error gap-2" onclick="handlePostBatchDelete()">
-                            <span class="iconify" data-icon="heroicons:trash" data-width="20"></span>批量删除
-                        </button>
-                    </div>
-                    <div class="flex gap-4 mb-6">
-                        <div class="join flex-1">
-                            <input id="postSearchInput" type="text" placeholder="搜索帖子标题..."
-                                class="input input-bordered join-item flex-1"
-                                onkeypress="if(event.key==='Enter') performPostSearch()">
-                            <button class="btn join-item btn-primary" onclick="performPostSearch()">
-                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                            </button>
-                        </div>
-                        <select id="postStatusFilter" class="select select-bordered w-48"
-                            onchange="filterPostsByStatus(this.value)">
-                            <option value="all">全部状态</option>
-                            <option value="已发布">已发布</option>
-                            <option value="草稿">草稿</option>
-                        </select>
-                    </div>
-                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
-                        <table class="table">
-                            <thead>
-                                <tr class="bg-base-200">
-                                    <th><input type="checkbox" class="checkbox checkbox-primary" id="postSelectAll"
-                                            onchange="togglePostSelectAll(this)"></th>
-                                    <th>帖子信息</th>
-                                    <th>状态</th>
-                                    <th>发布日期</th>
-                                    <th>点赞数</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="postTableBody">
-                                <tr>
-                                    <td colspan="6" class="text-center py-8 text-base-content/60">加载中...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- User Permission Section -->
-                <div id="user-permission-section" class="content-section">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-base-content mb-2">用户权限管理</h1>
-                        <p class="text-base-content/70">管理用户角色和权限</p>
-                    </div>
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-base-200 rounded-lg p-4">
-                            <div class="text-xs text-base-content/60">总用户</div>
-                            <div class="text-2xl font-bold" id="statTotal">-</div>
-                        </div>
-                        <div class="bg-base-200 rounded-lg p-4">
-                            <div class="text-xs text-base-content/60">管理员</div>
-                            <div class="text-2xl font-bold text-primary" id="statAdmin">-</div>
-                        </div>
-                        <div class="bg-base-200 rounded-lg p-4">
-                            <div class="text-xs text-base-content/60">普通用户</div>
-                            <div class="text-2xl font-bold text-success" id="statUser">-</div>
-                        </div>
-                        <div class="bg-base-200 rounded-lg p-4">
-                            <div class="text-xs text-base-content/60">已封禁</div>
-                            <div class="text-2xl font-bold text-error" id="statBanned">-</div>
-                        </div>
-                    </div>
-                    <!-- Filter Tabs + Search -->
-                    <div class="flex flex-wrap items-center gap-4 mb-6">
-                        <div class="tabs tabs-boxed">
-                            <a class="tab tab-active" data-filter="ALL" onclick="setUserFilter(this)">全部</a>
-                            <a class="tab" data-filter="ADMIN" onclick="setUserFilter(this)">管理员</a>
-                            <a class="tab" data-filter="USER" onclick="setUserFilter(this)">普通用户</a>
-                            <a class="tab" data-filter="BANNED" onclick="setUserFilter(this)">已封禁</a>
-                        </div>
-                        <div class="join flex-1 min-w-[200px]">
-                            <input id="userSearchInput" type="text" placeholder="搜索用户名或邮箱..."
-                                class="input input-bordered join-item flex-1 input-sm"
-                                onkeypress="if(event.key===&#39;Enter&#39;) searchUserPermissions()">
-                            <button class="btn join-item btn-primary btn-sm" onclick="searchUserPermissions()">
-                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- User Table -->
-                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr class="bg-base-200">
-                                    <th>用户</th>
-                                    <th>邮箱</th>
-                                    <th>角色</th>
-                                    <th>状态</th>
-                                    <th>注册时间</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="userPermTableBody">
-                                <tr><td colspan="6" class="text-center py-8 text-base-content/60">请输入用户名或邮箱进行搜索</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Pagination -->
-                    <div class="flex justify-between items-center mt-4">
-                        <div id="userPermPageInfo" class="text-sm text-base-content/70"></div>
-                        <div id="userPermPageButtons" class="join"></div>
-                    </div>
-                </div>
-
-                <!-- Ban Modal -->
-                <dialog id="banModal" class="modal">
-                    <div class="modal-box max-w-sm">
-                        <h3 class="font-bold text-lg mb-4">封禁用户</h3>
-                        <p class="text-base-content/70 mb-4">选择封禁时长：</p>
-                        <input type="hidden" id="banTargetUserId">
-                        <div class="space-y-2">
-                            <label class="label cursor-pointer justify-start gap-3">
-                                <input type="radio" name="banDuration" value="1" class="radio radio-warning" checked>
-                                <span>1 小时</span>
-                            </label>
-                            <label class="label cursor-pointer justify-start gap-3">
-                                <input type="radio" name="banDuration" value="24" class="radio radio-warning">
-                                <span>1 天</span>
-                            </label>
-                            <label class="label cursor-pointer justify-start gap-3">
-                                <input type="radio" name="banDuration" value="168" class="radio radio-warning">
-                                <span>7 天</span>
-                            </label>
-                            <label class="label cursor-pointer justify-start gap-3">
-                                <input type="radio" name="banDuration" value="720" class="radio radio-warning">
-                                <span>30 天</span>
-                            </label>
-                            <label class="label cursor-pointer justify-start gap-3">
-                                <input type="radio" name="banDuration" value="0" class="radio radio-error">
-                                <span class="text-error">永久封禁</span>
-                            </label>
-                            <label class="label cursor-pointer justify-start gap-3">
-                                <input type="radio" name="banDuration" value="custom" class="radio radio-warning">
-                                <span>自定义时间(小时)</span>
-                            </label>
-                            <label id="customBanContainer" class="label hidden">
-                                <input type="number" id="customBanHours" placeholder="请输入小时数" class="input input-bordered input-sm w-full" min="1">
-                            </label>
-                        </div>
-                        <div class="modal-action">
-                            <button class="btn btn-ghost btn-sm" onclick="document.getElementById(&#39;banModal&#39;).close()">取消</button>
-                            <button class="btn btn-warning btn-sm" onclick="confirmBanUser()">确认封禁</button>
-                        </div>
-                    </div>
-                    <form method="dialog" class="modal-backdrop"><button>close</button></form>
-                </dialog>
-
-                <!-- Forum Management Section -->
-                <div id="forum-management-section" class="content-section">
-                    <div class="mb-6">
-                        <h1 class="text-2xl font-bold text-base-content mb-2">论坛管理</h1>
-                        <p class="text-base-content/70">管理所有帖子，支持置顶/取消置顶操作</p>
-                    </div>
-                    <div class="flex gap-4 mb-6">
-                        <div class="join flex-1">
-                            <input id="forumSearchInput" type="text" placeholder="搜索帖子标题..."
-                                class="input input-bordered join-item flex-1"
-                                onkeypress="if(event.key===&#39;Enter&#39;) performForumSearch()">
-                            <button class="btn join-item btn-primary" onclick="performForumSearch()">
-                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                            </button>
-                        </div>
-                        <select id="forumCategoryFilter" class="select select-bordered w-36"
-                            onchange="filterForumByCategory(this.value)">
-                            <option value="all">全部分类</option>
-                        </select>
-                        <select id="forumPinFilter" class="select select-bordered w-36"
-                            onchange="filterForumByPin(this.value)">
-                            <option value="all">全部置顶状态</option>
-                            <option value="pinned">仅置顶</option>
-                            <option value="unpinned">未置顶</option>
-                        </select>
-                    </div>
-                    <div class="overflow-x-auto bg-base-100 rounded-lg shadow-soft border academic-border">
-                        <table class="table">
-                            <thead>
-                                <tr class="bg-base-200">
-                                    <th>帖子信息</th>
-                                    <th>作者</th>
-                                    <th>状态</th>
-                                    <th>置顶</th>
-                                    <th>发布日期</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="forumTableBody">
-                                <tr>
-                                    <td colspan="6" class="text-center py-8 text-base-content/60">
-                                        <span class="loading loading-spinner loading-md"></span>
-                                        <span class="ml-2">加载中...</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div id="admin-section" class="hidden">
+                    <a th:href="@{/api/admin/users}" class="btn btn-outline btn-sm">系统管理 API</a>
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- Upload Modal -->
-        <dialog id="uploadModal" class="modal">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg mb-4">上传图谱</h3>
-                <form id="uploadForm" class="space-y-4">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">图谱文件 <span
-                                    class="text-error">*</span></span></label>
-                        <input type="file" id="graphFile" accept=".json" class="file-input file-input-bordered w-full"
-                            required>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">图谱名称</span></label>
-                        <input type="text" id="graphName" placeholder="输入图谱名称" class="input input-bordered">
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">描述</span></label>
-                        <textarea id="graphDescription" placeholder="输入图谱描述"
-                            class="textarea textarea-bordered h-24"></textarea>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">状态</span></label>
-                        <select id="graphStatus" class="select select-bordered">
-                            <option value="DRAFT">草稿</option>
-                            <option value="PUBLISHED">发布</option>
-                            <option value="PRIVATE">私有</option>
-                        </select>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">领域分类 <span
-                                    class="text-error">*</span></span></label>
-                        <select id="graphDomain" class="select select-bordered" required>
-                            <option value="">请选择分类...</option>
-                        </select>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">封面图片</span></label>
-                        <input type="file" id="graphCover" accept="image/*"
-                            class="file-input file-input-bordered w-full" onchange="previewCover(this)">
-                        <div id="coverPreview" class="hidden mt-2"><img id="coverPreviewImg" class="cover-preview"
-                                alt="封面预览"></div>
-                    </div>
-                </form>
-                <div class="modal-action">
-                    <button class="btn btn-ghost" onclick="closeUploadModal()">取消</button>
-                    <button class="btn btn-primary" onclick="submitUploadForm()">上传</button>
-                </div>
-            </div>
-            <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
+    <section class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="grid dashboard-grid gap-6">
+            <aside class="dashboard-nav bg-base-100 border border-base-300 rounded-box p-3 shadow-soft">
+                <button class="nav-item active" data-section="graph-batch" type="button" onclick="showSection('graph-batch')">
+                    <span class="iconify" data-icon="heroicons:squares-2x2" data-width="18"></span>
+                    图谱管理
+                </button>
+                <button class="nav-item" data-section="post-batch" type="button" onclick="showSection('post-batch')">
+                    <span class="iconify" data-icon="heroicons:document-text" data-width="18"></span>
+                    帖子管理
+                </button>
+            </aside>
 
-        <!-- Edit Post Modal -->
-        <dialog id="editPostModal" class="modal">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg mb-4">编辑帖子</h3>
-                <form id="editPostForm" class="space-y-4">
-                    <input type="hidden" id="editPostId">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">帖子标题 <span
-                                    class="text-error">*</span></span></label>
-                        <input type="text" id="editPostTitle" class="input input-bordered" required>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">摘要</span></label>
-                        <textarea id="editPostAbstract" class="textarea textarea-bordered h-24"></textarea>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">状态</span></label>
-                        <select id="editPostStatus" class="select select-bordered">
-                            <option value="草稿">草稿</option>
-                            <option value="已发布">已发布</option>
-                        </select>
-                    </div>
-                </form>
-                <div class="modal-action">
-                    <button class="btn btn-ghost" onclick="closeEditPostModal()">取消</button>
-                    <button class="btn btn-primary" onclick="submitEditPost()">保存</button>
-                </div>
-            </div>
-            <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
-
-        <!-- Edit Modal -->
-        <dialog id="editModal" class="modal">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg mb-4">编辑图谱</h3>
-                <form id="editForm" class="space-y-4">
-                    <input type="hidden" id="editGraphId">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">图谱名称 <span
-                                    class="text-error">*</span></span></label>
-                        <input type="text" id="editGraphName" class="input input-bordered" required>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">描述</span></label>
-                        <textarea id="editGraphDescription" class="textarea textarea-bordered h-24"></textarea>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">状态</span></label>
-                        <select id="editGraphStatus" class="select select-bordered">
-                            <option value="DRAFT">草稿</option>
-                            <option value="PUBLISHED">已发布</option>
-                            <option value="PRIVATE">私有</option>
-                        </select>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">封面图片</span></label>
-                        <div id="editCoverPreview" class="mb-2">
-                            <img id="editCoverPreviewImg" class="w-full max-w-xs h-32 object-cover rounded-lg border"
-                                alt="当前封面">
+            <main class="space-y-6 min-w-0">
+                <section id="graph-batch-section" class="content-section active">
+                    <div class="bg-base-100 border border-base-300 rounded-box shadow-soft">
+                        <div class="p-4 border-b border-base-300 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                            <div>
+                                <h2 class="text-xl font-semibold">图谱管理</h2>
+                                <p id="paginationInfo" class="text-sm text-base-content/60 mt-1">加载中...</p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <div class="join">
+                                    <input id="searchInput" class="input input-bordered input-sm join-item" type="text" placeholder="搜索图谱名称">
+                                    <button class="btn btn-primary btn-sm join-item" type="button" onclick="performSearch()">搜索</button>
+                                </div>
+                                <select class="select select-bordered select-sm" onchange="filterByStatus(this.value)">
+                                    <option value="all">全部状态</option>
+                                    <option value="PUBLISHED">已上线</option>
+                                    <option value="DRAFT">草稿</option>
+                                    <option value="PRIVATE">私有</option>
+                                </select>
+                                <select id="graphDomainFilter" class="select select-bordered select-sm" onchange="filterGraphDomain()">
+                                    <option value="all">全部领域</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline" type="button" onclick="openUploadModal()">上传图谱</button>
+                            </div>
                         </div>
-                        <input type="file" id="editGraphCover" accept="image/*"
-                            class="file-input file-input-bordered w-full" onchange="previewEditCover(this)">
-                        <p class="text-xs text-base-content/60 mt-1">上传新封面将覆盖当前封面，且不会被自动缩略图替换</p>
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra">
+                                <thead>
+                                <tr>
+                                    <th><input id="selectAll" type="checkbox" class="checkbox checkbox-primary" onchange="toggleSelectAll(this)"></th>
+                                    <th>图谱</th>
+                                    <th>状态</th>
+                                    <th>上传时间</th>
+                                    <th>更新时间</th>
+                                    <th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody id="graphTableBody">
+                                <tr><td colspan="6" class="text-center py-8 text-base-content/60">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-4 border-t border-base-300 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div class="flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-success" type="button" onclick="handleBatchOperation('online')">批量上线</button>
+                                <button class="btn btn-sm btn-warning" type="button" onclick="handleBatchOperation('offline')">批量下线</button>
+                                <button class="btn btn-sm btn-error" type="button" onclick="handleBatchOperation('delete')">批量删除</button>
+                            </div>
+                            <div id="paginationButtons" class="join"></div>
+                        </div>
                     </div>
-                </form>
-                <div class="modal-action">
-                    <button class="btn btn-ghost" onclick="closeEditModal()">取消</button>
-                    <button class="btn btn-primary" onclick="submitEditForm()">保存</button>
-                </div>
+                </section>
+
+                <section id="post-batch-section" class="content-section">
+                    <div class="bg-base-100 border border-base-300 rounded-box shadow-soft">
+                        <div class="p-4 border-b border-base-300 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                            <div>
+                                <h2 class="text-xl font-semibold">帖子管理</h2>
+                                <p id="postPaginationInfo" class="text-sm text-base-content/60 mt-1">加载中...</p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <div class="join">
+                                    <input id="postSearchInput" class="input input-bordered input-sm join-item" type="text" placeholder="搜索帖子标题">
+                                    <button class="btn btn-primary btn-sm join-item" type="button" onclick="performPostSearch()">搜索</button>
+                                </div>
+                                <select class="select select-bordered select-sm" onchange="filterPostsByStatus(this.value)">
+                                    <option value="all">全部状态</option>
+                                    <option value="已发布">已发布</option>
+                                    <option value="草稿">草稿</option>
+                                    <option value="已下架">已下架</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline" type="button" onclick="goToCreatePost()">发帖</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra">
+                                <thead>
+                                <tr>
+                                    <th><input id="postSelectAll" type="checkbox" class="checkbox checkbox-primary" onchange="togglePostSelectAll(this)"></th>
+                                    <th>帖子</th>
+                                    <th>状态</th>
+                                    <th>发布时间</th>
+                                    <th>点赞</th>
+                                    <th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody id="postTableBody">
+                                <tr><td colspan="6" class="text-center py-8 text-base-content/60">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-4 border-t border-base-300 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div class="flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-success" type="button" onclick="handlePostBatchOnline()">批量上线</button>
+                                <button class="btn btn-sm btn-warning" type="button" onclick="handlePostBatchOffline()">批量下线</button>
+                                <button class="btn btn-sm btn-error" type="button" onclick="handlePostBatchDelete()">批量删除</button>
+                            </div>
+                            <div id="postPaginationButtons" class="join"></div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </section>
+
+    <dialog id="editModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">编辑图谱</h3>
+            <input id="editGraphId" type="hidden">
+            <div class="space-y-3 mt-4">
+                <input id="editGraphName" class="input input-bordered w-full" placeholder="图谱名称">
+                <textarea id="editGraphDescription" class="textarea textarea-bordered w-full" placeholder="图谱描述"></textarea>
+                <select id="editGraphStatus" class="select select-bordered w-full">
+                    <option value="DRAFT">草稿</option>
+                    <option value="PUBLISHED">已上线</option>
+                    <option value="PRIVATE">私有</option>
+                </select>
             </div>
-            <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
-    </div>
+            <div class="modal-action">
+                <button class="btn btn-ghost" type="button" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" type="button" onclick="submitEditForm()">保存</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="uploadModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">上传图谱</h3>
+            <form id="uploadForm" class="space-y-3 mt-4">
+                <input id="graphFile" type="file" class="file-input file-input-bordered w-full" accept=".json,application/json">
+                <input id="graphName" class="input input-bordered w-full" placeholder="图谱名称">
+                <textarea id="graphDescription" class="textarea textarea-bordered w-full" placeholder="图谱描述"></textarea>
+                <select id="graphDomain" class="select select-bordered w-full">
+                    <option value="other">其他领域</option>
+                </select>
+                <select id="graphStatus" class="select select-bordered w-full">
+                    <option value="DRAFT">草稿</option>
+                    <option value="PUBLISHED">已上线</option>
+                </select>
+                <input id="graphCover" type="file" class="file-input file-input-bordered w-full" accept="image/*" onchange="previewCover(this)">
+                <div id="coverPreview" class="hidden">
+                    <img id="coverPreviewImg" class="rounded-box border border-base-300 max-h-40 object-cover" alt="封面预览">
+                </div>
+            </form>
+            <div class="modal-action">
+                <button class="btn btn-ghost" type="button" onclick="closeUploadModal()">取消</button>
+                <button class="btn btn-primary" type="button" onclick="submitUploadForm()">上传</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="editPostModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">编辑帖子</h3>
+            <input id="editPostId" type="hidden">
+            <input id="editPostContent" type="hidden">
+            <div class="space-y-3 mt-4">
+                <input id="editPostTitle" class="input input-bordered w-full" placeholder="帖子标题">
+                <textarea id="editPostAbstract" class="textarea textarea-bordered w-full" placeholder="帖子摘要"></textarea>
+                <select id="editPostStatus" class="select select-bordered w-full">
+                    <option value="草稿">草稿</option>
+                    <option value="已发布">已发布</option>
+                    <option value="已下架">已下架</option>
+                </select>
+            </div>
+            <div class="modal-action">
+                <button class="btn btn-ghost" type="button" onclick="closeEditPostModal()">取消</button>
+                <button class="btn btn-primary" type="button" onclick="submitEditPost()">保存</button>
+            </div>
+        </div>
+    </dialog>
 
     <th:block layout:fragment="js">
         <script th:src="@{/js/dashboard.js}"></script>
     </th:block>
+</div>
 </body>
-
 </html>

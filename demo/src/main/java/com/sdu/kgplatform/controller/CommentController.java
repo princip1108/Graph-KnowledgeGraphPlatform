@@ -1,139 +1,51 @@
 package com.sdu.kgplatform.controller;
 
-import com.sdu.kgplatform.common.SecurityUtils;
-import com.sdu.kgplatform.entity.Comment;
-import com.sdu.kgplatform.entity.User;
-import com.sdu.kgplatform.repository.UserRepository;
+import com.sdu.kgplatform.security.CustomOAuth2User;
+import com.sdu.kgplatform.security.CustomUserDetails;
 import com.sdu.kgplatform.service.CommentService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-/**
- * 评论 Controller
- */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/comments")
 public class CommentController {
 
     private final CommentService commentService;
-    private final UserRepository userRepository;
 
-    public CommentController(CommentService commentService, UserRepository userRepository) {
+    public CommentController(CommentService commentService) {
         this.commentService = commentService;
-        this.userRepository = userRepository;
     }
 
-    private User getCurrentUser() {
-        return SecurityUtils.getCurrentUser(userRepository);
-    }
-
-    /**
-     * 获取帖子的评论列表
-     * GET /api/posts/{postId}/comments
-     */
-    @GetMapping("/posts/{postId}/comments")
-    public ResponseEntity<Map<String, Object>> getComments(@PathVariable Integer postId) {
-        Map<String, Object> response = new HashMap<>();
-
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Integer commentId) {
+        Integer userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
         try {
-            List<Map<String, Object>> comments = commentService.getCommentsByPostId(postId);
-            long totalCount = commentService.countByPostId(postId);
-
-            response.put("success", true);
-            response.put("comments", comments);
-            response.put("totalCount", totalCount);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            commentService.deleteComment(commentId, userId);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 
-    /**
-     * 发表评论
-     * POST /api/posts/{postId}/comments
-     */
-    @PostMapping("/posts/{postId}/comments")
-    public ResponseEntity<Map<String, Object>> createComment(
-            @PathVariable Integer postId,
-            @RequestBody Map<String, Object> request) {
-
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            String text = (String) request.get("text");
-            Integer parentCommentId = null;
-            if (request.get("parentCommentId") != null) {
-                parentCommentId = (Integer) request.get("parentCommentId");
-            }
-
-            if (text == null || text.trim().isEmpty()) {
-                response.put("success", false);
-                response.put("error", "评论内容不能为空");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            Comment comment = commentService.createComment(
-                    postId,
-                    user.getUserId(),
-                    text.trim(),
-                    parentCommentId
-            );
-
-            response.put("success", true);
-            response.put("comment", comment);
-            response.put("message", "评论成功");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+    private Integer getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
         }
-    }
-
-    /**
-     * 删除评论
-     * DELETE /api/comments/{commentId}
-     */
-    @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<Map<String, Object>> deleteComment(
-            @PathVariable Integer commentId) {
-
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            User user = getCurrentUser();
-            if (user == null) {
-                response.put("success", false);
-                response.put("error", "请先登录");
-                return ResponseEntity.status(401).body(response);
-            }
-
-            commentService.deleteComment(commentId, user.getUserId());
-
-            response.put("success", true);
-            response.put("message", "删除成功");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(403).body(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails userDetails) {
+            return userDetails.getUserId();
         }
+        if (principal instanceof CustomOAuth2User oauth2User) {
+            return oauth2User.getUserId();
+        }
+        return null;
     }
 }

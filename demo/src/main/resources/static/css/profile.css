@@ -4,8 +4,40 @@
  */
 
 /* Content section animation */
+.profile-layout {
+    grid-template-columns: 1fr;
+}
+
+.profile-nav {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-field);
+    text-align: left;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.profile-nav:hover,
+.profile-nav.active {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+}
+
 .content-section {
+    display: none;
     animation: section-fade-in 0.3s ease-in-out;
+}
+
+.content-section.active {
+    display: block;
+}
+
+@media (min-width: 1024px) {
+    .profile-layout {
+        grid-template-columns: 260px minmax(0, 1fr);
+    }
 }
 
 @keyframes section-fade-in {
@@ -58,6 +90,10 @@
     border-color: var(--color-primary);
     transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(30, 58, 138, 0.15);
+}
+
+.profile-deactivated-state {
+    min-height: 60vh;
 }
 
 /* History item */

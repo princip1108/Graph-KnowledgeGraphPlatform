@@ -5,11 +5,14 @@ import com.sdu.kgplatform.entity.KnowledgeGraph;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -40,6 +43,9 @@ public interface KnowledgeGraphRepository
         Page<KnowledgeGraph> findByStatus(GraphStatus status, Pageable pageable);
 
         Page<KnowledgeGraph> findByStatusAndCategoryId(GraphStatus status, Integer categoryId, Pageable pageable);
+
+        @Query("SELECT g.graphId FROM KnowledgeGraph g")
+        List<Integer> findAllGraphIds();
 
         /**
          * 根据名称模糊查询
@@ -115,4 +121,40 @@ public interface KnowledgeGraphRepository
          */
         @Query("SELECT g FROM KnowledgeGraph g WHERE g.status = 'PUBLISHED' AND g.domain = :domain ORDER BY g.hotScore DESC")
         Page<KnowledgeGraph> findByHotScoreAndDomain(@Param("domain") String domain, Pageable pageable);
+
+        Page<KnowledgeGraph> findByStatusOrderByGraphIdAsc(GraphStatus status, Pageable pageable);
+
+        @Transactional
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query(value = """
+                        UPDATE knowledge_graph
+                        SET hot_score = (
+                                COALESCE(view_count, 0)
+                                + COALESCE(collect_count, 0) * 5
+                                + COALESCE(download_count, 0) * 3
+                                + 1
+                        ) / POW(
+                                GREATEST(
+                                        TIMESTAMPDIFF(DAY, COALESCE(upload_date, CURRENT_DATE), CURRENT_TIMESTAMP),
+                                        0
+                                ) + 2,
+                                1.5
+                        )
+                        WHERE status = 'PUBLISHED'
+                        """, nativeQuery = true)
+        int refreshPublishedHotScores();
+
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("UPDATE KnowledgeGraph g SET g.viewCount = COALESCE(g.viewCount, 0) + 1 WHERE g.graphId = :graphId")
+        int incrementViewCount(@Param("graphId") Integer graphId);
+
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("UPDATE KnowledgeGraph g SET g.downloadCount = COALESCE(g.downloadCount, 0) + 1 WHERE g.graphId = :graphId")
+        int incrementDownloadCount(@Param("graphId") Integer graphId);
+
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("UPDATE KnowledgeGraph g SET g.collectCount = :collectCount, g.lastModified = :lastModified WHERE g.graphId = :graphId")
+        int updateCollectCount(@Param("graphId") Integer graphId,
+                        @Param("collectCount") int collectCount,
+                        @Param("lastModified") LocalDateTime lastModified);
 }

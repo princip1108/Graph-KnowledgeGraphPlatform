@@ -11,6 +11,45 @@
     let currentSearchType = 'graph';
     let currentBrowseType = 'graph';
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (ch) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[ch];
+        });
+    }
+
+    function escapeJsString(value) {
+        return String(value ?? '')
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, '\\r')
+            .replace(/\n/g, '\\n')
+            .replace(/</g, '\\x3C')
+            .replace(/>/g, '\\x3E');
+    }
+
+    function safeInteger(value) {
+        const number = Number(value);
+        return Number.isInteger(number) && number >= 0 ? number : 0;
+    }
+
+    function safeImageUrl(value) {
+        const url = String(value ?? '').trim();
+        if (!url) return '';
+        if (url.startsWith('/')) return url;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         const urlParams = new URLSearchParams(window.location.search);
         const section = urlParams.get('section');
@@ -64,35 +103,43 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.conversations && data.conversations.length > 0) {
-                    container.innerHTML = data.conversations.map(conv => `
-                        <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="openMessage(${conv.otherUserId}, '${conv.otherUserName}')">
+                    container.innerHTML = data.conversations.map(conv => {
+                        const otherUserId = safeInteger(conv.otherUserId);
+                        const otherUserName = conv.otherUserName || '聊天';
+                        const displayName = escapeHtml(otherUserName);
+                        const jsName = escapeJsString(otherUserName);
+                        const unreadCount = safeInteger(conv.unreadCount);
+                        const lastMessageId = safeInteger(conv.lastMessageId);
+
+                        return `
+                        <div class="flex items-start gap-4 p-4 bg-base-200 rounded-lg hover-lift cursor-pointer" onclick="openMessage(${otherUserId}, '${jsName}')">
                             <div class="avatar placeholder">
                                 <div class="w-12 h-12 rounded-full bg-neutral-focus text-neutral-content">
-                                    <span class="text-xl">${(conv.otherUserName || '?').substring(0, 1)}</span>
+                                    <span class="text-xl">${escapeHtml(otherUserName.substring(0, 1) || '?')}</span>
                                 </div>
                             </div>
                             <div class="flex-1">
                                 <div class="flex justify-between items-start mb-1">
-                                    <h4 class="font-semibold">${conv.otherUserName}</h4>
+                                    <h4 class="font-semibold">${displayName}</h4>
                                     <div class="flex items-center gap-2">
-                                        ${conv.unreadCount > 0 ? `<span class="badge badge-error badge-sm">${conv.unreadCount}</span>` : ''}
+                                        ${unreadCount > 0 ? `<span class="badge badge-error badge-sm">${unreadCount}</span>` : ''}
                                         <span class="text-xs text-base-content/60">${new Date(conv.lastMessageTime).toLocaleString()}</span>
                                     </div>
                                 </div>
-                                <p class="text-sm text-base-content/70 line-clamp-1 mb-2">${conv.lastMessage || ''}</p>
+                                <p class="text-sm text-base-content/70 line-clamp-1 mb-2">${escapeHtml(conv.lastMessage || '')}</p>
                                 <div class="flex gap-2">
                                     ${conv.otherUserName === '已注销用户'
                                         ? `<span class="badge badge-ghost badge-sm">已注销</span>`
-                                        : `<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage(${conv.otherUserId}, '${conv.otherUserName}')">
+                                        : `<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation(); replyMessage(${otherUserId}, '${jsName}')">
                                         <span class="iconify" data-icon="heroicons:arrow-uturn-left" data-width="14"></span>回复
                                     </button>`}
-                                    <button class="btn btn-ghost btn-xs text-error" onclick="event.stopPropagation(); deleteConversationMessage(${conv.lastMessageId})">
+                                    <button class="btn btn-ghost btn-xs text-error" onclick="event.stopPropagation(); deleteConversationMessage(${lastMessageId})">
                                         <span class="iconify" data-icon="heroicons:trash" data-width="14"></span>删除
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else {
                     container.innerHTML = '<div class="text-center py-8 text-base-content/70">暂无私信</div>';
                 }
@@ -140,10 +187,10 @@
             return `
                 <div class="chat ${isOther ? 'chat-start' : 'chat-end'}">
                     <div class="chat-header text-xs opacity-50 mb-1">
-                        ${new Date(msg.sendTime).toLocaleTimeString()}
+                        ${escapeHtml(new Date(msg.sendTime).toLocaleTimeString())}
                     </div>
                     <div class="chat-bubble ${isOther ? 'chat-bubble-secondary' : 'chat-bubble-primary'}">
-                        ${msg.messageText}
+                        ${escapeHtml(msg.messageText || '')}
                     </div>
                 </div>
             `;
@@ -170,7 +217,7 @@
                     div.innerHTML = `
                 <div class="chat chat-end">
                     <div class="chat-header text-xs opacity-50 mb-1">刚刚</div>
-                    <div class="chat-bubble chat-bubble-primary">${content}</div>
+                    <div class="chat-bubble chat-bubble-primary">${escapeHtml(content)}</div>
                 </div>`;
                     container.appendChild(div.firstElementChild);
                     scrollToBottom();
@@ -223,7 +270,7 @@
                     if (headerTitle) headerTitle.textContent = '已注销用户';
                     var mainContent = document.querySelector('.flex-1.p-6') || document.querySelector('.flex-1');
                     if (mainContent) {
-                        mainContent.innerHTML = '<div class="flex items-center justify-center min-h-[60vh]">'
+                        mainContent.innerHTML = '<div class="flex items-center justify-center profile-deactivated-state">'
                             + '<div class="text-center">'
                             + '<div class="text-6xl mb-4 opacity-30">👤</div>'
                             + '<h2 class="text-xl font-bold mb-2">该用户已注销</h2>'
@@ -297,9 +344,10 @@
         if (el('sidebar-username')) el('sidebar-username').textContent = user.userName || '用户';
         if (el('sidebar-email')) el('sidebar-email').textContent = user.email || '';
 
-        if (user.avatar && el('sidebar-avatar-img')) {
+        const avatarUrl = safeImageUrl(user.avatar);
+        if (avatarUrl && el('sidebar-avatar-img')) {
             el('sidebar-avatar-text')?.classList.add('hidden');
-            el('sidebar-avatar-img').src = user.avatar;
+            el('sidebar-avatar-img').src = avatarUrl;
             el('sidebar-avatar-img').classList.remove('hidden');
         } else if (el('sidebar-avatar-text')) {
             el('sidebar-avatar-text').textContent = (user.userName || '用').substring(0, 1);
@@ -308,9 +356,9 @@
         const fields = { 'form-username': user.userName, 'form-email': user.email, 'form-phone': user.phone, 'form-gender': user.gender, 'form-birthday': user.birthday, 'form-institution': user.institution, 'form-bio': user.bio };
         Object.entries(fields).forEach(([id, val]) => { if (el(id)) el(id).value = val || ''; });
 
-        if (user.avatar && el('form-avatar-img')) {
+        if (avatarUrl && el('form-avatar-img')) {
             el('form-avatar-text')?.classList.add('hidden');
-            el('form-avatar-img').src = user.avatar;
+            el('form-avatar-img').src = avatarUrl;
             el('form-avatar-img').classList.remove('hidden');
         } else if (el('form-avatar-text')) {
             el('form-avatar-text').textContent = (user.userName || '用').substring(0, 1);
@@ -376,25 +424,29 @@
             .then(data => {
                 const history = data.content || [];
                 if (history.length > 0) {
-                    container.innerHTML = history.map(item => `
+                    container.innerHTML = history.map(item => {
+                        const queryText = item.queryText || '';
+                        const jsQueryText = escapeJsString(queryText);
+
+                        return `
                         <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
                             <div class="flex items-center gap-3">
                                 <span class="iconify text-base-content/70" data-icon="heroicons:magnifying-glass" data-width="20"></span>
                                 <div>
-                                    <p class="font-medium">${item.queryText}</p>
+                                    <p class="font-medium">${escapeHtml(queryText)}</p>
                                     <p class="text-sm text-base-content/70">${item.searchTime ? new Date(item.searchTime).toLocaleString() : ''}</p>
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <button class="btn btn-ghost btn-sm" onclick="searchAgain('${item.queryText}', '${type}')">
+                                <button class="btn btn-ghost btn-sm" onclick="searchAgain('${jsQueryText}', '${type}')">
                                     <span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span>再次搜索
                                 </button>
-                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteSearchItem('${item.queryText}', '${type}')">
+                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteSearchItem('${jsQueryText}', '${type}')">
                                     <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
                                 </button>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else {
                     container.innerHTML = '<div class="text-center py-8 text-base-content/70">暂无搜索历史</div>';
                 }
@@ -480,16 +532,17 @@
                 const history = data.content || [];
                 if (history.length > 0) {
                     container.innerHTML = history.map(item => {
-                        const resourceId = item.resourceId;
+                        const resourceId = safeInteger(item.resourceId);
                         const resourceName = item.resourceName || (type === 'graph' ? '未知图谱' : '未知帖子');
                         const viewUrl = type === 'graph' ? `/graph/graph_detail.html?id=${resourceId}` : `/community/post_detail.html?id=${resourceId}`;
+                        const historyId = safeInteger(item.id);
 
                         return `
                         <div data-repeatable="true" class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift">
                             <div class="flex items-center gap-3">
                                 <span class="iconify text-base-content/70" data-icon="${type === 'graph' ? 'heroicons:squares-2x2' : 'heroicons:document-text'}" data-width="20"></span>
                                 <div>
-                                    <p class="font-medium">${resourceName}</p>
+                                    <p class="font-medium">${escapeHtml(resourceName)}</p>
                                     <p class="text-sm text-base-content/70">${item.viewTime ? new Date(item.viewTime).toLocaleString() : ''}</p>
                                 </div>
                             </div>
@@ -497,7 +550,7 @@
                                 <a href="${viewUrl}" class="btn btn-ghost btn-sm">
                                     <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>查看详情
                                 </a>
-                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteHistoryItem('${type}', ${item.id})">
+                                <button class="btn btn-ghost btn-sm text-error" onclick="deleteHistoryItem('${type}', ${historyId})">
                                     <span class="iconify" data-icon="heroicons:x-mark" data-width="16"></span>
                                 </button>
                             </div>
@@ -561,25 +614,28 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.favorites && data.favorites.length > 0) {
-                    container.innerHTML = data.favorites.map(item => `
+                    container.innerHTML = data.favorites.map(item => {
+                        const graphId = safeInteger(item.graphId);
+
+                        return `
                         <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift group">
                             <div class="flex items-center gap-3">
                                 <span class="iconify text-base-content/70" data-icon="heroicons:squares-2x2" data-width="20"></span>
                                 <div>
-                                    <p class="font-medium">${item.name || '未命名图谱'}</p>
+                                    <p class="font-medium">${escapeHtml(item.name || '未命名图谱')}</p>
                                     <p class="text-sm text-base-content/70">${item.uploadDate ? new Date(item.uploadDate).toLocaleString() : ''}</p>
                                 </div>
                             </div>
                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <a href="/graph/graph_detail.html?id=${item.graphId}" class="btn btn-ghost btn-sm">
+                                <a href="/graph/graph_detail.html?id=${graphId}" class="btn btn-ghost btn-sm">
                                     <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>查看
                                 </a>
-                                <button class="btn btn-ghost btn-sm text-error" onclick="unfavoriteGraph(${item.graphId})">
+                                <button class="btn btn-ghost btn-sm text-error" onclick="unfavoriteGraph(${graphId})">
                                     <span class="iconify" data-icon="heroicons:heart-slash" data-width="16"></span>取消收藏
                                 </button>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else {
                     container.innerHTML = '<div class="text-center py-8 text-base-content/70">暂无收藏的图谱</div>';
                 }
@@ -596,25 +652,28 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.favorites && data.favorites.length > 0) {
-                    container.innerHTML = data.favorites.map(item => `
+                    container.innerHTML = data.favorites.map(item => {
+                        const postId = safeInteger(item.postId);
+
+                        return `
                         <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover-lift group">
                             <div class="flex items-center gap-3">
                                 <span class="iconify text-base-content/70" data-icon="heroicons:document-text" data-width="20"></span>
                                 <div>
-                                    <p class="font-medium">${item.postTitle || '无标题'}</p>
+                                    <p class="font-medium">${escapeHtml(item.postTitle || '无标题')}</p>
                                     <p class="text-sm text-base-content/70">${item.uploadTime ? new Date(item.uploadTime).toLocaleString() : ''}</p>
                                 </div>
                             </div>
                             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <a href="/community/post_detail.html?id=${item.postId}" class="btn btn-ghost btn-sm">
+                                <a href="/community/post_detail.html?id=${postId}" class="btn btn-ghost btn-sm">
                                     <span class="iconify" data-icon="heroicons:eye" data-width="16"></span>查看
                                 </a>
-                                <button class="btn btn-ghost btn-sm text-error" onclick="unfavoritePost(${item.postId})">
+                                <button class="btn btn-ghost btn-sm text-error" onclick="unfavoritePost(${postId})">
                                     <span class="iconify" data-icon="heroicons:heart-slash" data-width="16"></span>取消收藏
                                 </button>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else {
                     container.innerHTML = '<div class="text-center py-8 text-base-content/70">暂无收藏的帖子</div>';
                 }

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Data
 public class GraphSearchCriteria {
     private String keyword;
+    private String refineKeyword;
     private Integer categoryId;
     private String domain;
 

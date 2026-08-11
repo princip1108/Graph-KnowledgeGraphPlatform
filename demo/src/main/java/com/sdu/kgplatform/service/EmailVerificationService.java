@@ -105,6 +105,14 @@ public class EmailVerificationService {
         return false;
     }
 
+    @Transactional(readOnly = true)
+    public boolean isCodeValid(String email, String code) {
+        return codeRepository
+                .findTopByEmailAndUsedFalseAndExpireAtAfterOrderByCreatedAtDesc(email, LocalDateTime.now())
+                .map(entity -> entity.getCode().equals(code))
+                .orElse(false);
+    }
+
     private String generateCode() {
         Random random = new Random();
         StringBuilder sb = new StringBuilder();

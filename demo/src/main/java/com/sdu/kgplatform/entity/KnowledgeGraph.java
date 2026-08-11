@@ -13,7 +13,15 @@ import java.time.LocalDateTime;
  * 知识图谱实体类 - 对应数据库 knowledge_graph 表
  */
 @Entity
-@Table(name = "knowledge_graph")
+@Table(name = "knowledge_graph", indexes = {
+        @Index(name = "idx_graph_status_hot", columnList = "status, hot_score"),
+        @Index(name = "idx_graph_status_domain_hot", columnList = "status, domain, hot_score"),
+        @Index(name = "idx_graph_status_view", columnList = "status, view_count"),
+        @Index(name = "idx_graph_uploader_modified", columnList = "uploader_id, last_modified"),
+        @Index(name = "idx_graph_uploader_status", columnList = "uploader_id, status"),
+        @Index(name = "idx_graph_category_status", columnList = "category_id, status"),
+        @Index(name = "idx_graph_share_link", columnList = "share_link")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -11,6 +11,50 @@
     // API 基础配置
     const API_BASE = '/api/graph';
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (ch) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[ch];
+        });
+    }
+
+    function escapeJsString(value) {
+        return String(value ?? '')
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, '\\r')
+            .replace(/\n/g, '\\n')
+            .replace(/</g, '\\x3C')
+            .replace(/>/g, '\\x3E');
+    }
+
+    function safeImageUrl(value, fallback) {
+        const url = String(value ?? '').trim();
+        if (!url) return fallback;
+        if (url.startsWith('/')) return url;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function graphPlaceholderDataUrl(text) {
+        const safeText = escapeHtml(String(text || 'Graph').slice(0, 24));
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1e3a8a"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs><rect width="400" height="225" fill="url(#g)"/><circle cx="118" cy="84" r="28" fill="#ffffff" fill-opacity=".18"/><circle cx="206" cy="132" r="36" fill="#ffffff" fill-opacity=".14"/><circle cx="297" cy="78" r="24" fill="#ffffff" fill-opacity=".18"/><path d="M142 96 178 116M239 116 276 88" stroke="#fff" stroke-opacity=".35" stroke-width="4"/><text x="200" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#fff">${safeText}</text></svg>`;
+        return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
+    function unavailableApi(name) {
+        throw new Error(name + ' 接口当前未开放');
+    }
+
     // 通用请求方法
     async function request(url, options = {}) {
         const defaultOptions = {
@@ -79,8 +123,8 @@
          * 更新图谱状态
          */
         updateStatus: async function(graphId, status) {
-            return request(`${API_BASE}/${graphId}/status`, {
-                method: 'PATCH',
+            return request(`${API_BASE}/${graphId}`, {
+                method: 'PUT',
                 body: JSON.stringify({ status })
             });
         },
@@ -133,7 +177,7 @@
          * 获取用户公开图谱
          */
         getUserGraphs: async function(userId, page = 0, size = 10) {
-            return request(`${API_BASE}/user/${userId}?page=${page}&size=${size}`);
+            return unavailableApi('getUserGraphs');
         },
 
         // ==================== 节点操作 ====================
@@ -231,7 +275,7 @@
          * 获取关系类型统计
          */
         getRelationStats: async function(graphId) {
-            return request(`${API_BASE}/${graphId}/relation-stats`);
+            return unavailableApi('getRelationStats');
         },
 
         /**
@@ -247,39 +291,51 @@
     // ==================== UI 辅助函数 ====================
 
     /**
+     * 判断是否已收藏
+     */
+    function isFavorited(graphId) {
+        var id = String(graphId);
+        var favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        return favorites.some(function(item) { return String(item.id) === id; });
+    }
+
+    /**
      * 生成图谱卡片 HTML
+     * 收藏按钮统一使用 toggleFavorite(graphId, graphName, event) 调用方式
      */
     window.APP_GLOBALS.renderGraphCard = function(graph) {
-        const coverImage = graph.coverImage || 'https://placehold.co/400x225/1E3A8A/FFFFFF?text=Graph';
+        const graphTitle = graph.name || graph.graphName || 'Graph';
+        const coverImage = safeImageUrl(graph.coverImage, graphPlaceholderDataUrl(graphTitle));
         const description = graph.description || '暂无描述';
         const nodeCount = graph.nodeCount || 0;
         const viewCount = graph.viewCount || 0;
         const uploadDate = graph.uploadDate || '';
+        const graphName = escapeJsString(graphTitle);
+        const favorited = isFavorited(graph.graphId);
         
         return `
             <div class="card bg-base-100 shadow-soft hover-lift cursor-pointer academic-border" 
                  onclick="window.location.href='/graph/graph_detail.html?id=${graph.graphId}'">
                 <figure class="relative">
-                    <img loading="lazy" src="${coverImage}" alt="${graph.name}" class="w-full h-44 object-cover">
-                    <button class="btn btn-circle btn-sm absolute top-3 right-3 bg-base-100/90 hover:bg-base-100 border-0 shadow-soft" 
-                            onclick="event.stopPropagation(); toggleFavorite('${graph.graphId}', this)">
-                        <span class="iconify text-base-content/60 hover:text-error transition-colors" 
-                              data-icon="heroicons:heart" data-width="16"></span>
+                    <img loading="lazy" src="${escapeHtml(coverImage)}" alt="${escapeHtml(graphTitle)}" class="w-full h-44 object-cover">
+                    <button class="btn btn-circle btn-sm absolute top-3 right-3 bg-base-100/90 hover:bg-base-100 border-0 shadow-soft favorite-btn ${favorited ? 'favorited' : ''}" 
+                            onclick="toggleFavorite(${graph.graphId}, '${graphName}', event)">
+                        <span class="iconify" data-icon="heroicons:heart${favorited ? '-solid' : ''}" data-width="16"></span>
                     </button>
                 </figure>
                 <div class="card-body p-6">
-                    <h3 class="card-title text-lg font-semibold mb-3">${graph.name}</h3>
-                    <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed mb-4">${description}</p>
+                    <h3 class="card-title text-lg font-semibold mb-3">${escapeHtml(graphTitle)}</h3>
+                    <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed mb-4">${escapeHtml(description)}</p>
                     <div class="flex items-center justify-between text-xs text-base-content/60">
                         <span class="flex items-center gap-1">
                             <span class="iconify" data-icon="heroicons:cube" data-width="14"></span>
-                            ${nodeCount} 节点
+                            ${Number.isFinite(Number(nodeCount)) ? Number(nodeCount) : 0} 节点
                         </span>
                         <span class="flex items-center gap-1">
                             <span class="iconify" data-icon="heroicons:eye" data-width="14"></span>
-                            ${viewCount}
+                            ${Number.isFinite(Number(viewCount)) ? Number(viewCount) : 0}
                         </span>
-                        <span>${uploadDate}</span>
+                        <span>${escapeHtml(uploadDate)}</span>
                     </div>
                 </div>
             </div>

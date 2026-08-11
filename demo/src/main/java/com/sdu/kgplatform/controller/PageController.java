@@ -13,12 +13,12 @@ public class PageController {
 
     @GetMapping("/app")
     public String mainFrame() {
-        return "main";
+        return "redirect:/graph/home.html";
     }
 
     @GetMapping("/graph/home_content.html")
     public String homeContent() {
-        return "graph/home_content";
+        return "redirect:/graph/home.html";
     }
 
     // ========== 图谱相关页面 ==========

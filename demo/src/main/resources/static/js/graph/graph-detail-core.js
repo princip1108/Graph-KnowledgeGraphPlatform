@@ -16,6 +16,9 @@
         selectedNode: null,
         nodeCount: 0,
         relationCount: 0,
+        loadedNodeCount: 0,
+        loadedRelationCount: 0,
+        visualizationLimited: false,
         nodePositions: {}
     };
 
@@ -103,8 +106,11 @@
                 description: graphInfo.description || '',
                 nodes: nodesData.nodes || [],
                 edges: relationsData.relations || [],
-                nodeCount: graphInfo.nodeCount || 0,
-                relationCount: graphInfo.relationCount || 0,
+                nodeCount: (vizData.totalCount && vizData.totalCount.nodes) || graphInfo.nodeCount || 0,
+                relationCount: (vizData.totalCount && vizData.totalCount.links) || graphInfo.relationCount || 0,
+                loadedNodeCount: (vizData.count && vizData.count.nodes) || (nodesData.nodes || []).length,
+                loadedRelationCount: (vizData.count && vizData.count.links) || (relationsData.relations || []).length,
+                visualizationLimited: vizData.limited === true,
                 viewCount: graphInfo.viewCount || 0,
                 collectCount: graphInfo.collectCount || 0,
                 shareLink: graphInfo.shareLink || '',

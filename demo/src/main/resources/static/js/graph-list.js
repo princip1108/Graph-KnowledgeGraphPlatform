@@ -3,247 +3,323 @@
  * 图谱列表页面 JavaScript 模块
  */
 
-(function () {
+(function() {
     'use strict';
 
     let currentFilter = 'all';
     let currentView = 'recommended';
-    let allGraphs = [];
+    let searchQuery = '';
+    let currentPage = 0;
+    let totalPages = 0;
+    let totalElements = 0;
+    let activeRequestId = 0;
+    const pageSize = 20;
 
-    document.addEventListener('DOMContentLoaded', function () {
-        handleUrlParams();
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (ch) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[ch];
+        });
+    }
+
+    function escapeJsString(value) {
+        return String(value ?? '')
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, '\\r')
+            .replace(/\n/g, '\\n')
+            .replace(/</g, '\\x3C')
+            .replace(/>/g, '\\x3E');
+    }
+
+    function safeInteger(value) {
+        const number = Number(value);
+        return Number.isInteger(number) && number >= 0 ? number : 0;
+    }
+
+    function safeImageUrl(value, fallback) {
+        const url = String(value ?? '').trim();
+        if (!url) return fallback;
+        if (url.startsWith('/')) return url;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function graphPlaceholderDataUrl(text) {
+        const safeText = escapeHtml(String(text || 'Graph').slice(0, 24));
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#f8fafc"/><stop offset="1" stop-color="#e2e8f0"/></linearGradient></defs><rect width="400" height="225" fill="url(#g)"/><circle cx="126" cy="82" r="28" fill="#64748b" fill-opacity=".18"/><circle cx="210" cy="132" r="36" fill="#64748b" fill-opacity=".14"/><circle cx="294" cy="82" r="24" fill="#64748b" fill-opacity=".18"/><path d="M150 94 176 112M244 116 274 92" stroke="#64748b" stroke-opacity=".35" stroke-width="4"/><text x="200" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#64748b">${safeText}</text></svg>`;
+        return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
         bindEvents();
+        handleUrlParams();
+        loadGraphs(0);
     });
 
     function bindEvents() {
-        // Range sliders - apply filters on change
+        // Range sliders
         const rangeInputs = document.querySelectorAll('input[type="range"]');
         rangeInputs.forEach(input => {
-            input.addEventListener('input', function () {
+            input.addEventListener('input', function() {
                 const valueDisplay = document.getElementById(this.id.replace('Range', 'Value'));
                 if (valueDisplay) {
                     let val = this.value;
-                    if (this.id.includes('Density')) {
-                        val = (parseFloat(val) / 100).toFixed(2);
+                    if (this.id.includes('Density') || this.id.includes('Richness')) {
+                        val = (parseFloat(val) / 10).toFixed(1);
                     }
                     valueDisplay.textContent = val;
                 }
             });
-            // Apply filters after user stops dragging
-            input.addEventListener('change', debounce(applyFilters, 200));
         });
 
         // Search input
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
-            searchInput.addEventListener('keypress', function (e) {
+            searchInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') performSearch();
             });
-            searchInput.addEventListener('input', function () {
+            searchInput.addEventListener('input', function() {
                 if (this.value.length > 0) showSearchSuggestions(this.value);
-                else hideSearchSuggestions();
+                else {
+                    searchQuery = '';
+                    hideSearchSuggestions();
+                    loadGraphs(0);
+                }
             });
         }
 
         // Keyword filter
         const keywordFilter = document.getElementById('keywordFilter');
         if (keywordFilter) {
-            keywordFilter.addEventListener('input', debounce(applyFilters, 300));
+            keywordFilter.addEventListener('input', debounce(function() {
+                loadGraphs(0);
+            }, 300));
         }
     }
-
-    // Global function for slider value update (called from HTML oninput)
-    window.updateSliderValue = function (input, format) {
-        const valueDisplay = document.getElementById(input.id.replace('Range', 'Value'));
-        if (valueDisplay) {
-            let val = input.value;
-            if (format === 'decimal') {
-                val = (parseFloat(val) / 100).toFixed(2);
-            }
-            valueDisplay.textContent = val;
-        }
-    };
 
     function handleUrlParams() {
         const params = new URLSearchParams(window.location.search);
         const q = params.get('q');
-        loadCategories(); // Load categories first
         if (q) {
+            searchQuery = q.trim();
             const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.value = q;
-            loadGraphs(q);
-        } else {
-            loadGraphs();
+            if (searchInput) searchInput.value = searchQuery;
+            saveSearchHistory(searchQuery);
         }
     }
 
-    // Load categories from API
-    async function loadCategories() {
-        try {
-            const res = await fetch('/api/categories');
-            const categories = await res.json();
-            const container = document.getElementById('categoryFilters');
-            if (container && categories.length > 0) {
-                categories.forEach(c => {
-                    const btn = document.createElement('button');
-                    btn.setAttribute('data-filter', c.code);
-                    btn.className = 'btn btn-ghost btn-xs justify-start filter-btn';
-                    btn.onclick = () => filterGraphs(c.code);
-                    btn.innerHTML = `<span class="iconify" data-icon="heroicons:tag" data-width="12"></span>${c.name}`;
-                    container.appendChild(btn);
-                });
-            }
-        } catch (e) {
-            console.error('Failed to load categories:', e);
-        }
-    }
-
-    async function loadGraphs(query) {
+    async function loadGraphs(page = currentPage) {
         const grid = document.getElementById('graphGrid');
         if (!grid) return;
 
+        const requestedPage = Math.max(0, safeInteger(page));
+        const requestId = ++activeRequestId;
+        currentPage = requestedPage;
+        totalPages = 0;
+
         grid.innerHTML = '<div class="col-span-full text-center py-12"><span class="loading loading-spinner loading-lg text-primary"></span><p class="mt-4 text-base-content/60">加载图谱中...</p></div>';
+        const resultCount = document.getElementById('resultCount');
+        if (resultCount) resultCount.textContent = '正在加载图谱...';
+        renderPager();
 
         try {
-            let url;
-            if (query) {
-                // 搜索模式：使用搜索接口
-                let sortBy = 'viewCount';
-                if (currentView === 'latest') sortBy = 'date';
-                else if (currentView === 'popular') sortBy = 'hot';
-                url = '/api/graph/search?page=0&size=20&sortBy=' + sortBy + '&keyword=' + encodeURIComponent(query);
-            } else if (currentView === 'recommended') {
-                // 推荐模式：使用个性化推荐接口
-                url = '/api/graph/recommend?page=0&size=20';
-            } else {
-                // 热门/最新模式
-                let sortBy = 'viewCount';
-                if (currentView === 'latest') sortBy = 'date';
-                else if (currentView === 'popular') sortBy = 'hot';
-                url = '/api/graph/public?page=0&size=20&sortBy=' + sortBy;
+            const data = await fetchPublicGraphPage(requestedPage);
+            if (requestId !== activeRequestId) return;
+
+            currentPage = safeInteger(data.number ?? data.page ?? requestedPage);
+            totalPages = safeInteger(data.totalPages);
+            totalElements = safeInteger(data.totalElements);
+
+            if (totalPages > 0 && currentPage >= totalPages) {
+                loadGraphs(totalPages - 1);
+                return;
             }
 
-            const response = await fetch(url, { credentials: 'include' });
-            const data = await response.json();
-
-            if (data.content && data.content.length > 0) {
-                allGraphs = data.content;
-                renderGraphs(allGraphs);
-
-                if (query) {
-                    document.getElementById('resultCount').textContent = '搜索 "' + query + '" 找到 ' + data.totalElements + ' 个图谱';
-                } else {
-                    document.getElementById('resultCount').textContent = '共找到 ' + data.totalElements + ' 个图谱';
-                }
-            } else {
-                grid.innerHTML = '<div class="col-span-full text-center py-12"><span class="iconify text-base-content/30" data-icon="heroicons:cube-transparent" data-width="48"></span><p class="mt-4 text-base-content/60">暂无图谱</p></div>';
-                document.getElementById('resultCount').textContent = '共找到 0 个图谱';
+            const graphs = Array.isArray(data.content) ? data.content : [];
+            if (graphs.length === 0) {
+                renderEmptyState();
+                renderResultCount(0);
+                renderPager();
+                return;
             }
+
+            renderGraphs(graphs);
+            renderResultCount(graphs.length);
+            renderPager();
         } catch (e) {
-            console.error('加载图谱失败:', e);
+            if (requestId !== activeRequestId) return;
             grid.innerHTML = '<div class="col-span-full text-center py-12"><span class="iconify text-error" data-icon="heroicons:exclamation-circle" data-width="48"></span><p class="mt-4 text-base-content/60">加载失败，请刷新重试</p></div>';
+            document.getElementById('resultCount').textContent = '加载失败';
+            renderPager();
         }
+    }
+
+    async function fetchPublicGraphPage(page) {
+        const params = new URLSearchParams({
+            page: String(page),
+            size: String(pageSize),
+            sortBy: currentView
+        });
+        const domain = getSelectedDomain();
+        const refineKeyword = getRefineKeyword();
+        if (domain) {
+            params.set('domain', domain);
+        }
+        if (searchQuery) {
+            params.set('keyword', searchQuery);
+        }
+        if (refineKeyword) {
+            params.set('refineKeyword', refineKeyword);
+        }
+        const hasKeyword = Boolean(searchQuery || refineKeyword);
+        const endpoint = currentView === 'recommended' && !hasKeyword ? '/api/graph/recommended' : '/api/graph/search';
+        const response = await fetch(endpoint + '?' + params.toString(), {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            throw new Error('加载失败');
+        }
+        return response.json();
+    }
+
+    function getSelectedDomain() {
+        return currentFilter && currentFilter !== 'all' ? currentFilter : '';
+    }
+
+    function getRefineKeyword() {
+        return document.getElementById('keywordFilter')?.value.trim() || '';
+    }
+
+    function hasActiveFilters() {
+        return Boolean(getSelectedDomain() || searchQuery || getRefineKeyword());
+    }
+
+    function renderResultCount(visibleCount) {
+        const resultCount = document.getElementById('resultCount');
+        if (!resultCount) return;
+        if (totalElements === 0) {
+            resultCount.textContent = hasActiveFilters() ? '暂无匹配图谱' : '暂无图谱';
+            return;
+        }
+        const pageText = `显示第 ${currentPage + 1}/${Math.max(totalPages, 1)} 页，当前 ${visibleCount} 个`;
+        resultCount.textContent = hasActiveFilters()
+            ? `${pageText}，筛选到 ${totalElements} 个图谱`
+            : `${pageText}，共 ${totalElements} 个图谱`;
+    }
+
+    function renderPager() {
+        const pager = document.getElementById('graphPager');
+        if (!pager) return;
+
+        if (totalPages <= 1) {
+            pager.innerHTML = '';
+            return;
+        }
+
+        const buttons = [];
+        buttons.push(createPagerButton(currentPage - 1, '上一页', 'heroicons:chevron-left', currentPage === 0));
+
+        const pages = getVisiblePages(currentPage, totalPages);
+        let previous = -1;
+        pages.forEach(page => {
+            if (previous >= 0 && page - previous > 1) {
+                buttons.push('<span class="join-item btn btn-sm btn-disabled graph-pager-ellipsis">...</span>');
+            }
+            buttons.push(createPagerButton(page, String(page + 1), null, false, page === currentPage));
+            previous = page;
+        });
+
+        buttons.push(createPagerButton(currentPage + 1, '下一页', 'heroicons:chevron-right', currentPage >= totalPages - 1));
+        pager.innerHTML = `<div class="join">${buttons.join('')}</div>`;
+    }
+
+    function getVisiblePages(page, pages) {
+        const values = new Set([0, pages - 1, page - 1, page, page + 1]);
+        return Array.from(values)
+            .filter(value => value >= 0 && value < pages)
+            .sort((a, b) => a - b);
+    }
+
+    function createPagerButton(page, label, icon, disabled, active) {
+        const classes = ['join-item', 'btn', 'btn-sm'];
+        if (active) classes.push('btn-primary');
+        if (disabled) classes.push('btn-disabled');
+
+        const content = icon
+            ? `<span class="iconify" data-icon="${icon}" data-width="16"></span><span class="sr-only">${escapeHtml(label)}</span>`
+            : escapeHtml(label);
+
+        return `<button type="button" class="${classes.join(' ')}" ${disabled ? 'disabled' : ''} onclick="goToGraphPage(${page})">${content}</button>`;
     }
 
     function renderGraphs(graphs) {
         const grid = document.getElementById('graphGrid');
         if (!grid) return;
 
-        grid.innerHTML = graphs.map(graph => `
-            <div class="card bg-base-100 shadow-soft graph-card fade-in" onclick="viewGraph(${graph.graphId})">
+        grid.innerHTML = graphs.map(graph => {
+            const graphId = safeInteger(graph.graphId);
+            const graphName = graph.name || graph.graphName || '未命名图谱';
+            const coverFallback = graphPlaceholderDataUrl(graphName);
+            const coverImage = safeImageUrl(graph.coverImage, coverFallback);
+
+            return `
+            <div class="card bg-base-100 shadow-soft graph-card fade-in" onclick="viewGraph(${graphId})">
                 <figure>
-                    <img src="${graph.coverImage || 'https://placehold.co/400x225/eee/999?text=' + encodeURIComponent(graph.name || '图谱')}" alt="${graph.name}" class="graph-card-image">
+                    <img src="${escapeHtml(coverImage)}" alt="${escapeHtml(graphName)}" class="graph-card-image">
                 </figure>
                 <div class="card-body p-4">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="badge badge-primary badge-sm domain-badge">${graph.domain || '未分类'}</span>
-                        <button class="btn btn-ghost btn-xs favorite-btn ${isFavorited(graph.graphId) ? 'favorited' : ''}" onclick="toggleFavorite(${graph.graphId}, '${(graph.name || graph.graphName || '未命名图谱').replace(/'/g, "\\'")}', event)">
-                            <span class="iconify" data-icon="heroicons:heart${isFavorited(graph.graphId) ? '-solid' : ''}" data-width="16"></span>
+                        <span class="badge badge-primary badge-sm domain-badge">${escapeHtml(graph.domain || '未分类')}</span>
+                        <button class="btn btn-ghost btn-xs favorite-btn ${isFavorited(graphId) ? 'favorited' : ''}" onclick="toggleFavorite(${graphId}, '${escapeJsString(graphName)}', event)">
+                            <span class="iconify" data-icon="heroicons:heart${isFavorited(graphId) ? '-solid' : ''}" data-width="16"></span>
                         </button>
                     </div>
-                    <h3 class="card-title text-base font-semibold line-clamp-1">${graph.name || '未命名图谱'}</h3>
-                    <p class="text-sm text-base-content/70 line-clamp-2 mb-3">${graph.description || '暂无描述'}</p>
+                    <h3 class="card-title text-base font-semibold line-clamp-1">${escapeHtml(graphName)}</h3>
+                    <p class="text-sm text-base-content/70 line-clamp-2 mb-3">${escapeHtml(graph.description || '暂无描述')}</p>
                     <div class="provider-info mb-2">
                         <span class="iconify" data-icon="heroicons:user" data-width="14"></span>
-                        <span>${graph.uploaderName || '匿名'}</span>
+                        <span>${escapeHtml(graph.uploaderName || '匿名')}</span>
                     </div>
                     <div class="stats-info">
-                        <span class="flex items-center gap-1" title="节点数">
+                        <span class="flex items-center gap-1">
                             <span class="iconify" data-icon="heroicons:circle" data-width="12"></span>
-                            ${graph.nodeCount || 0}
+                            ${safeInteger(graph.nodeCount)} 节点
                         </span>
-                        <span class="flex items-center gap-1" title="关系数">
-                            <span class="iconify" data-icon="heroicons:arrow-right" data-width="12"></span>
-                            ${graph.relationCount || 0}
-                        </span>
-                        <span class="flex items-center gap-1" title="浏览数">
+                        <span class="flex items-center gap-1">
                             <span class="iconify" data-icon="heroicons:eye" data-width="12"></span>
-                            ${graph.viewCount || 0}
+                            ${safeInteger(graph.viewCount)}
                         </span>
-                        <span class="flex items-center gap-1" title="收藏数">
+                        <span class="flex items-center gap-1">
                             <span class="iconify" data-icon="heroicons:heart" data-width="12"></span>
-                            ${graph.collectCount || 0}
+                            ${safeInteger(graph.collectCount)}
                         </span>
                     </div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     function isFavorited(graphId) {
-        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        return favorites.some(item => String(item.id) === String(graphId));
+        var id = String(graphId);
+        var favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        return favorites.some(function(item) { return String(item.id) === id; });
     }
 
-    function applyFilters() {
-        const keyword = document.getElementById('keywordFilter')?.value.toLowerCase() || '';
-
-        // Get range filter values
-        const minNodes = parseInt(document.getElementById('minNodesRange')?.value || 0);
-        const maxNodes = parseInt(document.getElementById('maxNodesRange')?.value || 1000);
-        const minEdges = parseInt(document.getElementById('minEdgesRange')?.value || 0);
-        const maxEdges = parseInt(document.getElementById('maxEdgesRange')?.value || 2000);
-        const minDensity = parseFloat(document.getElementById('minDensityRange')?.value || 0) / 100;
-        const maxDensity = parseFloat(document.getElementById('maxDensityRange')?.value || 100) / 100;
-        const minViewCount = parseInt(document.getElementById('minViewCountRange')?.value || 0);
-        const maxViewCount = parseInt(document.getElementById('maxViewCountRange')?.value || 30000);
-        const minDownloadCount = parseInt(document.getElementById('minDownloadCountRange')?.value || 0);
-        const maxDownloadCount = parseInt(document.getElementById('maxDownloadCountRange')?.value || 5000);
-
-        const filtered = allGraphs.filter(graph => {
-            // Domain filter
-            if (currentFilter !== 'all' && graph.domain !== currentFilter) return false;
-
-            // Keyword filter
-            if (keyword && !graph.name?.toLowerCase().includes(keyword) && !graph.description?.toLowerCase().includes(keyword)) return false;
-
-            // Node count filter
-            const nodeCount = graph.nodeCount || 0;
-            if (nodeCount < minNodes || nodeCount > maxNodes) return false;
-
-            // Edge/Relation count filter
-            const relationCount = graph.relationCount || 0;
-            if (relationCount < minEdges || relationCount > maxEdges) return false;
-
-            // Density filter (动态计算，与详情页公式一致)
-            const nc = graph.nodeCount || 0;
-            const rc = graph.relationCount || 0;
-            const maxE = nc * (nc - 1) / 2;
-            const density = maxE > 0 ? rc / maxE : 0;
-            if (density < minDensity || density > maxDensity) return false;
-
-            // View count filter
-            const viewCount = graph.viewCount || 0;
-            if (viewCount < minViewCount || viewCount > maxViewCount) return false;
-
-            // Download count filter
-            const downloadCount = graph.downloadCount || 0;
-            if (downloadCount < minDownloadCount || downloadCount > maxDownloadCount) return false;
-
-            return true;
-        });
-        renderGraphs(filtered);
-        document.getElementById('resultCount').textContent = '共找到 ' + filtered.length + ' 个图谱';
+    function renderEmptyState() {
+        const grid = document.getElementById('graphGrid');
+        if (!grid) return;
+        const message = hasActiveFilters() ? '暂无匹配图谱' : '暂无图谱';
+        grid.innerHTML = `<div class="col-span-full text-center py-12"><span class="iconify text-base-content/30" data-icon="heroicons:cube-transparent" data-width="48"></span><p class="mt-4 text-base-content/60">${message}</p></div>`;
     }
 
     function showSearchSuggestions(query) {
@@ -254,7 +330,7 @@
         const filtered = history.filter(h => h.toLowerCase().includes(query.toLowerCase())).slice(0, 5);
 
         if (filtered.length > 0) {
-            suggestions.innerHTML = filtered.map(item => `<div class="suggestion-item" onclick="selectSuggestion('${item}')">${item}</div>`).join('');
+            suggestions.innerHTML = filtered.map(item => `<div class="suggestion-item" onclick="selectSuggestion('${escapeJsString(item)}')">${escapeHtml(item)}</div>`).join('');
             suggestions.classList.remove('hidden');
         } else {
             suggestions.classList.add('hidden');
@@ -268,99 +344,107 @@
 
     function debounce(func, wait) {
         let timeout;
-        return function (...args) {
+        return function(...args) {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
     }
 
     // Global functions
-    window.performSearch = function () {
+    window.performSearch = function() {
         const query = document.getElementById('searchInput')?.value.trim();
-        if (!query) return;
+        searchQuery = query || '';
+        if (!query) {
+            hideSearchSuggestions();
+            loadGraphs(0);
+            return;
+        }
 
-        // Save to backend history
-        fetch('/api/history/search?type=graph&keyword=' + encodeURIComponent(query), { method: 'POST' });
+        saveSearchHistory(query);
 
         hideSearchSuggestions();
-
-        // Use loadGraphs to fetch from backend
-        loadGraphs(query);
+        loadGraphs(0);
     };
 
-    window.selectSuggestion = function (query) {
+    function saveSearchHistory(query) {
+        if (!query) return;
+        let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+        if (!history.includes(query)) {
+            history.unshift(query);
+            history = history.slice(0, 10);
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+        }
+    }
+
+    window.selectSuggestion = function(query) {
         const searchInput = document.getElementById('searchInput');
         if (searchInput) searchInput.value = query;
         performSearch();
     };
 
-    window.filterGraphs = function (filter) {
+    window.filterGraphs = function(filter) {
         currentFilter = filter;
-
+        
         // Update button states
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
         });
 
-        applyFilters();
+        loadGraphs(0);
     };
 
-    window.toggleView = function (view) {
+    window.toggleView = function(view) {
         currentView = view;
-
+        
         // Update button states
         document.querySelectorAll('.view-toggle').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-view') === view);
         });
 
-        loadGraphs();
+        currentPage = 0;
+        loadGraphs(0);
     };
 
-    window.resetFilters = function () {
+    window.resetFilters = function() {
         currentFilter = 'all';
-        document.getElementById('searchInput').value = '';
-        document.getElementById('keywordFilter').value = '';
+        searchQuery = '';
+        const searchInput = document.getElementById('searchInput');
+        const keywordFilter = document.getElementById('keywordFilter');
+        if (searchInput) searchInput.value = '';
+        if (keywordFilter) keywordFilter.value = '';
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-filter') === 'all');
         });
-
-        // Reset range sliders with correct display values
-        const sliderDefaults = {
-            'minNodesRange': { value: 0, display: '0' },
-            'maxNodesRange': { value: 1000, display: '1000' },
-            'minEdgesRange': { value: 0, display: '0' },
-            'maxEdgesRange': { value: 2000, display: '2000' },
-            'minDensityRange': { value: 0, display: '0.00' },
-            'maxDensityRange': { value: 100, display: '1.00' },
-            'minViewCountRange': { value: 0, display: '0' },
-            'maxViewCountRange': { value: 30000, display: '30000' },
-            'minDownloadCountRange': { value: 0, display: '0' },
-            'maxDownloadCountRange': { value: 5000, display: '5000' }
-        };
-
-        Object.keys(sliderDefaults).forEach(id => {
-            const input = document.getElementById(id);
-            const valueDisplay = document.getElementById(id.replace('Range', 'Value'));
-            if (input) input.value = sliderDefaults[id].value;
-            if (valueDisplay) valueDisplay.textContent = sliderDefaults[id].display;
+        
+        // Reset range sliders
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.value = input.id.includes('min') ? input.min : input.max;
+            const valueDisplay = document.getElementById(input.id.replace('Range', 'Value'));
+            if (valueDisplay) valueDisplay.textContent = input.value;
         });
 
-        loadGraphs();
-        showNotification('筛选条件已重置', 'info');
+        loadGraphs(0);
     };
 
-    window.viewGraph = function (graphId) {
+    window.goToGraphPage = function(page) {
+        const nextPage = Number(page);
+        if (!Number.isInteger(nextPage)) return;
+        if (nextPage < 0 || nextPage >= totalPages || nextPage === currentPage) return;
+        loadGraphs(nextPage);
+    };
+
+    window.viewGraph = function(graphId) {
         window.location.href = '/graph/graph_detail.html?id=' + graphId;
     };
 
-    window.toggleFavorite = async function (graphId, graphName, event) {
+    window.toggleFavorite = async function(graphId, graphName, event) {
         event.stopPropagation();
-        if (!requireLogin('收藏')) return;
-
-        const btn = event.target.closest('.favorite-btn');
-        const icon = btn.querySelector('.iconify');
-        const wasFavorited = isFavorited(graphId);
-
+        
+        var id = String(graphId);
+        var btn = event.target.closest('.favorite-btn');
+        var icon = btn.querySelector('.iconify');
+        var wasFavorited = isFavorited(graphId);
+        
         // 立即更新UI
         if (wasFavorited) {
             btn.classList.remove('favorited');
@@ -369,17 +453,17 @@
             btn.classList.add('favorited');
             icon.setAttribute('data-icon', 'heroicons:heart-solid');
         }
-
+        
         // 后台执行API和localStorage操作
         try {
             await fetch('/api/graph/' + graphId + '/favorite', { method: 'POST', credentials: 'include' });
-            let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            var favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
             if (wasFavorited) {
-                favorites = favorites.filter(item => String(item.id) !== String(graphId));
+                favorites = favorites.filter(function(item) { return String(item.id) !== id; });
                 localStorage.setItem('favorites', JSON.stringify(favorites));
                 showNotification('已取消收藏', 'info');
             } else {
-                favorites.push({ id: String(graphId), name: graphName, addedAt: new Date().toISOString() });
+                favorites.push({ id: id, name: graphName, addedAt: new Date().toISOString() });
                 localStorage.setItem('favorites', JSON.stringify(favorites));
                 showNotification('已添加到收藏', 'success');
             }

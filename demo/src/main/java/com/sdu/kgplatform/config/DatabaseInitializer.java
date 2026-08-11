@@ -5,6 +5,7 @@ import org.neo4j.driver.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
  * 在应用启动时自动检查并创建必要的数据库索引和约束
  */
 @Component
+@Profile("!local-no-neo4j")
 public class DatabaseInitializer implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseInitializer.class);
@@ -34,11 +36,12 @@ public class DatabaseInitializer implements CommandLineRunner {
             createIndex(session, "entity_graphid_index", "Entity", "graphId");
             createIndex(session, "entity_name_index", "Entity", "name");
             createIndex(session, "entity_type_index", "Entity", "type");
+            createCompositeIndex(session, "entity_graphid_nodeid_index", "Entity", "graphId", "nodeId");
+            createCompositeIndex(session, "entity_graphid_name_index", "Entity", "graphId", "name");
+            createCompositeIndex(session, "entity_graphid_type_index", "Entity", "graphId", "type");
 
             // 3. 创建关系索引 (Neo4j 4.3+)
-            // 注意：关系索引语法略有不同，且旧版本可能不支持。这里使用 TRY-CATCH 包裹或检查版本
-            // 为了兼容性，这里暂时只打印日志，建议在 Neo4j 5.x 环境下手动开启
-            log.info("提示: 建议在生产环境中为 RELATES_TO 关系的 graphId 属性创建索引");
+            createRelationshipIndex(session, "relates_to_graphid_index", "RELATES_TO", "graphId");
 
         } catch (Exception e) {
             log.error("数据库初始化期间发生错误: ", e);
@@ -71,6 +74,33 @@ public class DatabaseInitializer implements CommandLineRunner {
             log.info("已验证索引: {} (Label: {}, Property: {})", indexName, label, property);
         } catch (Exception e) {
             log.warn("创建索引 {} 失败: {}", indexName, e.getMessage());
+        }
+    }
+
+    private void createCompositeIndex(Session session, String indexName, String label, String... properties) {
+        try {
+            String props = String.join(", ", java.util.Arrays.stream(properties)
+                    .map(property -> "n." + property)
+                    .toArray(String[]::new));
+            String query = String.format(
+                    "CREATE INDEX %s IF NOT EXISTS FOR (n:%s) ON (%s)",
+                    indexName, label, props);
+            session.run(query);
+            log.info("已验证复合索引: {} (Label: {}, Properties: {})", indexName, label, String.join(",", properties));
+        } catch (Exception e) {
+            log.warn("创建复合索引 {} 失败: {}", indexName, e.getMessage());
+        }
+    }
+
+    private void createRelationshipIndex(Session session, String indexName, String relationshipType, String property) {
+        try {
+            String query = String.format(
+                    "CREATE INDEX %s IF NOT EXISTS FOR ()-[r:%s]-() ON (r.%s)",
+                    indexName, relationshipType, property);
+            session.run(query);
+            log.info("已验证关系索引: {} (Type: {}, Property: {})", indexName, relationshipType, property);
+        } catch (Exception e) {
+            log.warn("创建关系索引 {} 失败，可能是 Neo4j 版本不支持关系属性索引: {}", indexName, e.getMessage());
         }
     }
 }

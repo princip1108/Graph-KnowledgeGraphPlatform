@@ -8,11 +8,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         initializeFormValidation();
-        // 根据 URL 参数自动切换到注册 tab
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('tab') === 'register') {
-            switchTab('register');
-        }
     });
 
     // Tab switching
@@ -43,30 +38,29 @@
         const password = document.getElementById('login-password').value;
         
         if (!account || !password) {
-            showNotification('请输入用户名/邮箱/手机号和密码', 'error');
+            showNotification('请输入邮箱/手机号和密码', 'error');
             return;
         }
         
         showNotification('正在登录...', 'info');
+        
         fetch('/api/auth/login', {
             method: 'POST',
-            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({
                 username: account,
                 password: password
-            })
+            }),
+            redirect: 'manual'
         })
         .then(response => {
-            if (response.ok) {
-                return response.json().then(data => {
-                    showNotification('登录成功！', 'success');
-                    setTimeout(() => {
-                        window.location.href = data.redirect || '/graph/home.html';
-                    }, 500);
-                });
+            if (response.ok || response.type === 'opaqueredirect' || response.status === 302 || response.redirected) {
+                showNotification('登录成功！', 'success');
+                setTimeout(() => {
+                    window.location.href = '/graph/home.html';
+                }, 500);
             } else if (response.status === 401) {
                 return response.json().then(data => {
                     showNotification(data.error || '邮箱/手机号或密码错误', 'error');
@@ -87,7 +81,6 @@
         
         const username = document.getElementById('reg-username').value.trim();
         const email = document.getElementById('reg-email').value.trim();
-        const code = document.getElementById('reg-code').value.trim();
         const phone = document.getElementById('reg-phone').value.trim();
         const password = document.getElementById('reg-password').value;
         const confirmPassword = document.getElementById('reg-confirm-password').value;
@@ -97,13 +90,8 @@
             return;
         }
         
-        if (!email) {
-            showNotification('请输入邮箱地址', 'error');
-            return;
-        }
-        
-        if (!code || code.length !== 6) {
-            showNotification('请输入6位邮箱验证码', 'error');
+        if (!email && !phone) {
+            showNotification('邮箱和手机号至少填一个', 'error');
             return;
         }
         
@@ -127,90 +115,47 @@
             body: new URLSearchParams({
                 userName: username,
                 email: email,
-                verificationCode: code,
                 phone: phone,
                 password: password
             })
         })
         .then(response => {
-            return response.json().then(data => {
-                if (response.ok && data.success) {
-                    showNotification('注册成功！', 'success');
-                    setTimeout(() => {
-                        window.location.href = data.redirect || '/graph/home.html';
-                    }, 500);
-                } else {
-                    showNotification(data.error || '注册失败', 'error');
-                }
-            });
-        })
-        .catch(error => {
-            console.error('注册错误:', error);
-            showNotification('注册失败，请稍后重试', 'error');
-        });
-    };
-
-    // 发送邮箱验证码
-    window.sendEmailCode = function() {
-        const emailInput = document.getElementById('reg-email');
-        const btn = document.getElementById('sendCodeBtn');
-        const email = emailInput ? emailInput.value.trim() : '';
-
-        if (!email) {
-            showNotification('请先输入邮箱地址', 'warning');
-            return;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            showNotification('请输入正确的邮箱地址', 'error');
-            return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = '发送中...';
-
-        fetch('/api/auth/send-code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                showNotification(data.error, 'error');
-                btn.disabled = false;
-                btn.textContent = '发送验证码';
+            if (response.ok || response.redirected) {
+                showNotification('注册成功！', 'success');
+                setTimeout(() => {
+                    window.location.href = '/graph/home.html';
+                }, 500);
             } else {
-                showNotification('验证码已发送到您的邮箱', 'success');
-                // 60秒倒计时
-                let countdown = 60;
-                btn.textContent = countdown + '秒后重发';
-                const timer = setInterval(() => {
-                    countdown--;
-                    btn.textContent = countdown + '秒后重发';
-                    if (countdown <= 0) {
-                        clearInterval(timer);
-                        btn.textContent = '发送验证码';
-                        btn.disabled = false;
-                    }
-                }, 1000);
+                return response.text().then(text => {
+                    throw new Error(text || '注册失败');
+                });
             }
         })
         .catch(error => {
-            console.error('发送验证码失败:', error);
-            showNotification('发送失败，请稍后重试', 'error');
-            btn.disabled = false;
-            btn.textContent = '发送验证码';
+            console.error('注册错误:', error);
+            showNotification(error.message || '注册失败，请稍后重试', 'error');
         });
     };
 
-    // Social login handler - GitHub OAuth2
+    // Social login handler
     window.handleSocialLogin = function(provider) {
-        if (provider === 'github') {
-            showNotification('正在跳转到 GitHub 登录...', 'info');
-            window.location.href = '/oauth2/authorization/github';
-        }
+        showNotification(`正在跳转到${provider === 'wechat' ? '微信' : 'GitHub'}登录...`, 'info');
+        
+        setTimeout(() => {
+            if (window.APP_GLOBALS && window.APP_GLOBALS.user) {
+                window.APP_GLOBALS.user.login({
+                    email: `user@${provider}.com`,
+                    name: `${provider}用户`,
+                    provider: provider,
+                    loginTime: new Date().toISOString()
+                });
+            }
+            
+            showNotification('登录成功！', 'success');
+            setTimeout(() => {
+                window.location.href = '/graph/home.html';
+            }, 1000);
+        }, 2000);
     };
 
     // Verification code sender

@@ -1,188 +1,186 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
-
+      layout:decorate="~{layout/base}">
 <head>
-    <title>登录注册</title>
+    <title>登录与注册</title>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/login-register.css}">
     </th:block>
 </head>
-
 <body>
-    <div layout:fragment="content">
-        <!-- Main Content -->
-        <div class="flex-1 flex items-center justify-center py-16 px-4">
-            <div class="w-full max-w-md">
-                <div class="card bg-base-100 shadow-xl border academic-border">
-                    <div class="card-body p-8">
-                        <!-- Return Home Button -->
-                        <div class="flex justify-start mb-6">
-                            <a th:href="@{/graph/home.html}"
-                                class="btn btn-ghost btn-sm gap-2 text-base-content/70 hover:text-base-content nav-hover">
-                                <span class="iconify" data-icon="heroicons:arrow-left" data-width="16"></span>
-                                返回首页
+<div layout:fragment="content">
+    <section class="auth-section py-12 md:py-20 bg-base-200">
+        <div class="container mx-auto px-4 max-w-5xl">
+            <div class="grid auth-grid gap-8 items-start">
+                <div class="space-y-5">
+                    <span class="badge badge-primary">认证入口</span>
+                    <h1 class="text-4xl font-bold">登录或创建账户</h1>
+                    <p class="text-base-content/70 leading-7">
+                        这一版先恢复真实可用的认证链路。表单登录走 `/api/auth/login`，注册成功后会自动登录并跳转首页。
+                    </p>
+                    <div class="bg-base-100 border border-base-300 rounded-box p-5 shadow-soft space-y-3">
+                        <div class="font-semibold">当前可用能力</div>
+                        <div class="text-sm text-base-content/70">表单登录、邮箱注册、密码重置接口、GitHub OAuth2 登录入口。</div>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 border border-base-300">
+                    <div class="card-body p-6 md:p-8">
+                        <div class="tabs tabs-boxed grid grid-cols-2 mb-6">
+                            <button id="loginTab" class="tab tab-active" type="button" onclick="switchTab('login')">登录</button>
+                            <button id="registerTab" class="tab" type="button" onclick="switchTab('register')">注册</button>
+                        </div>
+
+                        <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">邮箱 / 手机号 / 用户名</span></label>
+                                <input id="login-account" type="text" class="input input-bordered w-full" required>
+                            </div>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">密码</span></label>
+                                <input id="login-password" type="password" class="input input-bordered w-full" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">登录</button>
+                            <div class="divider text-xs text-base-content/50">或</div>
+                            <a href="/oauth2/authorization/github" class="btn btn-outline w-full gap-2">
+                                <span class="iconify" data-icon="mdi:github" data-width="18"></span>
+                                GitHub 登录
                             </a>
-                        </div>
+                        </form>
 
-                        <!-- Tab Navigation -->
-                        <div class="tabs tabs-boxed mb-8 bg-base-200">
-                            <a id="loginTab" class="tab tab-active" onclick="switchTab('login')">登录</a>
-                            <a id="registerTab" class="tab" onclick="switchTab('register')">注册</a>
-                        </div>
-
-                        <!-- Login Form -->
-                        <div id="loginForm" class="space-y-6">
-                            <div class="text-center mb-6">
-                                <h2 class="text-2xl font-bold text-base-content">欢迎回来</h2>
-                                <p class="text-base-content/70 mt-2">登录您的账户以继续使用</p>
+                        <form id="registerForm" class="space-y-4 hidden" onsubmit="handleRegister(event)">
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">用户名</span></label>
+                                <input id="reg-username" type="text" class="input input-bordered w-full" required>
                             </div>
-
-                            <!-- Social Login -->
-                            <div class="space-y-3">
-                                <button class="btn btn-outline w-full gap-3 hover-lift"
-                                    onclick="handleSocialLogin('github')">
-                                    <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                            fill="white">
-                                            <path
-                                                d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-                                        </svg>
-                                    </div>
-                                    <span>GitHub登录</span>
-                                </button>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">邮箱</span></label>
+                                <input id="reg-email" type="email" class="input input-bordered w-full" required>
                             </div>
-
-                            <div class="divider text-base-content/50 academic-divider">或使用账号密码</div>
-
-                            <!-- Login Form Fields -->
-                            <form class="space-y-4" onsubmit="handleLogin(event)">
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">用户名、邮箱或手机号</span>
-                                    </label>
-                                    <input id="login-account" type="text" placeholder="请输入用户名、邮箱或手机号" required
-                                        class="input input-bordered w-full focus-primary">
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">邮箱验证码</span></label>
+                                <div class="join">
+                                    <input id="reg-verification-code" type="text" class="input input-bordered join-item flex-1" required>
+                                    <button id="verifyBtn" class="btn btn-outline join-item" type="button" onclick="sendEmailVerificationCode()">发送验证码</button>
                                 </div>
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">密码</span>
-                                    </label>
-                                    <input id="login-password" type="password" placeholder="请输入密码" required
-                                        class="input input-bordered w-full focus-primary">
-                                </div>
-                                <div class="flex items-center justify-end">
-                                    <a th:href="@{/user/password_reset.html}" class="link link-primary text-sm">忘记密码？</a>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-full hover-lift">
-                                    <span class="iconify" data-icon="heroicons:arrow-right-on-rectangle"
-                                        data-width="16"></span>
-                                    登录
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Register Form -->
-                        <div id="registerForm" class="space-y-6 hidden">
-                            <div class="text-center mb-6">
-                                <h2 class="text-2xl font-bold text-base-content">创建账户</h2>
-                                <p class="text-base-content/70 mt-2">加入我们，开始探索知识图谱</p>
                             </div>
-
-                            <!-- Social Register -->
-                            <div class="space-y-3">
-                                <button class="btn btn-outline w-full gap-3 hover-lift"
-                                    onclick="handleSocialLogin('github')">
-                                    <div class="w-5 h-5 bg-gray-900 rounded flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                            fill="white">
-                                            <path
-                                                d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-                                        </svg>
-                                    </div>
-                                    <span>GitHub注册</span>
-                                </button>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">手机号</span></label>
+                                <input id="reg-phone" type="tel" class="input input-bordered w-full">
                             </div>
-
-                            <div class="divider text-base-content/50 academic-divider">或手动注册</div>
-
-                            <!-- Register Form Fields -->
-                            <form class="space-y-4" onsubmit="handleRegister(event)">
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">用户名</span>
-                                    </label>
-                                    <input id="reg-username" type="text" placeholder="请输入用户名" required
-                                        class="input input-bordered w-full focus-primary">
-                                </div>
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">邮箱地址 <span class="text-error">*</span></span>
-                                    </label>
-                                    <div class="flex gap-2">
-                                        <input id="reg-email" type="email" placeholder="请输入邮箱地址" required
-                                            class="input input-bordered flex-1 focus-primary">
-                                        <button type="button" id="sendCodeBtn" onclick="sendEmailCode()"
-                                            class="btn btn-outline btn-primary btn-sm min-w-[100px] self-center">
-                                            发送验证码
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">邮箱验证码 <span class="text-error">*</span></span>
-                                    </label>
-                                    <input id="reg-code" type="text" placeholder="请输入6位验证码" required
-                                        maxlength="6" class="input input-bordered w-full focus-primary">
-                                </div>
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">手机号码</span>
-                                        <span class="label-text-alt text-base-content/50">选填</span>
-                                    </label>
-                                    <input id="reg-phone" type="tel" placeholder="请输入手机号码"
-                                        class="input input-bordered w-full focus-primary">
-                                </div>
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">设置密码</span>
-                                    </label>
-                                    <input id="reg-password" type="password" placeholder="请设置密码（8位以上）" required
-                                        class="input input-bordered w-full focus-primary">
-                                </div>
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text">确认密码</span>
-                                    </label>
-                                    <input id="reg-confirm-password" type="password" placeholder="请再次输入密码" required
-                                        class="input input-bordered w-full focus-primary">
-                                </div>
-                                <div class="form-control">
-                                    <label class="label cursor-pointer justify-start gap-3">
-                                        <input type="checkbox" required class="checkbox checkbox-primary checkbox-sm">
-                                        <span class="label-text text-sm">
-                                            我已阅读并同意
-                                            <a th:href="@{/terms}" class="link link-primary" target="_blank">用户协议</a>
-                                            和
-                                            <a th:href="@{/privacy}" class="link link-primary" target="_blank">隐私政策</a>
-                                        </span>
-                                    </label>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-full hover-lift">
-                                    <span class="iconify" data-icon="heroicons:user-plus" data-width="16"></span>
-                                    注册账户
-                                </button>
-                            </form>
-                        </div>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">密码</span></label>
+                                <input id="reg-password" type="password" class="input input-bordered w-full" required>
+                            </div>
+                            <div class="form-control">
+                                <label class="label"><span class="label-text">确认密码</span></label>
+                                <input id="reg-confirm-password" type="password" class="input input-bordered w-full" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">创建账户</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <th:block layout:fragment="js">
         <script th:src="@{/js/login-register.js}"></script>
-    </th:block>
-</body>
+        <script>
+            window.sendEmailVerificationCode = async function() {
+                const email = document.getElementById('reg-email').value.trim();
+                const btn = document.getElementById('verifyBtn');
+                if (!email) {
+                    window.showNotification('请先输入邮箱', 'warning');
+                    return;
+                }
 
+                btn.disabled = true;
+                btn.textContent = '发送中...';
+                try {
+                    const response = await fetch('/api/auth/send-code', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: email, purpose: 'register' })
+                    });
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.error || '发送失败');
+                    }
+
+                    window.showNotification(result.message || '验证码已发送', 'success');
+                    let countdown = 60;
+                    btn.textContent = countdown + '秒后重发';
+                    const timer = setInterval(() => {
+                        countdown -= 1;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            btn.disabled = false;
+                            btn.textContent = '发送验证码';
+                            return;
+                        }
+                        btn.textContent = countdown + '秒后重发';
+                    }, 1000);
+                } catch (error) {
+                    btn.disabled = false;
+                    btn.textContent = '发送验证码';
+                    window.showNotification(error.message || '发送失败', 'error');
+                }
+            };
+
+            const originalRegister = window.handleRegister;
+            window.handleRegister = function(event) {
+                event.preventDefault();
+
+                const username = document.getElementById('reg-username').value.trim();
+                const email = document.getElementById('reg-email').value.trim();
+                const code = document.getElementById('reg-verification-code').value.trim();
+                const phone = document.getElementById('reg-phone').value.trim();
+                const password = document.getElementById('reg-password').value;
+                const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+                if (!username || !email || !code || !password || !confirmPassword) {
+                    window.showNotification('请完整填写注册信息', 'error');
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    window.showNotification('两次输入的密码不一致', 'error');
+                    return;
+                }
+                if (password.length < 8) {
+                    window.showNotification('密码长度至少8位', 'error');
+                    return;
+                }
+
+                window.showNotification('正在注册...', 'info');
+
+                fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        userName: username,
+                        email: email,
+                        verificationCode: code,
+                        phone: phone,
+                        password: password
+                    })
+                }).then(async (response) => {
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.error || '注册失败');
+                    }
+                    window.showNotification('注册成功', 'success');
+                    setTimeout(() => {
+                        window.location.href = result.redirect || '/graph/home.html';
+                    }, 500);
+                }).catch((error) => {
+                    window.showNotification(error.message || '注册失败', 'error');
+                });
+            };
+        </script>
+    </th:block>
+</div>
+</body>
 </html>

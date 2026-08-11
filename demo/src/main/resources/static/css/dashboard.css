@@ -19,7 +19,26 @@
 }
 
 /* Nav item */
+.dashboard-grid {
+    grid-template-columns: 1fr;
+}
+
+.dashboard-nav {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: auto;
+}
+
 .nav-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-field);
+    white-space: nowrap;
     transition: all 0.15s ease-in-out;
 }
 
@@ -93,6 +112,18 @@
 }
 
 /* Responsive */
+@media (min-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .dashboard-nav {
+        flex-direction: column;
+        overflow-x: visible;
+        align-self: start;
+    }
+}
+
 @media (max-width: 1024px) {
     .sidebar-wrapper {
         width: 100%;

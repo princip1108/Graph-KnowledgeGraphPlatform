@@ -9,6 +9,8 @@
     let currentStep = 1;
     let countdownTimer = null;
     let isCodeSent = false;
+    let verifiedEmail = '';
+    let verifiedCode = '';
 
     document.addEventListener('DOMContentLoaded', function() {
         initializeFormValidation();
@@ -41,7 +43,7 @@
     }
 
     // Send verification code
-    window.sendVerificationCode = function() {
+    window.sendVerificationCode = async function() {
         const contactInput = document.getElementById('contact-input');
         const contact = contactInput.value.trim();
         
@@ -53,28 +55,30 @@
         sendBtn.disabled = true;
         sendBtn.innerHTML = '<span class="loading loading-spinner loading-xs"></span> 发送中...';
         
-        fetch('/api/auth/send-code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: contact, purpose: 'reset' })
-        })
-        .then(response => response.json().then(data => ({ ok: response.ok, data })))
-        .then(({ ok, data }) => {
-            if (ok) {
-                if (window.showNotification) window.showNotification('验证码已发送，请查收', 'success');
-                startCountdown();
-                isCodeSent = true;
-            } else {
-                if (window.showNotification) window.showNotification(data.error || '发送失败', 'error');
-                sendBtn.disabled = false;
+        try {
+            const response = await fetch('/api/auth/send-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: contact, purpose: 'reset' })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(result.error || '验证码发送失败');
             }
+            if (window.showNotification) {
+                window.showNotification('验证码已发送，请查收', 'success');
+            }
+            startCountdown();
+            isCodeSent = true;
+            verifiedEmail = contact;
             sendBtn.innerHTML = '获取验证码';
-        })
-        .catch(() => {
-            if (window.showNotification) window.showNotification('网络错误，请稍后重试', 'error');
+        } catch (error) {
+            if (window.showNotification) {
+                window.showNotification(error.message || '验证码发送失败', 'error');
+            }
             sendBtn.disabled = false;
             sendBtn.innerHTML = '获取验证码';
-        });
+        }
     };
 
     function startCountdown() {
@@ -86,6 +90,7 @@
         
         timerElement.classList.remove('hidden');
         resendLink.style.display = 'none';
+        resendLink.classList.add('hidden');
         sendBtn.disabled = true;
         
         countdownTimer = setInterval(() => {
@@ -96,6 +101,7 @@
                 clearInterval(countdownTimer);
                 timerElement.classList.add('hidden');
                 resendLink.style.display = 'inline';
+                resendLink.classList.remove('hidden');
                 sendBtn.disabled = false;
             }
         }, 1000);
@@ -103,15 +109,14 @@
 
     function validateContactInput(contact) {
         if (!contact) {
-            showError('contact-input', '请输入邮箱或手机号');
+            showError('contact-input', '请输入邮箱');
             return false;
         }
         
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^1[3-9]\d{9}$/;
         
-        if (!emailRegex.test(contact) && !phoneRegex.test(contact)) {
-            showError('contact-input', '请输入有效的邮箱或手机号');
+        if (!emailRegex.test(contact)) {
+            showError('contact-input', '请输入有效的邮箱地址');
             return false;
         }
         
@@ -120,8 +125,9 @@
     }
 
     // Verify code
-    window.verifyCode = function() {
+    window.verifyCode = async function() {
         const code = document.getElementById('verification-code').value.trim();
+        const contact = document.getElementById('contact-input').value.trim();
         
         if (!code) {
             showError('verification-code', '请输入验证码');
@@ -138,25 +144,25 @@
             return;
         }
         
-        const contact = document.getElementById('contact-input').value.trim();
-        
-        fetch('/api/auth/verify-reset-code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: contact, code: code })
-        })
-        .then(response => response.json().then(data => ({ ok: response.ok, data })))
-        .then(({ ok, data }) => {
-            if (ok && data.success) {
-                if (window.showNotification) window.showNotification('验证成功', 'success');
-                nextStep();
-            } else {
-                showError('verification-code', data.error || '验证码错误');
+        try {
+            const response = await fetch('/api/auth/verify-reset-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: verifiedEmail || contact, code: code })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.success === false) {
+                throw new Error(result.error || '验证码错误或已过期');
             }
-        })
-        .catch(() => {
-            showError('verification-code', '网络错误，请稍后重试');
-        });
+            verifiedEmail = verifiedEmail || contact;
+            verifiedCode = code;
+            if (window.showNotification) {
+                window.showNotification('验证成功', 'success');
+            }
+            nextStep();
+        } catch (error) {
+            showError('verification-code', error.message || '验证码错误或已过期');
+        }
     };
 
     function nextStep() {
@@ -260,7 +266,7 @@
     };
 
     // Reset password
-    window.resetPassword = function() {
+    window.resetPassword = async function() {
         const newPassword = document.getElementById('new-password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         
@@ -268,25 +274,29 @@
             return;
         }
         
-        const email = document.getElementById('contact-input').value.trim();
-        
-        fetch('/api/auth/reset-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, newPassword: newPassword })
-        })
-        .then(response => response.json().then(data => ({ ok: response.ok, data })))
-        .then(({ ok, data }) => {
-            if (ok && data.success) {
-                if (window.showNotification) window.showNotification('密码重置成功！', 'success');
-                nextStep();
-            } else {
-                showError('new-password', data.error || '重置失败，请重试');
+        try {
+            const response = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: verifiedEmail,
+                    code: verifiedCode,
+                    newPassword: newPassword
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.success === false) {
+                throw new Error(result.error || '密码重置失败');
             }
-        })
-        .catch(() => {
-            showError('new-password', '网络错误，请稍后重试');
-        });
+            if (window.showNotification) {
+                window.showNotification('密码重置成功！', 'success');
+            }
+            nextStep();
+        } catch (error) {
+            if (window.showNotification) {
+                window.showNotification(error.message || '密码重置失败', 'error');
+            }
+        }
     };
 
     function validatePassword(newPassword, confirmPassword) {

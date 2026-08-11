@@ -186,6 +186,10 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.core-node-name {
+    max-width: 120px;
+}
+
 /* ==================== 表单控件样式增强 ==================== */
 
 /* Enhanced range slider styling for academic look */

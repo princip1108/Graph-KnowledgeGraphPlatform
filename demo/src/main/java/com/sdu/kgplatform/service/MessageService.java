@@ -3,9 +3,12 @@ package com.sdu.kgplatform.service;
 import com.sdu.kgplatform.domain.dto.ConversationDto;
 import com.sdu.kgplatform.entity.Message;
 import com.sdu.kgplatform.entity.MessageStatus;
+import com.sdu.kgplatform.entity.User;
+import com.sdu.kgplatform.entity.UserStatus;
 import com.sdu.kgplatform.repository.MessageRepository;
-import com.sdu.kgplatform.repository.UserRepository; // Assuming UserRepository exists
+import com.sdu.kgplatform.repository.UserRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,58 +33,65 @@ public class MessageService {
      */
     @Transactional
     public Message sendMessage(Integer senderId, Integer receiverId, String content) {
+        if (senderId == null || receiverId == null) {
+            throw new IllegalArgumentException("发送方和接收方不能为空");
+        }
+        if (senderId.equals(receiverId)) {
+            throw new IllegalArgumentException("不能给自己发送私信");
+        }
+
+        requireActiveUser(senderId, "发送方");
+        requireActiveUser(receiverId, "接收方");
+
+        String messageText = normalizeMessageText(content);
+
         Message message = new Message();
         message.setSenderId(senderId);
         message.setToId(receiverId);
-        message.setMessageText(content);
+        message.setMessageText(messageText);
         message.setSendTime(LocalDateTime.now());
         message.setMessageStatus(MessageStatus.已发送);
         message.setIsRead(false);
         return messageRepository.save(message);
     }
 
-    /**
-     * 获取会话列表 (MVP实现: 内存分组)
-     * 性能优化提示: 如果数据量大，应该在数据库层做分组查询
-     */
     public List<ConversationDto> getConversations(Integer userId) {
-        // 获取所有相关消息
-        List<Message> allMessages = messageRepository.findUserMessages(userId);
+        List<Message> latestMessages = messageRepository.findLatestConversationMessages(userId, PageRequest.of(0, 100));
+        Set<Integer> otherUserIds = latestMessages.stream()
+                .map(m -> m.getSenderId().equals(userId) ? m.getToId() : m.getSenderId())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
-        Map<Integer, ConversationDto> conversationMap = new HashMap<>();
+        Map<Integer, User> usersById = userRepository.findAllById(otherUserIds).stream()
+                .collect(Collectors.toMap(User::getUserId, user -> user, (left, right) -> left));
 
-        for (Message m : allMessages) {
+        Map<Integer, Integer> unreadCounts = messageRepository.countUnreadBySender(userId).stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).intValue(),
+                        row -> ((Number) row[1]).intValue(),
+                        Integer::sum));
+
+        List<ConversationDto> conversations = new ArrayList<>();
+        for (Message m : latestMessages) {
             boolean isSentByMe = m.getSenderId().equals(userId);
             Integer otherPersonId = isSentByMe ? m.getToId() : m.getSenderId();
 
-            ConversationDto dto = conversationMap.getOrDefault(otherPersonId, new ConversationDto());
-            if (dto.getOtherUserId() == null) {
-                dto.setOtherUserId(otherPersonId);
-                // 填充用户信息
-                userRepository.findById(otherPersonId).ifPresent(user -> {
-                    dto.setOtherUserName(user.getUserName());
-                    // dto.setOtherUserAvatar(user.getAvatar()); // Assuming avatar field
-                });
-                dto.setUnreadCount(0);
+            ConversationDto dto = new ConversationDto();
+            dto.setOtherUserId(otherPersonId);
+            User otherUser = usersById.get(otherPersonId);
+            if (otherUser != null) {
+                dto.setOtherUserName(otherUser.getUserName());
+                dto.setOtherUserAvatar(otherUser.getAvatar());
+            } else {
+                dto.setOtherUserName("未知用户");
             }
-
-            // 更新最新消息 (列表已按时间倒序，所以遇到的第一个就是最新的)
-            if (dto.getLastMessageTime() == null) {
-                dto.setLastMessage(m.getMessageText());
-                dto.setLastMessageTime(m.getSendTime());
-            }
-
-            // 统计未读
-            if (!isSentByMe && Boolean.FALSE.equals(m.getIsRead())) {
-                dto.setUnreadCount(dto.getUnreadCount() + 1);
-            }
-
-            conversationMap.put(otherPersonId, dto);
+            dto.setLastMessage(m.getMessageText());
+            dto.setLastMessageTime(m.getSendTime());
+            dto.setUnreadCount(unreadCounts.getOrDefault(otherPersonId, 0));
+            conversations.add(dto);
         }
 
-        return new ArrayList<>(conversationMap.values()).stream()
-                .sorted(Comparator.comparing(ConversationDto::getLastMessageTime).reversed())
-                .collect(Collectors.toList());
+        return conversations;
     }
 
     /**
@@ -119,5 +129,28 @@ public class MessageService {
 
     public long getUnreadCount(Integer userId) {
         return messageRepository.countUnread(userId);
+    }
+
+    private User requireActiveUser(Integer userId, String label) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(label + "用户不存在"));
+        if (user.getUserStatus() == UserStatus.DELETED) {
+            throw new IllegalArgumentException(label + "用户已注销");
+        }
+        if (user.getUserStatus() == UserStatus.BANNED) {
+            throw new IllegalArgumentException(label + "用户已被封禁");
+        }
+        return user;
+    }
+
+    private String normalizeMessageText(String content) {
+        String messageText = content == null ? null : content.trim();
+        if (messageText == null || messageText.isEmpty()) {
+            throw new IllegalArgumentException("消息内容不能为空");
+        }
+        if (messageText.length() > 2000) {
+            throw new IllegalArgumentException("消息内容不能超过2000个字符");
+        }
+        return messageText;
     }
 }

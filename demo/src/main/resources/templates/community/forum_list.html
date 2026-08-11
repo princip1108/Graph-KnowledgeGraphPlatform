@@ -1,299 +1,111 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
-
+      layout:decorate="~{layout/base}">
 <head>
-    <title>论坛</title>
+    <title>社区论坛</title>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/forum-list.css}">
     </th:block>
 </head>
-
 <body>
-    <div layout:fragment="content">
-        <!-- Main Layout -->
-        <div class="flex flex-1 min-h-screen">
-            <!-- Left Sidebar -->
-            <div class="sidebar-wrapper w-80 bg-base-100 border-r academic-border">
-                <div class="p-6">
-                    <h2 class="text-lg font-semibold text-base-content mb-4 flex items-center gap-2">
-                        <span class="iconify text-primary" data-icon="heroicons:funnel" data-width="20"></span>
-                        筛选与检索
-                    </h2>
-                    <div class="form-control mb-4">
-                        <label class="label"><span class="label-text">关键字搜索</span></label>
-                        <div class="join">
-                            <input type="text" placeholder="输入关键字..." id="searchInput"
-                                class="input input-bordered join-item flex-1">
-                            <button class="btn btn-primary join-item" onclick="performSearch()">
-                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="16"></span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-control mb-4">
-                        <label class="label"><span class="label-text">领域分类</span></label>
-                        <select id="domainFilter" class="select select-bordered">
-                            <option value="">全部领域</option>
-                            <!-- 动态加载分类 -->
-                        </select>
-                    </div>
-                    <div class="form-control mb-6">
-                        <label class="label"><span class="label-text">排序方式</span></label>
-                        <select id="sortFilter" class="select select-bordered">
-                            <option value="latest">最新发布</option>
-                            <option value="popular">最多点赞</option>
-                            <option value="comments">最多评论</option>
-                            <option value="views">最多浏览</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-outline w-full" onclick="resetFilters()">
-                        <span class="iconify" data-icon="heroicons:arrow-path" data-width="16"></span>
-                        重置筛选
-                    </button>
+<div layout:fragment="content">
+    <section class="bg-base-200 border-b border-base-300">
+        <div class="container mx-auto px-4 py-10 max-w-6xl">
+            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl font-bold">社区论坛</h1>
+                    <p class="text-base-content/60 mt-2">浏览图谱讨论、经验分享和问题反馈。</p>
                 </div>
+                <a th:href="@{/community/post_edit.html}" class="btn btn-primary">发布帖子</a>
             </div>
-
-            <!-- Main Content -->
-            <div class="main-content-wrapper flex-1 flex flex-col">
-                <!-- Stats Section -->
-                <div class="bg-base-100 border-b academic-border p-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                        <div class="card bg-gradient-to-r from-primary/10 to-primary/5 border academic-border">
-                            <div class="card-body p-4 text-center">
-                                <div id="statTotalPosts" class="text-2xl font-bold text-primary">0</div>
-                                <div class="text-sm text-base-content/70">总帖子数</div>
-                            </div>
-                        </div>
-                        <div class="card bg-gradient-to-r from-secondary/10 to-secondary/5 border academic-border">
-                            <div class="card-body p-4 text-center">
-                                <div id="statTotalComments" class="text-2xl font-bold text-secondary">0</div>
-                                <div class="text-sm text-base-content/70">总评论数</div>
-                            </div>
-                        </div>
-                        <div class="card bg-gradient-to-r from-info/10 to-info/5 border academic-border">
-                            <div class="card-body p-4 text-center">
-                                <div id="statTodayPosts" class="text-2xl font-bold text-info">0</div>
-                                <div class="text-sm text-base-content/70">今日新帖</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-4 items-center justify-between">
-                        <div class="flex gap-4">
-                            <a href="javascript:void(0)" onclick="if(!requireLogin('\u53d1\u5e16')) return; window.location.href='/community/post_edit.html'" class="btn btn-primary">
-                                <span class="iconify" data-icon="heroicons:plus" data-width="16"></span>
-                                发布新帖
-                            </a>
-                            <button class="btn btn-outline">
-                                <span class="iconify" data-icon="heroicons:fire" data-width="16"></span>
-                                热门话题
-                            </button>
-                        </div>
-                        <div class="text-sm text-base-content/70">
-                            <span class="iconify text-success" data-icon="heroicons:signal" data-width="16"></span>
-                            论坛活跃度: 高
-                        </div>
-                    </div>
+            <div class="grid sm:grid-cols-3 gap-4 mt-8">
+                <div class="stat bg-base-100 border border-base-300 rounded-box">
+                    <div class="stat-title">帖子</div>
+                    <div id="statTotalPosts" class="stat-value text-primary">0</div>
                 </div>
-
-                <!-- Posts List -->
-                <div class="flex-1 p-6">
-                    <div id="postsLoading" class="text-center py-12">
-                        <span class="loading loading-spinner loading-lg text-primary"></span>
-                        <p class="mt-4 text-base-content/60">加载帖子中...</p>
-                    </div>
-                    <div id="postsEmpty" class="hidden text-center py-12">
-                        <span class="iconify text-base-content/30" data-icon="heroicons:document-text"
-                            data-width="48"></span>
-                        <p class="mt-4 text-base-content/60">暂无帖子</p>
-                        <a href="javascript:void(0)" onclick="if(!requireLogin('\u53d1\u5e16')) return; window.location.href='/community/post_edit.html'" class="btn btn-primary btn-sm mt-4">发布第一篇帖子</a>
-                    </div>
-                    <div id="postsList" class="space-y-4"></div>
-                    <div id="loadMoreSection" class="hidden text-center py-8">
-                        <button id="loadMoreBtn" class="btn btn-outline" onclick="loadMorePosts()">
-                            <span class="iconify" data-icon="heroicons:arrow-down" data-width="16"></span>
-                            加载更多帖子
-                        </button>
-                    </div>
+                <div class="stat bg-base-100 border border-base-300 rounded-box">
+                    <div class="stat-title">评论</div>
+                    <div id="statTotalComments" class="stat-value text-secondary">0</div>
                 </div>
-            </div>
-
-            <!-- Right Sidebar -->
-            <div class="sidebar-wrapper w-80 bg-base-100 border-l academic-border">
-                <div class="p-6">
-                    <div class="mb-8">
-                        <h2 class="text-lg font-semibold text-base-content mb-4 flex items-center gap-2">
-                            <span class="iconify text-error" data-icon="heroicons:fire" data-width="20"></span>
-                            热门话题
-                        </h2>
-                        <div id="hotTopicsList" class="space-y-3">
-                            <div class="text-center text-sm text-base-content/50 py-2">加载中...</div>
-                        </div>
-                    </div>
-                    <div class="mb-8">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-semibold text-base-content flex items-center gap-2">
-                                <span class="iconify text-info" data-icon="heroicons:megaphone" data-width="20"></span>
-                                论坛公告
-                            </h2>
-                            <button id="addAnnouncementBtn" class="btn btn-ghost btn-xs hidden" onclick="openAnnouncementModal()">
-                                <span class="iconify" data-icon="heroicons:plus-circle" data-width="16"></span>
-                                发布
-                            </button>
-                        </div>
-                        <div id="announcementList" class="space-y-3">
-                            <div class="text-center text-sm text-base-content/50 py-2">加载中...</div>
-                        </div>
-                    </div>
+                <div class="stat bg-base-100 border border-base-300 rounded-box">
+                    <div class="stat-title">今日新增</div>
+                    <div id="statTodayPosts" class="stat-value text-accent">0</div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- Announcement Modal -->
-        <dialog id="announcementModal" class="modal">
-            <div class="modal-box w-96 max-w-md">
-                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
-                    <span class="iconify text-info" data-icon="heroicons:megaphone" data-width="20"></span>
-                    发布公告
-                </h3>
-                <div class="space-y-4">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">公告标题</span></label>
-                        <input type="text" id="announcementTitle" placeholder="输入公告标题..." maxlength="100"
-                            class="input input-bordered input-sm">
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">公告内容</span></label>
-                        <textarea id="announcementContent" placeholder="输入公告内容..." maxlength="500"
-                            class="textarea textarea-bordered h-20 text-sm"></textarea>
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">公告类型</span></label>
-                        <select id="announcementType" class="select select-bordered select-sm">
-                            <option value="INFO">通知</option>
-                            <option value="SUCCESS">好消息</option>
-                            <option value="WARNING">警告</option>
-                            <option value="ERROR">紧急</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-action">
-                    <button class="btn btn-ghost btn-sm" onclick="closeAnnouncementModal()">取消</button>
-                    <button class="btn btn-primary btn-sm" onclick="submitAnnouncement()">
-                        <span class="iconify" data-icon="heroicons:paper-airplane" data-width="16"></span>
-                        发布
-                    </button>
-                </div>
+    <section class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="flex flex-col lg:flex-row gap-4 mb-6">
+            <div class="join flex-1">
+                <input id="searchInput" class="input input-bordered join-item flex-1" type="text" placeholder="搜索帖子标题或内容">
+                <button class="btn btn-primary join-item" type="button" onclick="performSearch()">搜索</button>
             </div>
-            <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
+            <select id="sortFilter" class="select select-bordered">
+                <option value="latest">最新</option>
+                <option value="hot">热门</option>
+            </select>
+            <select id="domainFilter" class="select select-bordered">
+                <option value="">全部领域</option>
+            </select>
+            <button class="btn btn-ghost" type="button" onclick="resetFilters()">重置</button>
+        </div>
 
-        <!-- Quick Comment Modal -->
-        <dialog id="quickCommentModal" class="modal">
-            <div class="modal-box w-96 max-w-sm">
-                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
-                    <span class="iconify text-primary" data-icon="heroicons:chat-bubble-left" data-width="20"></span>
-                    快速评论
-                </h3>
-                <div class="space-y-4">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">评论内容</span></label>
-                        <textarea id="quickCommentContent" placeholder="写下你的评论..." maxlength="300"
-                            class="textarea textarea-bordered h-20 text-sm"></textarea>
-                        <label class="label"><span class="label-text-alt text-base-content/50"><span
-                                    id="quickCommentCharCount">0</span>/300</span></label>
-                    </div>
-                </div>
-                <div class="modal-action">
-                    <button class="btn btn-ghost btn-sm" onclick="closeQuickCommentModal()">取消</button>
-                    <button class="btn btn-primary btn-sm" onclick="submitQuickComment()">
-                        <span class="iconify" data-icon="heroicons:paper-airplane" data-width="16"></span>
-                        发布评论
-                    </button>
-                </div>
-            </div>
-            <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
+        <div id="postsList" class="space-y-4"></div>
+        <div id="postsLoading" class="text-center py-12">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="mt-3 text-base-content/60">加载帖子中...</p>
+        </div>
+        <div id="postsEmpty" class="hidden text-center py-16 text-base-content/60">
+            <span class="iconify text-base-content/30" data-icon="heroicons:document-text" data-width="56"></span>
+            <p class="mt-4">暂无帖子</p>
+        </div>
+        <div id="loadMoreSection" class="hidden text-center mt-8">
+            <button class="btn btn-outline" type="button" onclick="loadMorePosts()">加载更多</button>
+        </div>
+    </section>
 
-        <!-- Share Modal -->
-        <dialog id="shareModal" class="modal">
-            <div class="modal-box w-96 max-w-sm">
-                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
-                    <span class="iconify text-primary" data-icon="heroicons:share" data-width="20"></span>
-                    分享帖子
-                </h3>
-                <div class="space-y-4">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">分享链接</span></label>
-                        <div class="join">
-                            <input type="text" id="shareLink" readonly
-                                class="input input-bordered join-item flex-1 text-sm">
-                            <button id="copyButton" class="btn btn-primary join-item" onclick="copyShareLink()">
-                                <span class="iconify" data-icon="heroicons:clipboard-document" data-width="16"></span>
-                                复制
-                            </button>
-                        </div>
-                    </div>
-                    <div class="divider text-xs">或通过以下方式分享</div>
-                    <div class="flex gap-2 justify-center">
-                        <button class="btn btn-outline btn-sm" onclick="shareToWeChat()">
-                            <span class="iconify text-green-500" data-icon="heroicons:chat-bubble-left-ellipsis"
-                                data-width="16"></span>
-                            微信
-                        </button>
-                        <button class="btn btn-outline btn-sm" onclick="shareToWeibo()">
-                            <span class="iconify text-red-500" data-icon="heroicons:megaphone" data-width="16"></span>
-                            微博
-                        </button>
-                        <button class="btn btn-outline btn-sm" onclick="shareToQQ()">
-                            <span class="iconify text-blue-500" data-icon="heroicons:chat-bubble-oval-left"
-                                data-width="16"></span>
-                            QQ
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-action">
-                    <button class="btn btn-ghost btn-sm" onclick="closeShareModal()">关闭</button>
-                </div>
+    <dialog id="quickCommentModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">快速评论</h3>
+            <textarea id="quickCommentContent" class="textarea textarea-bordered w-full mt-4" rows="4" maxlength="500" placeholder="写下你的评论"></textarea>
+            <div class="text-right text-xs text-base-content/50 mt-1"><span id="quickCommentCharCount">0</span>/500</div>
+            <div class="modal-action">
+                <button class="btn btn-ghost" type="button" onclick="closeQuickCommentModal()">取消</button>
+                <button class="btn btn-primary" type="button" onclick="submitQuickComment()">发布</button>
             </div>
-            <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
+        </div>
+    </dialog>
 
-        <!-- Private Message Modal -->
-        <dialog id="privateMessageModal" class="modal">
-            <div class="modal-box w-96 max-w-sm">
-                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
-                    <span class="iconify text-primary" data-icon="heroicons:envelope" data-width="20"></span>
-                    发送私信
-                </h3>
-                <div class="space-y-4">
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">收件人</span></label>
-                        <input type="text" id="recipientName" placeholder="用户名" readonly
-                            class="input input-bordered input-sm">
-                    </div>
-                    <div class="form-control">
-                        <label class="label"><span class="label-text">消息内容</span></label>
-                        <textarea id="messageContent" placeholder="输入你的消息..." maxlength="500"
-                            class="textarea textarea-bordered h-24 text-sm"></textarea>
-                        <label class="label"><span class="label-text-alt text-base-content/50"><span
-                                    id="charCount">0</span>/500</span></label>
-                    </div>
-                </div>
-                <div class="modal-action">
-                    <button class="btn btn-ghost btn-sm" onclick="closePrivateMessageModal()">取消</button>
-                    <button class="btn btn-primary btn-sm" onclick="sendPrivateMessage()">
-                        <span class="iconify" data-icon="heroicons:paper-airplane" data-width="16"></span>
-                        发送
-                    </button>
-                </div>
+    <dialog id="shareModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">分享帖子</h3>
+            <div class="join w-full mt-4">
+                <input id="shareLink" class="input input-bordered join-item flex-1" readonly>
+                <button id="copyButton" class="btn btn-primary join-item" type="button" onclick="copyShareLink()">复制</button>
             </div>
-            <form method="dialog" class="modal-backdrop"><button>close</button></form>
-        </dialog>
-    </div>
+            <div class="modal-action">
+                <button class="btn btn-ghost" type="button" onclick="closeShareModal()">关闭</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="privateMessageModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">发送私信</h3>
+            <input id="recipientName" class="input input-bordered w-full mt-4" readonly>
+            <textarea id="messageContent" class="textarea textarea-bordered w-full mt-3" maxlength="500" rows="4" placeholder="消息内容"></textarea>
+            <div class="text-right text-xs text-base-content/50 mt-1"><span id="charCount">0</span>/500</div>
+            <div class="modal-action">
+                <button class="btn btn-ghost" type="button" onclick="closePrivateMessageModal()">取消</button>
+                <button class="btn btn-primary" type="button" onclick="sendPrivateMessage()">发送</button>
+            </div>
+        </div>
+    </dialog>
 
     <th:block layout:fragment="js">
         <script th:src="@{/js/forum-list.js}"></script>
     </th:block>
+</div>
 </body>
-
 </html>

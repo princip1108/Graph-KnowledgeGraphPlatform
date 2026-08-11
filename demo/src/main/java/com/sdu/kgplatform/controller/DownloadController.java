@@ -1,20 +1,29 @@
 package com.sdu.kgplatform.controller;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdu.kgplatform.dto.NodeDto;
 import com.sdu.kgplatform.dto.RelationshipDto;
 import com.sdu.kgplatform.entity.KnowledgeGraph;
 import com.sdu.kgplatform.repository.KnowledgeGraphRepository;
+import com.sdu.kgplatform.service.GraphService;
 import com.sdu.kgplatform.service.NodeService;
 import com.sdu.kgplatform.service.RelationshipService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
@@ -27,16 +36,28 @@ import java.util.List;
 @RequestMapping("/api/download")
 public class DownloadController {
 
+    private static final Logger log = LoggerFactory.getLogger(DownloadController.class);
+    private static final int EXPORT_BATCH_SIZE = 1000;
+    private static final long PNG_MAX_NODES = 500;
+    private static final long PNG_MAX_RELATIONS = 1500;
+    private static final byte[] UTF8_BOM = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+
     private final KnowledgeGraphRepository graphRepository;
+    private final GraphService graphService;
     private final NodeService nodeService;
     private final RelationshipService relationshipService;
+    private final ObjectMapper objectMapper;
 
     public DownloadController(KnowledgeGraphRepository graphRepository,
+                              GraphService graphService,
                               NodeService nodeService,
-                              RelationshipService relationshipService) {
+                              RelationshipService relationshipService,
+                              ObjectMapper objectMapper) {
         this.graphRepository = graphRepository;
+        this.graphService = graphService;
         this.nodeService = nodeService;
         this.relationshipService = relationshipService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -47,35 +68,49 @@ public class DownloadController {
     public ResponseEntity<?> downloadGraph(
             @PathVariable Integer graphId,
             @RequestParam(value = "format", defaultValue = "json") String format) {
-        
+
         // 获取图谱信息
         Optional<KnowledgeGraph> graphOpt = graphRepository.findById(graphId);
         if (graphOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        if (!graphService.canViewGraph(graphId, com.sdu.kgplatform.common.SecurityUtils.getCurrentUserId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "无权下载该图谱"));
+        }
         
         KnowledgeGraph graph = graphOpt.get();
-        String graphName = graph.getName() != null ? graph.getName() : "graph_" + graphId;
-        // 清理文件名中的非法字符
-        graphName = graphName.replaceAll("[\\\\/:*?\"<>|]", "_");
-        
+        String graphName = sanitizeFileName(graph.getName() != null ? graph.getName() : "graph_" + graphId);
+        String normalizedFormat = format == null ? "json" : format.toLowerCase(Locale.ROOT);
+
         try {
-            // 获取节点和关系数据
-            List<NodeDto> nodes = nodeService.getNodesByGraphId(graphId);
-            List<RelationshipDto> relations = relationshipService.getRelationshipsByGraphId(graphId);
-            
-            switch (format.toLowerCase()) {
+            switch (normalizedFormat) {
                 case "json":
-                    return downloadAsJson(graphName, graph, nodes, relations);
+                    graphService.incrementDownloadCount(graphId);
+                    return downloadAsJson(graphId, graphName, graph);
                 case "csv":
-                    return downloadAsCsv(graphName, nodes, relations);
+                    graphService.incrementDownloadCount(graphId);
+                    return downloadAsCsv(graphId, graphName);
                 case "png":
+                    long nodeCount = nodeService.countNodesByGraphId(graphId);
+                    long relationCount = relationshipService.countRelationshipsByGraphId(graphId);
+                    if (nodeCount > PNG_MAX_NODES || relationCount > PNG_MAX_RELATIONS) {
+                        return ResponseEntity.badRequest().body(Map.of(
+                                "error", "图谱过大，PNG 导出已限制以避免内存溢出",
+                                "nodeCount", nodeCount,
+                                "relationCount", relationCount,
+                                "maxNodes", PNG_MAX_NODES,
+                                "maxRelations", PNG_MAX_RELATIONS,
+                                "suggestion", "请使用 json 或 csv 格式下载完整数据"));
+                    }
+                    List<NodeDto> nodes = nodeService.getNodesByGraphId(graphId);
+                    List<RelationshipDto> relations = relationshipService.getRelationshipsByGraphId(graphId);
+                    graphService.incrementDownloadCount(graphId);
                     return downloadAsPng(graphName, nodes, relations);
                 default:
                     return ResponseEntity.badRequest().body(Map.of("error", "不支持的格式: " + format));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Download graph failed, graphId={}, format={}", graphId, format, e);
             return ResponseEntity.internalServerError().body(Map.of("error", "下载失败: " + e.getMessage()));
         }
     }
@@ -83,97 +118,147 @@ public class DownloadController {
     /**
      * 下载为 JSON 格式
      */
-    private ResponseEntity<byte[]> downloadAsJson(String graphName, KnowledgeGraph graph,
-                                                   List<NodeDto> nodes, List<RelationshipDto> relations) {
-        // 构建 JSON 结构
-        Map<String, Object> jsonData = new LinkedHashMap<>();
-        jsonData.put("name", graph.getName());
-        jsonData.put("description", graph.getDescription());
-        
-        // 节点数据
-        List<Map<String, Object>> nodesList = new ArrayList<>();
-        for (NodeDto node : nodes) {
-            Map<String, Object> nodeMap = new LinkedHashMap<>();
-            nodeMap.put("name", node.getName());
-            nodeMap.put("type", node.getType());
-            if (node.getDescription() != null) {
-                nodeMap.put("description", node.getDescription());
+    private ResponseEntity<StreamingResponseBody> downloadAsJson(Integer graphId, String graphName, KnowledgeGraph graph) {
+        StreamingResponseBody body = outputStream -> {
+            try (JsonGenerator json = objectMapper.getFactory().createGenerator(outputStream)) {
+                json.useDefaultPrettyPrinter();
+                json.writeStartObject();
+                json.writeStringField("name", graph.getName());
+                json.writeStringField("description", graph.getDescription());
+
+                json.writeArrayFieldStart("nodes");
+                streamNodesJson(graphId, json);
+                json.writeEndArray();
+
+                json.writeArrayFieldStart("relations");
+                streamRelationsJson(graphId, json);
+                json.writeEndArray();
+
+                json.writeEndObject();
+            } catch (Exception e) {
+                log.error("Stream JSON export failed, graphId={}", graphId, e);
+                throw asIOException("JSON export failed", e);
             }
-            nodesList.add(nodeMap);
-        }
-        jsonData.put("nodes", nodesList);
-        
-        // 关系数据 - 使用节点名称而非 ID
-        Map<String, String> nodeIdToName = new HashMap<>();
-        for (NodeDto node : nodes) {
-            nodeIdToName.put(node.getNodeId(), node.getName());
-        }
-        
-        List<Map<String, Object>> relationsList = new ArrayList<>();
-        for (RelationshipDto rel : relations) {
-            Map<String, Object> relMap = new LinkedHashMap<>();
-            relMap.put("source", nodeIdToName.getOrDefault(rel.getSourceNodeId(), rel.getSourceNodeId()));
-            relMap.put("target", nodeIdToName.getOrDefault(rel.getTargetNodeId(), rel.getTargetNodeId()));
-            relMap.put("type", rel.getType());
-            relationsList.add(relMap);
-        }
-        jsonData.put("relations", relationsList);
-        
-        // 转换为 JSON 字符串
-        String jsonString = toJsonString(jsonData);
-        byte[] content = jsonString.getBytes(StandardCharsets.UTF_8);
-        
+        };
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setContentDispositionFormData("attachment", graphName + ".json");
-        
-        return ResponseEntity.ok().headers(headers).body(content);
+
+        return ResponseEntity.ok().headers(headers).body(body);
+    }
+
+    private void streamNodesJson(Integer graphId, JsonGenerator json) throws IOException {
+        for (long skip = 0; ; skip += EXPORT_BATCH_SIZE) {
+            List<NodeDto> nodes = nodeService.getExportNodesByGraphId(graphId, skip, EXPORT_BATCH_SIZE);
+            if (nodes.isEmpty()) {
+                return;
+            }
+            for (NodeDto node : nodes) {
+                json.writeStartObject();
+                json.writeStringField("name", node.getName());
+                json.writeStringField("type", node.getType());
+                if (node.getDescription() != null) {
+                    json.writeStringField("description", node.getDescription());
+                }
+                json.writeEndObject();
+            }
+            json.flush();
+            if (nodes.size() < EXPORT_BATCH_SIZE) {
+                return;
+            }
+        }
+    }
+
+    private void streamRelationsJson(Integer graphId, JsonGenerator json) throws IOException {
+        for (long skip = 0; ; skip += EXPORT_BATCH_SIZE) {
+            List<RelationshipDto> relations = relationshipService.getExportRelationshipsByGraphId(graphId, skip, EXPORT_BATCH_SIZE);
+            if (relations.isEmpty()) {
+                return;
+            }
+            for (RelationshipDto rel : relations) {
+                json.writeStartObject();
+                json.writeStringField("source", valueOrFallback(rel.getSourceNodeName(), rel.getSourceNodeId()));
+                json.writeStringField("target", valueOrFallback(rel.getTargetNodeName(), rel.getTargetNodeId()));
+                json.writeStringField("type", rel.getType());
+                json.writeEndObject();
+            }
+            json.flush();
+            if (relations.size() < EXPORT_BATCH_SIZE) {
+                return;
+            }
+        }
     }
 
     /**
      * 下载为 CSV 格式（包含节点表和关系表）
      */
-    private ResponseEntity<byte[]> downloadAsCsv(String graphName,
-                                                  List<NodeDto> nodes, List<RelationshipDto> relations) {
-        StringBuilder csv = new StringBuilder();
-        
-        // 节点表
-        csv.append("# 节点数据\n");
-        csv.append("节点名称,节点类型,描述\n");
-        for (NodeDto node : nodes) {
-            csv.append(escapeCsv(node.getName())).append(",");
-            csv.append(escapeCsv(node.getType())).append(",");
-            csv.append(escapeCsv(node.getDescription() != null ? node.getDescription() : "")).append("\n");
-        }
-        
-        csv.append("\n");
-        
-        // 关系表
-        Map<String, String> nodeIdToName = new HashMap<>();
-        for (NodeDto node : nodes) {
-            nodeIdToName.put(node.getNodeId(), node.getName());
-        }
-        
-        csv.append("# 关系数据\n");
-        csv.append("源节点,目标节点,关系类型\n");
-        for (RelationshipDto rel : relations) {
-            csv.append(escapeCsv(nodeIdToName.getOrDefault(rel.getSourceNodeId(), rel.getSourceNodeId()))).append(",");
-            csv.append(escapeCsv(nodeIdToName.getOrDefault(rel.getTargetNodeId(), rel.getTargetNodeId()))).append(",");
-            csv.append(escapeCsv(rel.getType())).append("\n");
-        }
-        
-        // 添加 BOM 以支持 Excel 正确识别 UTF-8
-        byte[] bom = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
-        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
-        byte[] content = new byte[bom.length + csvBytes.length];
-        System.arraycopy(bom, 0, content, 0, bom.length);
-        System.arraycopy(csvBytes, 0, content, bom.length, csvBytes.length);
-        
+    private ResponseEntity<StreamingResponseBody> downloadAsCsv(Integer graphId, String graphName) {
+        StreamingResponseBody body = outputStream -> {
+            try {
+                outputStream.write(UTF8_BOM);
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+                streamNodesCsv(graphId, writer);
+                writer.write("\n");
+                streamRelationsCsv(graphId, writer);
+                writer.flush();
+            } catch (Exception e) {
+                log.error("Stream CSV export failed, graphId={}", graphId, e);
+                throw asIOException("CSV export failed", e);
+            }
+        };
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("text", "csv", StandardCharsets.UTF_8));
         headers.setContentDispositionFormData("attachment", graphName + ".csv");
-        
-        return ResponseEntity.ok().headers(headers).body(content);
+
+        return ResponseEntity.ok().headers(headers).body(body);
+    }
+
+    private void streamNodesCsv(Integer graphId, BufferedWriter writer) throws IOException {
+        writer.write("# 节点数据\n");
+        writer.write("节点名称,节点类型,描述\n");
+        for (long skip = 0; ; skip += EXPORT_BATCH_SIZE) {
+            List<NodeDto> nodes = nodeService.getExportNodesByGraphId(graphId, skip, EXPORT_BATCH_SIZE);
+            if (nodes.isEmpty()) {
+                return;
+            }
+            for (NodeDto node : nodes) {
+                writer.write(escapeCsv(node.getName()));
+                writer.write(",");
+                writer.write(escapeCsv(node.getType()));
+                writer.write(",");
+                writer.write(escapeCsv(node.getDescription()));
+                writer.write("\n");
+            }
+            writer.flush();
+            if (nodes.size() < EXPORT_BATCH_SIZE) {
+                return;
+            }
+        }
+    }
+
+    private void streamRelationsCsv(Integer graphId, BufferedWriter writer) throws IOException {
+        writer.write("# 关系数据\n");
+        writer.write("源节点,目标节点,关系类型\n");
+        for (long skip = 0; ; skip += EXPORT_BATCH_SIZE) {
+            List<RelationshipDto> relations = relationshipService.getExportRelationshipsByGraphId(graphId, skip, EXPORT_BATCH_SIZE);
+            if (relations.isEmpty()) {
+                return;
+            }
+            for (RelationshipDto rel : relations) {
+                writer.write(escapeCsv(valueOrFallback(rel.getSourceNodeName(), rel.getSourceNodeId())));
+                writer.write(",");
+                writer.write(escapeCsv(valueOrFallback(rel.getTargetNodeName(), rel.getTargetNodeId())));
+                writer.write(",");
+                writer.write(escapeCsv(rel.getType()));
+                writer.write("\n");
+            }
+            writer.flush();
+            if (relations.size() < EXPORT_BATCH_SIZE) {
+                return;
+            }
+        }
     }
 
     /**
@@ -283,6 +368,18 @@ public class DownloadController {
         }
     }
 
+    private String sanitizeFileName(String fileName) {
+        return fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
+    }
+
+    private String valueOrFallback(String value, String fallback) {
+        return value != null ? value : fallback;
+    }
+
+    private IOException asIOException(String message, Exception e) {
+        return e instanceof IOException ioException ? ioException : new IOException(message, e);
+    }
+
     /**
      * CSV 转义
      */
@@ -294,51 +391,4 @@ public class DownloadController {
         return value;
     }
 
-    /**
-     * 简单的 JSON 序列化
-     */
-    private String toJsonString(Object obj) {
-        if (obj == null) return "null";
-        if (obj instanceof String) {
-            return "\"" + escapeJson((String) obj) + "\"";
-        }
-        if (obj instanceof Number || obj instanceof Boolean) {
-            return obj.toString();
-        }
-        if (obj instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) obj;
-            StringBuilder sb = new StringBuilder("{\n");
-            boolean first = true;
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                if (!first) sb.append(",\n");
-                sb.append("  \"").append(escapeJson(entry.getKey().toString())).append("\": ");
-                sb.append(toJsonString(entry.getValue()));
-                first = false;
-            }
-            sb.append("\n}");
-            return sb.toString();
-        }
-        if (obj instanceof List) {
-            List<?> list = (List<?>) obj;
-            StringBuilder sb = new StringBuilder("[\n");
-            boolean first = true;
-            for (Object item : list) {
-                if (!first) sb.append(",\n");
-                sb.append("    ").append(toJsonString(item));
-                first = false;
-            }
-            sb.append("\n  ]");
-            return sb.toString();
-        }
-        return "\"" + obj.toString() + "\"";
-    }
-
-    private String escapeJson(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-    }
 }

@@ -2,11 +2,15 @@ package com.sdu.kgplatform.controller;
 
 import com.sdu.kgplatform.dto.GraphDetailDto;
 import com.sdu.kgplatform.entity.User;
+import com.sdu.kgplatform.repository.DomainCategoryRepository;
 import com.sdu.kgplatform.repository.UserRepository;
 import com.sdu.kgplatform.service.FileStorageService;
+import com.sdu.kgplatform.service.FileValidationService;
 import com.sdu.kgplatform.service.GraphImportService;
 import com.sdu.kgplatform.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,9 +28,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FileUploadController {
 
+    private static final Logger log = LoggerFactory.getLogger(FileUploadController.class);
+
     private final UserService userService;
     private final UserRepository userRepository;
+    private final DomainCategoryRepository domainCategoryRepository;
     private final FileStorageService fileStorageService;
+    private final FileValidationService fileValidationService;
     private final GraphImportService graphImportService;
 
     /**
@@ -40,7 +48,7 @@ public class FileUploadController {
         }
 
         try {
-            validateImage(file, 2 * 1024 * 1024); // 2MB
+            fileValidationService.validateImage(file, FileValidationService.AVATAR_MAX_SIZE);
             String avatarUrl = fileStorageService.storeFile(file, "avatars");
             User user = findCurrentUser(auth);
             userService.updateUserAvatar(user.getEmail() != null ? user.getEmail() : user.getUserName(), avatarUrl);
@@ -65,7 +73,7 @@ public class FileUploadController {
         }
 
         try {
-            validateImage(file, 5 * 1024 * 1024); // 5MB
+            fileValidationService.validateImage(file, FileValidationService.IMAGE_MAX_SIZE);
             String imageUrl = fileStorageService.storeFile(file, "images");
 
             return ResponseEntity.ok(Map.of(
@@ -88,7 +96,7 @@ public class FileUploadController {
         }
 
         try {
-            validateImage(file, 5 * 1024 * 1024); // 5MB
+            fileValidationService.validateImage(file, FileValidationService.IMAGE_MAX_SIZE);
             String coverUrl = fileStorageService.storeFile(file, "covers");
 
             return ResponseEntity.ok(Map.of(
@@ -120,8 +128,9 @@ public class FileUploadController {
         try {
             User user = findCurrentUser(auth);
             Integer userId = user.getUserId();
+            String validatedDomain = validateDomain(domain);
 
-            GraphDetailDto graph = graphImportService.importGraph(file, name, description, status, domain, coverFile,
+            GraphDetailDto graph = graphImportService.importGraph(file, name, description, status, validatedDomain, coverFile,
                     userId);
 
             return ResponseEntity.ok(Map.of(
@@ -132,7 +141,7 @@ public class FileUploadController {
                     "nodeCount", graph.getNodeCount(),
                     "relationCount", graph.getRelationCount()));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Graph upload failed", e);
             return ResponseEntity.status(500).body(Map.of("error", "图谱上传失败: " + e.getMessage()));
         }
     }
@@ -141,17 +150,12 @@ public class FileUploadController {
         return auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal());
     }
 
-    private void validateImage(MultipartFile file, long maxSize) {
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("请选择要上传的文件");
+    private String validateDomain(String domain) {
+        String code = (domain == null || domain.isBlank()) ? "other" : domain.trim();
+        if (domainCategoryRepository.findByCode(code) == null) {
+            throw new IllegalArgumentException("无效的图谱分类: " + code);
         }
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("只能上传图片文件");
-        }
-        if (file.getSize() > maxSize) {
-            throw new IllegalArgumentException("文件大小均不能超过 " + (maxSize / 1024 / 1024) + "MB");
-        }
+        return code;
     }
 
     private User findCurrentUser(Authentication auth) {

@@ -1,299 +1,74 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
-
+      layout:decorate="~{layout/base}">
 <head>
-    <title>知识图谱探索</title>
+    <title>图谱列表</title>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/graph-list.css}">
     </th:block>
 </head>
-
 <body>
-    <div layout:fragment="content">
-        <!-- Header Section -->
-        <section class="bg-base-100 py-16 px-4">
-            <div class="container mx-auto max-w-6xl text-center">
-                <h1 class="text-4xl font-bold text-base-content mb-4">知识图谱探索</h1>
-                <p class="text-lg text-base-content/70 mb-8">在这里发现和探索海量的知识图谱，助您洞察数据背后的关联与价值。</p>
-                <div class="flex justify-center">
-                    <div class="join w-full max-w-md search-container">
-                        <input type="text" placeholder="搜索知识图谱..." id="searchInput"
-                            class="input input-bordered join-item w-full focus-primary">
-                        <button class="btn btn-primary join-item" onclick="performSearch()">
-                            <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                        </button>
-                        <div id="searchSuggestions" class="search-suggestions hidden"></div>
+<div layout:fragment="content">
+    <section class="bg-base-200 border-b border-base-300">
+        <div class="container mx-auto px-4 py-10 max-w-6xl">
+            <div class="space-y-6">
+                <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+                    <div>
+                        <h1 class="text-4xl font-bold">图谱列表</h1>
+                        <p class="text-base-content/65 mt-3">公共图谱接口已恢复，当前页面重新接回真实数据读取与收藏操作。</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="btn btn-outline btn-sm view-toggle active" data-view="recommended" onclick="toggleView('recommended')">推荐</button>
+                        <button class="btn btn-outline btn-sm view-toggle" data-view="viewCount" onclick="toggleView('viewCount')">热门</button>
+                        <button class="btn btn-outline btn-sm view-toggle" data-view="date" onclick="toggleView('date')">最新</button>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Filter and List Section -->
-        <section class="py-8 px-4">
-            <div class="container mx-auto max-w-7xl">
-                <div class="flex flex-col lg:flex-row gap-8">
-                    <!-- Left Sidebar - Filters -->
-                    <div class="lg:w-80 flex-shrink-0">
-                        <div class="card bg-base-100 shadow-soft">
-                            <div class="card-body p-4">
-                                <div class="space-y-4">
-                                    <!-- Basic Filter -->
-                                    <div class="filter-group">
-                                        <div class="collapse collapse-open bg-base-200/50 rounded-lg">
-                                            <input type="checkbox" checked class="collapse-toggle">
-                                            <div class="collapse-title text-sm font-medium px-4 py-2 min-h-0">
-                                                <span class="iconify" data-icon="heroicons:funnel"
-                                                    data-width="16"></span>
-                                                基础筛选
-                                            </div>
-                                            <div class="collapse-content px-4 pb-4">
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <span class="iconify" data-icon="heroicons:squares-2x2"
-                                                            data-width="16"></span>
-                                                        领域分类
-                                                    </h4>
-                                                    <div id="categoryFilters" class="grid grid-cols-2 gap-1">
-                                                        <button data-filter="all"
-                                                            class="btn btn-ghost btn-xs justify-start filter-btn active"
-                                                            onclick="filterGraphs('all')">
-                                                            <span class="iconify" data-icon="heroicons:squares-2x2"
-                                                                data-width="12"></span>全部
-                                                        </button>
-                                                        <!-- 动态加载分类 -->
-                                                    </div>
-                                                </div>
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <span class="iconify" data-icon="heroicons:magnifying-glass"
-                                                            data-width="16"></span>
-                                                        关键词筛选
-                                                    </h4>
-                                                    <input type="text" placeholder="输入关键词..." id="keywordFilter"
-                                                        class="input input-bordered input-xs w-full focus-primary">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Structure Filter -->
-                                    <div class="filter-group">
-                                        <div class="collapse bg-base-200/50 rounded-lg">
-                                            <input type="checkbox" class="collapse-toggle">
-                                            <div class="collapse-title text-sm font-medium px-4 py-2 min-h-0">
-                                                <span class="iconify" data-icon="heroicons:chart-bar-square"
-                                                    data-width="16"></span>
-                                                图谱结构
-                                            </div>
-                                            <div class="collapse-content px-4 pb-4">
-                                                <!-- 节点数量筛选 -->
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <span class="iconify" data-icon="heroicons:circle"
-                                                            data-width="14"></span>
-                                                        节点数量
-                                                    </h4>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最小节点数</span><span
-                                                                id="minNodesValue"
-                                                                class="label-text-alt text-xs">0</span></label>
-                                                        <input type="range" min="0" max="1000" value="0"
-                                                            id="minNodesRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最大节点数</span><span
-                                                                id="maxNodesValue"
-                                                                class="label-text-alt text-xs">1000</span></label>
-                                                        <input type="range" min="0" max="1000" value="1000"
-                                                            id="maxNodesRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                </div>
-                                                <!-- 关系数筛选 -->
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <span class="iconify" data-icon="heroicons:arrow-right"
-                                                            data-width="14"></span>
-                                                        关系数
-                                                    </h4>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最小关系数</span><span
-                                                                id="minEdgesValue"
-                                                                class="label-text-alt text-xs">0</span></label>
-                                                        <input type="range" min="0" max="2000" value="0"
-                                                            id="minEdgesRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最大关系数</span><span
-                                                                id="maxEdgesValue"
-                                                                class="label-text-alt text-xs">2000</span></label>
-                                                        <input type="range" min="0" max="2000" value="2000"
-                                                            id="maxEdgesRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                </div>
-                                                <!-- 图谱密度筛选 -->
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <span class="iconify" data-icon="heroicons:squares-plus"
-                                                            data-width="14"></span>
-                                                        图谱密度
-                                                    </h4>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最小密度</span><span
-                                                                id="minDensityValue"
-                                                                class="label-text-alt text-xs">0.00</span></label>
-                                                        <input type="range" min="0" max="100" value="0"
-                                                            id="minDensityRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this, 'decimal')">
-                                                    </div>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最大密度</span><span
-                                                                id="maxDensityValue"
-                                                                class="label-text-alt text-xs">1.00</span></label>
-                                                        <input type="range" min="0" max="100" value="100"
-                                                            id="maxDensityRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this, 'decimal')">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Popularity Filter -->
-                                    <div class="filter-group">
-                                        <div class="collapse bg-base-200/50 rounded-lg">
-                                            <input type="checkbox" class="collapse-toggle">
-                                            <div class="collapse-title text-sm font-medium px-4 py-2 min-h-0">
-                                                <span class="iconify" data-icon="heroicons:fire" data-width="16"></span>
-                                                热度指标
-                                            </div>
-                                            <div class="collapse-content px-4 pb-4">
-                                                <!-- 浏览次数筛选 -->
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <span class="iconify" data-icon="heroicons:eye"
-                                                            data-width="14"></span>
-                                                        浏览次数
-                                                    </h4>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最小浏览数</span><span
-                                                                id="minViewCountValue"
-                                                                class="label-text-alt text-xs">0</span></label>
-                                                        <input type="range" min="0" max="30000" value="0"
-                                                            id="minViewCountRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最大浏览数</span><span
-                                                                id="maxViewCountValue"
-                                                                class="label-text-alt text-xs">30000</span></label>
-                                                        <input type="range" min="0" max="30000" value="30000"
-                                                            id="maxViewCountRange" class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                </div>
-                                                <!-- 下载次数筛选 -->
-                                                <div class="mb-4">
-                                                    <h4 class="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <span class="iconify" data-icon="heroicons:arrow-down-tray"
-                                                            data-width="14"></span>
-                                                        下载次数
-                                                    </h4>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最小下载数</span><span
-                                                                id="minDownloadCountValue"
-                                                                class="label-text-alt text-xs">0</span></label>
-                                                        <input type="range" min="0" max="5000" value="0"
-                                                            id="minDownloadCountRange"
-                                                            class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                    <div class="form-control">
-                                                        <label class="label py-1"><span
-                                                                class="label-text text-xs">最大下载数</span><span
-                                                                id="maxDownloadCountValue"
-                                                                class="label-text-alt text-xs">5000</span></label>
-                                                        <input type="range" min="0" max="5000" value="5000"
-                                                            id="maxDownloadCountRange"
-                                                            class="range range-primary range-xs"
-                                                            oninput="updateSliderValue(this)">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Reset Button -->
-                                    <div class="mt-4">
-                                        <button class="btn btn-outline btn-sm w-full" onclick="resetFilters()">
-                                            <span class="iconify" data-icon="heroicons:arrow-path"
-                                                data-width="16"></span>
-                                            重置筛选
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                <div class="grid graph-filter-grid gap-6">
+                    <div class="space-y-4">
+                        <div class="join w-full relative">
+                            <input id="searchInput" type="text" class="input input-bordered join-item flex-1" placeholder="搜索图谱名称或描述">
+                            <button class="btn btn-primary join-item" onclick="performSearch()">搜索</button>
+                            <div id="searchSuggestions" class="search-suggestions hidden"></div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm text-base-content/60">领域筛选</span>
+                            <button class="btn btn-sm btn-outline filter-btn active" data-filter="all" onclick="filterGraphs('all')">全部</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="science" onclick="filterGraphs('science')">科学</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="engineering" onclick="filterGraphs('engineering')">工程</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="medicine" onclick="filterGraphs('medicine')">医学</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="humanities" onclick="filterGraphs('humanities')">人文</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="economics" onclick="filterGraphs('economics')">经济</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="information" onclick="filterGraphs('information')">信息</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="education" onclick="filterGraphs('education')">教育</button>
+                            <button class="btn btn-sm btn-outline filter-btn" data-filter="other" onclick="filterGraphs('other')">其他</button>
                         </div>
                     </div>
 
-                    <!-- Main Content -->
-                    <div class="flex-1">
-                        <!-- View Toggle and Result Count -->
-                        <div class="flex justify-between items-center mb-6 results-toolbar">
-                            <div class="flex gap-2">
-                                <button data-view="recommended" class="btn btn-primary btn-sm view-toggle active"
-                                    onclick="toggleView('recommended')">
-                                    <span class="iconify" data-icon="heroicons:star" data-width="16"></span>推荐
-                                </button>
-                                <button data-view="popular" class="btn btn-ghost btn-sm view-toggle"
-                                    onclick="toggleView('popular')">
-                                    <span class="iconify" data-icon="heroicons:fire" data-width="16"></span>热门
-                                </button>
-                                <button data-view="latest" class="btn btn-ghost btn-sm view-toggle"
-                                    onclick="toggleView('latest')">
-                                    <span class="iconify" data-icon="heroicons:clock" data-width="16"></span>最新
-                                </button>
-                            </div>
-                            <div id="resultCount" class="text-sm text-base-content/70">共找到 0 个图谱</div>
+                    <aside class="bg-base-100 border border-base-300 rounded-box p-4 shadow-soft space-y-4">
+                        <div>
+                            <div class="text-sm font-semibold">结果</div>
+                            <div id="resultCount" class="text-sm text-base-content/70 mt-1">加载中...</div>
                         </div>
-
-                        <!-- Graph Grid -->
-                        <div id="graphGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 academic-grid">
-                            <!-- Graphs will be loaded dynamically -->
+                        <div>
+                            <label class="label px-0"><span class="label-text text-sm">关键词过滤</span></label>
+                            <input id="keywordFilter" type="text" class="input input-bordered input-sm w-full" placeholder="进一步过滤当前结果">
                         </div>
-
-                        <!-- Pagination -->
-                        <div class="flex justify-center mt-8">
-                            <div class="join">
-                                <button class="join-item btn btn-sm">«</button>
-                                <button class="join-item btn btn-sm btn-active">1</button>
-                                <button class="join-item btn btn-sm">2</button>
-                                <button class="join-item btn btn-sm">3</button>
-                                <button class="join-item btn btn-sm">»</button>
-                            </div>
-                        </div>
-                    </div>
+                        <button class="btn btn-ghost btn-sm w-full" onclick="resetFilters()">重置筛选</button>
+                    </aside>
                 </div>
             </div>
-        </section>
-    </div>
+        </div>
+    </section>
+
+    <section class="container mx-auto px-4 py-10 max-w-6xl">
+        <div id="graphGrid" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+        <div id="graphPager" class="graph-pager mt-8"></div>
+    </section>
 
     <th:block layout:fragment="js">
         <script th:src="@{/js/graph-list.js}"></script>
     </th:block>
+</div>
 </body>
-
 </html>

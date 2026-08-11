@@ -4,6 +4,10 @@
 
 server:
   port: ${PORT:8080}
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: text/html,text/css,text/plain,application/javascript,application/json,image/svg+xml
 
 spring:
   datasource:
@@ -17,11 +21,19 @@ spring:
       username: ${NEO4J_USERNAME:neo4j}
       password: ${NEO4J_PASSWORD}
   jpa:
+    hibernate:
+      ddl-auto: validate
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          cache-public: true
+          max-age: 1d
 
 # 生产环境上传目录（Linux 服务器）
 app:

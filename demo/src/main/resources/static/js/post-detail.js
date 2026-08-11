@@ -5,18 +5,47 @@ let currentUser = null;
 let authorId = null;
 let replyToCommentId = null;
 
-document.addEventListener('DOMContentLoaded', async function () {
-    marked.setOptions({
-        gfm: true,
-        breaks: true,
-        highlight: function (code, lang) {
-            if (hljs.getLanguage(lang)) {
-                return hljs.highlight(code, { language: lang }).value;
-            }
-            return hljs.highlightAuto(code).value;
-        },
-        langPrefix: 'hljs language-'
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, function (ch) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[ch];
     });
+}
+
+function escapeJsString(value) {
+    return String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, '\\r')
+        .replace(/\n/g, '\\n')
+        .replace(/</g, '\\x3C')
+        .replace(/>/g, '\\x3E');
+}
+
+function safeInteger(value) {
+    const number = Number(value);
+    return Number.isInteger(number) && number >= 0 ? number : 0;
+}
+
+function safeImageUrl(value) {
+    const url = String(value ?? '').trim();
+    if (!url) return '';
+    if (url.startsWith('/')) return url;
+    try {
+        const parsed = new URL(url, window.location.origin);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : '';
+    } catch (e) {
+        return '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+    setupMarkdownRenderer();
 
     await initGuestCheck();
     await checkLogin();
@@ -27,6 +56,36 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     initScrollSpy();
 });
+
+function setupMarkdownRenderer() {
+    if (!window.marked) return;
+
+    window.marked.setOptions({
+        gfm: true,
+        breaks: true,
+        highlight: function (code, lang) {
+            if (!window.hljs) return escapeHtml(code);
+            if (lang && window.hljs.getLanguage(lang)) {
+                return window.hljs.highlight(code, { language: lang }).value;
+            }
+            return window.hljs.highlightAuto(code).value;
+        },
+        langPrefix: 'hljs language-'
+    });
+}
+
+function renderMarkdownContent(rawContent) {
+    const content = String(rawContent || '');
+    if (!window.marked) {
+        return '<pre class="whitespace-pre-wrap font-sans">' + escapeHtml(content) + '</pre>';
+    }
+
+    const html = window.marked.parse(content);
+    if (!window.DOMPurify) {
+        return escapeHtml(content).replace(/\n/g, '<br>');
+    }
+    return window.DOMPurify.sanitize(html);
+}
 
 // ========== Auth ==========
 async function checkLogin() {
@@ -80,7 +139,7 @@ async function loadPost() {
             const postContent = document.getElementById('postContent');
             if (postLoading) postLoading.classList.add('hidden');
             if (postContent) {
-                postContent.innerHTML = '<div class="text-center py-20"><p class="text-base-content/60 mb-4">' + (data.error || '帖子加载失败') + '</p><a href="/community/forum_list.html" class="btn btn-primary">返回论坛</a></div>';
+                postContent.innerHTML = '<div class="text-center py-20"><p class="text-base-content/60 mb-4">' + escapeHtml(data.error || '帖子加载失败') + '</p><a href="/community/forum_list.html" class="btn btn-primary">返回论坛</a></div>';
                 postContent.classList.remove('hidden');
             }
         }
@@ -148,9 +207,11 @@ function renderPost(data) {
     // Avatar with image support
     var authorAvatarEl = document.getElementById('authorAvatar');
     var sidebarAvatarEl = document.getElementById('sidebarAuthorAvatar');
-    if (data.authorAvatar) {
-        if (authorAvatarEl) authorAvatarEl.innerHTML = '<img src="' + data.authorAvatar + '" class="w-full h-full rounded-full object-cover" alt="" />';
-        if (sidebarAvatarEl) sidebarAvatarEl.innerHTML = '<img src="' + data.authorAvatar + '" class="w-full h-full rounded-full object-cover" alt="" />';
+    const authorAvatarUrl = safeImageUrl(data.authorAvatar);
+    if (authorAvatarUrl) {
+        const authorAvatarHtml = '<img src="' + escapeHtml(authorAvatarUrl) + '" class="w-full h-full rounded-full object-cover" alt="" />';
+        if (authorAvatarEl) authorAvatarEl.innerHTML = authorAvatarHtml;
+        if (sidebarAvatarEl) sidebarAvatarEl.innerHTML = authorAvatarHtml;
     } else {
         if (authorAvatarEl) authorAvatarEl.textContent = authorInitial;
         if (sidebarAvatarEl) sidebarAvatarEl.textContent = authorInitial;
@@ -223,11 +284,11 @@ function renderPost(data) {
 
     // Render Markdown
     const rawContent = data.post.postText || '';
-    const htmlContent = DOMPurify.sanitize(marked.parse(rawContent));
+    const htmlContent = renderMarkdownContent(rawContent);
     var postBodyEl = document.getElementById('postBody');
     if (postBodyEl) {
         postBodyEl.innerHTML = htmlContent;
-        hljs.highlightAll();
+        if (window.hljs) window.hljs.highlightAll();
         addCodeCopyButtons();
         generateTOC();
     }
@@ -341,13 +402,16 @@ function updateCommentCount(count) {
 }
 
 function createCommentHTML(comment, isReply, parentName) {
-    var name = comment.username || '匿名';
-    var initial = name.charAt(0);
-    var replyPrefix = isReply && parentName ? '<span class="text-primary">@' + parentName + '</span> ' : '';
+    var rawName = comment.username || '匿名';
+    var name = escapeHtml(rawName);
+    var initial = escapeHtml(rawName.charAt(0));
+    var replyPrefix = isReply && parentName ? '<span class="text-primary">@' + escapeHtml(parentName) + '</span> ' : '';
     var replyClass = isReply ? 'reply-item level-2' : '';
     var canDelete = currentUser && (currentUser.userId === comment.userId || currentUser.role === 'ADMIN');
-    var avatarHtml = comment.avatar
-        ? '<img src="' + comment.avatar + '" class="w-8 h-8 rounded-full object-cover" alt="" />'
+    var commentId = safeInteger(comment.commentId);
+    var avatarUrl = safeImageUrl(comment.avatar);
+    var avatarHtml = avatarUrl
+        ? '<img src="' + escapeHtml(avatarUrl) + '" class="w-8 h-8 rounded-full object-cover" alt="" />'
         : initial;
 
     var html = '<div class="flex gap-3 p-3 rounded-lg ' + replyClass + '">';
@@ -358,11 +422,11 @@ function createCommentHTML(comment, isReply, parentName) {
     html += '<div class="flex items-center gap-2">';
     html += '<span class="text-xs text-base-content/50">' + new Date(comment.commentTime).toLocaleString() + '</span>';
     if (canDelete) {
-        html += '<button class="btn btn-ghost btn-xs text-error" onclick="deleteComment(' + comment.commentId + ')">删除</button>';
+        html += '<button class="btn btn-ghost btn-xs text-error" onclick="deleteComment(' + commentId + ')">删除</button>';
     }
     html += '</div></div>';
-    html += '<p class="text-sm text-base-content/80">' + replyPrefix + comment.commentText + '</p>';
-    html += '<button class="btn btn-ghost btn-xs mt-1" onclick="replyTo(' + comment.commentId + ', \'' + name.replace(/'/g, "\\'") + '\')">回复</button>';
+    html += '<p class="text-sm text-base-content/80">' + replyPrefix + escapeHtml(comment.commentText || '') + '</p>';
+    html += '<button class="btn btn-ghost btn-xs mt-1" onclick="replyTo(' + commentId + ', \'' + escapeJsString(rawName) + '\')">回复</button>';
     html += '</div></div>';
     return html;
 }

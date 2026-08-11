@@ -3,6 +3,16 @@
  * 使用文档页面样式
  */
 
+.documentation-layout {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+    .documentation-layout {
+        grid-template-columns: 220px minmax(0, 1fr);
+    }
+}
+
 /* Sidebar sticky positioning */
 .doc-sidebar {
     position: sticky;
@@ -16,13 +26,13 @@
 
 .doc-nav-link:hover {
     color: var(--color-primary);
-    background-color: var(--color-primary)/10;
+    background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
 }
 
 .doc-nav-link.active {
     color: var(--color-primary);
     font-weight: 600;
-    background-color: var(--color-primary)/5;
+    background-color: color-mix(in oklab, var(--color-primary) 5%, transparent);
 }
 
 /* Code block styling */
@@ -63,7 +73,7 @@ article {
 
 /* Info box styling */
 .info-box {
-    background-color: var(--color-info)/10;
+    background-color: color-mix(in oklab, var(--color-info) 10%, transparent);
     border-left: 4px solid var(--color-info);
     padding: 1rem;
     margin-bottom: 1.5rem;

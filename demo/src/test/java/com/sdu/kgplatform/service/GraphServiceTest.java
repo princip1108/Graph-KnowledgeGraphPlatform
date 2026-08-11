@@ -9,7 +9,11 @@ import com.sdu.kgplatform.entity.KnowledgeGraph;
 import com.sdu.kgplatform.entity.User;
 import com.sdu.kgplatform.repository.KnowledgeGraphRepository;
 import com.sdu.kgplatform.repository.NodeRepository;
+import com.sdu.kgplatform.repository.RelationshipRepository;
 import com.sdu.kgplatform.repository.UserRepository;
+import com.sdu.kgplatform.repository.CategoryRepository;
+import com.sdu.kgplatform.repository.BrowsingHistoryRepository;
+import com.sdu.kgplatform.repository.GraphFavoriteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +48,21 @@ class GraphServiceTest {
 
     @Mock
     private NodeRepository nodeRepository;
+
+    @Mock
+    private RelationshipRepository relationshipRepository;
+
+    @Mock
+    private CategoryRepository categoryRepository;
+
+    @Mock
+    private FileStorageService fileStorageService;
+
+    @Mock
+    private BrowsingHistoryRepository browsingHistoryRepository;
+
+    @Mock
+    private GraphFavoriteRepository graphFavoriteRepository;
 
     @InjectMocks
     private GraphService graphService;
@@ -221,14 +240,19 @@ class GraphServiceTest {
     void deleteGraph_Success() {
         // Arrange
         when(graphRepository.findById(1)).thenReturn(Optional.of(testGraph));
-        doNothing().when(nodeRepository).deleteByGraphId(1);
+        doNothing().when(browsingHistoryRepository).deleteByGraphId(1);
+        when(relationshipRepository.deleteByGraphIdIncludingDangling(1)).thenReturn(2L);
+        when(nodeRepository.detachDeleteByGraphId(1)).thenReturn(3L);
+        doNothing().when(graphFavoriteRepository).deleteByIdGraphId(1);
         doNothing().when(graphRepository).delete(testGraph);
 
         // Act
         graphService.deleteGraph(1, 1);
 
         // Assert
-        verify(nodeRepository, times(1)).deleteByGraphId(1);
+        verify(relationshipRepository, times(1)).deleteByGraphIdIncludingDangling(1);
+        verify(nodeRepository, times(1)).detachDeleteByGraphId(1);
+        verify(graphFavoriteRepository, times(1)).deleteByIdGraphId(1);
         verify(graphRepository, times(1)).delete(testGraph);
     }
 
@@ -249,15 +273,67 @@ class GraphServiceTest {
     void incrementViewCount_Success() {
         // Arrange
         testGraph.setViewCount(5);
-        when(graphRepository.findById(1)).thenReturn(Optional.of(testGraph));
-        when(graphRepository.save(any(KnowledgeGraph.class))).thenReturn(testGraph);
 
         // Act
         graphService.incrementViewCount(1);
 
         // Assert
-        assertEquals(6, testGraph.getViewCount());
-        verify(graphRepository, times(1)).save(testGraph);
+        assertEquals(5, testGraph.getViewCount());
+        verify(graphRepository, times(1)).incrementViewCount(1);
+        verify(graphRepository, never()).save(any(KnowledgeGraph.class));
+    }
+
+    @Test
+    @DisplayName("热度刷新 - 优先使用仓库批量更新")
+    void updateAllHotScores_UsesRepositoryBatchUpdate() throws Exception {
+        // Arrange
+        javax.sql.DataSource dataSource = mock(javax.sql.DataSource.class);
+        java.sql.Connection connection = mock(java.sql.Connection.class);
+        java.sql.DatabaseMetaData metadata = mock(java.sql.DatabaseMetaData.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.getMetaData()).thenReturn(metadata);
+        when(metadata.getDatabaseProductName()).thenReturn("MySQL");
+        when(graphRepository.refreshPublishedHotScores()).thenReturn(7);
+        graphService = new GraphService(
+                graphRepository,
+                userRepository,
+                nodeRepository,
+                relationshipRepository,
+                categoryRepository,
+                fileStorageService,
+                browsingHistoryRepository,
+                graphFavoriteRepository,
+                null,
+                dataSource);
+
+        // Act
+        int updatedCount = graphService.updateAllHotScores();
+
+        // Assert
+        assertEquals(7, updatedCount);
+        verify(graphRepository, times(1)).refreshPublishedHotScores();
+        verify(graphRepository, never()).findByStatusOrderByGraphIdAsc(any(GraphStatus.class), any(Pageable.class));
+        verify(graphRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("清理 Neo4j 孤儿数据 - 使用有效图谱 ID 作为保留列表")
+    void cleanupNeo4jOrphans_UsesValidGraphIds() {
+        // Arrange
+        when(graphRepository.findAllGraphIds()).thenReturn(List.of(1, 2));
+        when(relationshipRepository.deleteOrphanRelationships(List.of(1, 2))).thenReturn(4L);
+        when(nodeRepository.detachDeleteOrphanNodes(List.of(1, 2))).thenReturn(5L);
+
+        // Act
+        var result = graphService.cleanupNeo4jOrphans();
+
+        // Assert
+        assertEquals(2, result.getValidGraphCount());
+        assertEquals(4L, result.getDeletedRelationshipCount());
+        assertEquals(5L, result.getDeletedNodeCount());
+        assertTrue(result.getWarnings().isEmpty());
+        verify(relationshipRepository, times(1)).deleteOrphanRelationships(List.of(1, 2));
+        verify(nodeRepository, times(1)).detachDeleteOrphanNodes(List.of(1, 2));
     }
 
     @Test
@@ -266,8 +342,7 @@ class GraphServiceTest {
         // Arrange
         testGraph.setStatus(GraphStatus.PUBLISHED);
         Page<KnowledgeGraph> page = new PageImpl<>(List.of(testGraph));
-        when(graphRepository.searchPublicGraphs(eq("测试"), any(Pageable.class))).thenReturn(page);
-        when(userRepository.findById(1)).thenReturn(Optional.of(testUser));
+        when(graphRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
 
         // Act
         Page<GraphListDto> result = graphService.searchPublicGraphs("测试", 0, 10);

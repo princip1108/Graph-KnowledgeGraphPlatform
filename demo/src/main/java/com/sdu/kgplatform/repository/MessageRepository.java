@@ -21,12 +21,30 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
             Pageable pageable);
 
     /**
-     * 获取我的最近联系人（发送或接收）
-     * 这是一个较复杂的查询，为了简化 MVP，我们查询我参与的所有消息，然后应用层分组
-     * 或者使用 Group By 查询最新的一条
+     * 获取每个会话的最新一条消息，避免把用户全部私信拉入内存再分组。
      */
-    @Query("SELECT m FROM Message m WHERE m.senderId = :userId OR m.toId = :userId ORDER BY m.sendTime DESC")
-    List<Message> findUserMessages(@Param("userId") Integer userId);
+    @Query(value = """
+            SELECT ranked.message_id, ranked.sender_id, ranked.to_id, ranked.send_time,
+                   ranked.message_status, ranked.message_text, ranked.is_read
+            FROM (
+                SELECT m.*,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY CASE WHEN m.sender_id = :userId THEN m.to_id ELSE m.sender_id END
+                           ORDER BY m.send_time DESC, m.message_id DESC
+                       ) AS row_num
+                FROM message m
+                WHERE m.sender_id = :userId OR m.to_id = :userId
+            ) ranked
+            WHERE ranked.row_num = 1
+            ORDER BY ranked.send_time DESC, ranked.message_id DESC
+            """, nativeQuery = true)
+    List<Message> findLatestConversationMessages(@Param("userId") Integer userId, Pageable pageable);
+
+    /**
+     * 按发送人统计未读数，配合会话列表批量填充。
+     */
+    @Query("SELECT m.senderId, COUNT(m) FROM Message m WHERE m.toId = :userId AND m.isRead = false GROUP BY m.senderId")
+    List<Object[]> countUnreadBySender(@Param("userId") Integer userId);
 
     /**
      * 统计未读消息数

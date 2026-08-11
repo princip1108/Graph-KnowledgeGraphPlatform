@@ -8,36 +8,8 @@ let hasUnsavedChanges = false;
 let autoSaveTimer = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
-    easyMDE = new EasyMDE({
-        element: document.getElementById('postContent'),
-        placeholder: "在此输入正文（支持 Markdown）...",
-        spellChecker: false,
-        status: false,
-        toolbar: ["bold", "italic", "heading", "|", "quote", "code", "unordered-list", "ordered-list", "|", "link", "image", "table", "|", "guide"],
-        uploadImage: true,
-        imageMaxSize: 5 * 1024 * 1024,
-        imageAccept: "image/png, image/jpeg, image/gif, image/webp",
-        imageUploadFunction: function (file, onSuccess, onError) {
-            var formData = new FormData();
-            formData.append('file', file);
-            fetch('/api/upload/image', {
-                method: 'POST',
-                body: formData,
-                credentials: 'include'
-            })
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    if (data.success) {
-                        onSuccess(data.url);
-                    } else {
-                        onError(data.error || '上传失败');
-                    }
-                })
-                .catch(function (err) { onError('网络错误'); });
-        }
-    });
-
-    tagify = new Tagify(document.getElementById('postTags'), { maxTags: 5 });
+    easyMDE = createEditor();
+    tagify = createTagInput();
 
     await checkLogin();
 
@@ -61,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // 实时预览
-    easyMDE.codemirror.on('change', function () {
+    easyMDE.onChange(function () {
         updatePreview();
         markUnsaved();
     });
@@ -83,6 +55,127 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
 });
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, function (ch) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[ch];
+    });
+}
+
+function createEditor() {
+    var textarea = document.getElementById('postContent');
+    if (window.EasyMDE) {
+        var editor = new window.EasyMDE({
+            element: textarea,
+            placeholder: "在此输入正文（支持 Markdown）...",
+            spellChecker: false,
+            status: false,
+            toolbar: ["bold", "italic", "heading", "|", "quote", "code", "unordered-list", "ordered-list", "|", "link", "image", "table", "|", "guide"],
+            uploadImage: true,
+            imageMaxSize: 5 * 1024 * 1024,
+            imageAccept: "image/png, image/jpeg, image/gif, image/webp",
+            imageUploadFunction: uploadEditorImage
+        });
+        return {
+            value: function (nextValue) {
+                if (arguments.length) {
+                    editor.value(nextValue || '');
+                    return undefined;
+                }
+                return editor.value();
+            },
+            onChange: function (handler) {
+                editor.codemirror.on('change', handler);
+            }
+        };
+    }
+
+    textarea.placeholder = "在此输入正文（支持 Markdown）...";
+    textarea.classList.add('textarea', 'textarea-bordered', 'w-full', 'h-full', 'min-h-96', 'font-mono', 'fallback-markdown-editor');
+    return {
+        value: function (nextValue) {
+            if (arguments.length) {
+                textarea.value = nextValue || '';
+                return undefined;
+            }
+            return textarea.value;
+        },
+        onChange: function (handler) {
+            textarea.addEventListener('input', handler);
+        }
+    };
+}
+
+function uploadEditorImage(file, onSuccess, onError) {
+    var formData = new FormData();
+    formData.append('file', file);
+    fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+    })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                onSuccess(data.url);
+            } else {
+                onError(data.error || '上传失败');
+            }
+        })
+        .catch(function () { onError('网络错误'); });
+}
+
+function createTagInput() {
+    var input = document.getElementById('postTags');
+    if (window.Tagify) {
+        return new window.Tagify(input, { maxTags: 5 });
+    }
+
+    input.classList.add('input', 'input-bordered');
+    return {
+        get value() {
+            return parseFallbackTags(input.value).map(function (tag) {
+                return { value: tag };
+            });
+        },
+        addTags: function (tags) {
+            input.value = parseFallbackTags(input.value).concat(tags || []).slice(0, 5).join(', ');
+        }
+    };
+}
+
+function parseFallbackTags(value) {
+    return String(value || '')
+        .split(/[,，\s]+/)
+        .map(function (tag) { return tag.trim(); })
+        .filter(Boolean)
+        .slice(0, 5);
+}
+
+function renderMarkdown(content) {
+    if (window.marked) {
+        var html = window.marked.parse(content);
+        if (window.DOMPurify) {
+            return window.DOMPurify.sanitize(html);
+        }
+        return escapeHtml(content).replace(/\n/g, '<br>');
+    }
+
+    return escapeHtml(content)
+        .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.*)$/gm, '<h1>$1</h1>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\n/g, '<br>');
+}
 
 // Load categories from API
 async function loadCategories() {
@@ -121,7 +214,7 @@ function updatePreview() {
     var content = easyMDE.value();
     var previewEl = document.getElementById('previewContent');
     if (content) {
-        previewEl.innerHTML = DOMPurify.sanitize(marked.parse(content));
+        previewEl.innerHTML = renderMarkdown(content);
         previewEl.classList.remove('text-base-content/50');
         previewEl.classList.add('text-base-content');
     } else {
@@ -149,6 +242,7 @@ function autoSave() {
         tags: tagify.value.map(function (t) { return t.value; }),
         graphId: document.getElementById('graphId').value,
         abstract: document.getElementById('postAbstract').value,
+        category: document.getElementById('postCategory').value,
         time: new Date().toISOString()
     };
     localStorage.setItem('post_draft_' + (postId || 'new'), JSON.stringify(draft));
@@ -269,7 +363,7 @@ async function publishPost() {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ title: title, content: content, tags: tags, abstract: abstract, graphId: graphId || null, category: document.getElementById('postCategory').value || 'other' })
+            body: JSON.stringify({ title: title, content: content, tags: tags, abstract: abstract, graphId: graphId || null, category: document.getElementById('postCategory').value || 'other', status: 'PUBLISHED' })
         });
         var data = await response.json();
 
@@ -298,9 +392,41 @@ function resetPublishBtn() {
         : '<span class="iconify" data-icon="heroicons:paper-airplane" data-width="18"></span> 发布';
 }
 
-function saveDraft() {
-    autoSave();
-    showToast('草稿已保存', 'success');
+async function saveDraft() {
+    var title = document.getElementById('postTitle').value.trim();
+    var content = easyMDE.value();
+    var category = document.getElementById('postCategory').value;
+    var graphId = document.getElementById('graphId').value;
+    var abstract = document.getElementById('postAbstract').value.trim() || content.substring(0, 150);
+    var tags = tagify.value.map(function (t) { return t.value; });
+
+    if (!title) { showToast('请输入标题', 'warning'); return; }
+    if (!content) { showToast('请输入正文内容', 'warning'); return; }
+    if (!category) { showToast('请选择领域分类', 'warning'); return; }
+
+    try {
+        var url = postId ? '/api/posts/' + postId : '/api/posts';
+        var method = postId ? 'PUT' : 'POST';
+        var response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ title: title, content: content, tags: tags, abstract: abstract, graphId: graphId || null, category: category, status: 'DRAFT' })
+        });
+        var data = await response.json();
+        if (data.success) {
+            localStorage.removeItem('post_draft_' + (postId || 'new'));
+            if (!postId && data.post && data.post.postId) {
+                postId = data.post.postId;
+            }
+            markSaved();
+            showToast('草稿已保存', 'success');
+        } else {
+            showToast(data.error || '草稿保存失败', 'error');
+        }
+    } catch (e) {
+        showToast('草稿保存失败', 'error');
+    }
 }
 
 function showToast(message, type) {

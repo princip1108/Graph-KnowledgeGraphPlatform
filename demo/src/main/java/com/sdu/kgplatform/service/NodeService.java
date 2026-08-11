@@ -11,7 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -37,36 +41,27 @@ public class NodeService {
      */
     @Transactional("neo4jTransactionManager")
     public NodeDto createNode(Integer graphId, NodeDto dto) {
-        validateGraphExists(graphId);
+        return createNode(graphId, dto, false);
+    }
 
-        // 检查同名节点（带异常处理，防止Neo4j连接问题）
-        try {
-        if (nodeRepository.findByGraphIdAndName(graphId, dto.getName()).isPresent()) {
-            throw new IllegalArgumentException("该图谱中已存在同名节点: " + dto.getName());
-            }
-        } catch (IllegalArgumentException e) {
-            throw e; // 重新抛出业务异常
-        } catch (Exception e) {
-            // Neo4j 连接问题，记录日志但继续创建节点
-            log.warn("警告: Neo4j 查询失败，跳过重复检查: {}", e.getMessage());
+    @Transactional("neo4jTransactionManager")
+    public NodeDto createNode(Integer graphId, NodeDto dto, boolean skipStats) {
+        validateGraphExists(graphId);
+        String nodeName = normalizeNodeName(dto.getName());
+
+        if (nodeRepository.findByGraphIdAndName(graphId, nodeName).isPresent()) {
+            throw new IllegalArgumentException("该图谱中已存在同名节点: " + nodeName);
         }
 
-        NodeEntity node = new NodeEntity();
-        // 生成业务 ID (nodeId)
-        node.setNodeId(java.util.UUID.randomUUID().toString());
-        node.setGraphId(graphId);
-        node.setName(dto.getName());
-        node.setType(dto.getType());
-        node.setDescription(dto.getDescription());
-        node.setOutDegree(0);
-        node.setInDegree(0);
-        node.setTotalDegree(0);
+        NodeEntity node = buildNode(graphId, dto, nodeName);
 
         try {
             log.debug("Creating node - nodeId={}, name={}", node.getNodeId(), node.getName());
-        NodeEntity saved = nodeRepository.save(node);
+            NodeEntity saved = nodeRepository.save(node);
             log.debug("Saved node - nodeId={}, id={}, name={}", saved.getNodeId(), saved.getId(), saved.getName());
-        updateGraphNodeCount(graphId);
+            if (!skipStats) {
+                updateGraphNodeCount(graphId);
+            }
             NodeDto result = convertToDto(saved);
             log.debug("Returning DTO - nodeId={}", result.getNodeId());
             return result;
@@ -82,20 +77,29 @@ public class NodeService {
     @Transactional("neo4jTransactionManager")
     public List<NodeDto> createNodes(Integer graphId, List<NodeDto> dtos) {
         validateGraphExists(graphId);
+        if (dtos == null || dtos.isEmpty()) {
+            throw new IllegalArgumentException("未提供节点数据");
+        }
 
-        List<NodeEntity> nodes = dtos.stream().map(dto -> {
-            NodeEntity node = new NodeEntity();
-            // 生成业务 ID (nodeId)
-            node.setNodeId(java.util.UUID.randomUUID().toString());
-            node.setGraphId(graphId);
-            node.setName(dto.getName());
-            node.setType(dto.getType());
-            node.setDescription(dto.getDescription());
-            node.setOutDegree(0);
-            node.setInDegree(0);
-            node.setTotalDegree(0);
-            return node;
-        }).collect(Collectors.toList());
+        List<String> nodeNames = new ArrayList<>();
+        Set<String> seenNames = new HashSet<>();
+        for (NodeDto dto : dtos) {
+            String nodeName = normalizeNodeName(dto.getName());
+            if (!seenNames.add(nodeName)) {
+                throw new IllegalArgumentException("批量节点中存在重复名称: " + nodeName);
+            }
+            nodeNames.add(nodeName);
+        }
+
+        List<NodeEntity> existingNodes = nodeRepository.findByGraphIdAndNameIn(graphId, nodeNames);
+        if (!existingNodes.isEmpty()) {
+            throw new IllegalArgumentException("该图谱中已存在同名节点: " + existingNodes.get(0).getName());
+        }
+
+        List<NodeEntity> nodes = new ArrayList<>();
+        for (int i = 0; i < dtos.size(); i++) {
+            nodes.add(buildNode(graphId, dtos.get(i), nodeNames.get(i)));
+        }
 
         List<NodeEntity> saved = nodeRepository.saveAll(nodes);
         updateGraphNodeCount(graphId);
@@ -112,13 +116,13 @@ public class NodeService {
         return nodes.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
-    /**
-     * 根据ID获取节点
-     */
-    public NodeDto getNodeById(String nodeId) {
-        NodeEntity node = nodeRepository.findByNodeId(nodeId)
-                .orElseThrow(() -> new IllegalArgumentException("节点不存在: " + nodeId));
-        return convertToDto(node);
+    @Transactional(value = "neo4jTransactionManager", readOnly = true)
+    public List<NodeDto> getExportNodesByGraphId(Integer graphId, long skip, long limit) {
+        return nodeRepository.findExportNodesByGraphId(graphId, skip, limit);
+    }
+
+    public NodeDto getNodeById(Integer graphId, String nodeId) {
+        return convertToDto(requireNodeInGraph(graphId, nodeId));
     }
 
     /**
@@ -146,20 +150,22 @@ public class NodeService {
         return nodes.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
-    /**
-     * 获取节点的出边邻居
-     */
-    public List<NodeDto> getOutgoingNeighbors(String nodeId) {
+    public List<NodeDto> getOutgoingNeighbors(Integer graphId, String nodeId) {
+        requireNodeInGraph(graphId, nodeId);
         List<NodeEntity> neighbors = nodeRepository.findOutgoingNeighbors(nodeId);
-        return neighbors.stream().map(this::convertToDto).collect(Collectors.toList());
+        return neighbors.stream()
+                .filter(node -> Objects.equals(node.getGraphId(), graphId))
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
-    /**
-     * 获取节点的入边邻居
-     */
-    public List<NodeDto> getIncomingNeighbors(String nodeId) {
+    public List<NodeDto> getIncomingNeighbors(Integer graphId, String nodeId) {
+        requireNodeInGraph(graphId, nodeId);
         List<NodeEntity> neighbors = nodeRepository.findIncomingNeighbors(nodeId);
-        return neighbors.stream().map(this::convertToDto).collect(Collectors.toList());
+        return neighbors.stream()
+                .filter(node -> Objects.equals(node.getGraphId(), graphId))
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -176,18 +182,13 @@ public class NodeService {
 
     // ==================== 更新节点 ====================
 
-    /**
-     * 更新节点
-     */
     @Transactional("neo4jTransactionManager")
-    public NodeDto updateNode(String nodeId, NodeDto dto) {
-        NodeEntity node = nodeRepository.findByNodeId(nodeId)
-                .orElseThrow(() -> new IllegalArgumentException("节点不存在: " + nodeId));
+    public NodeDto updateNode(Integer graphId, String nodeId, NodeDto dto) {
+        NodeEntity node = requireNodeInGraph(graphId, nodeId);
 
         if (dto.getName() != null && !dto.getName().trim().isEmpty()) {
-            // 检查新名称是否与其他节点冲突
             if (!node.getName().equals(dto.getName())) {
-                nodeRepository.findByGraphIdAndName(node.getGraphId(), dto.getName())
+                nodeRepository.findByGraphIdAndName(graphId, dto.getName())
                         .ifPresent(existing -> {
                             throw new IllegalArgumentException("该图谱中已存在同名节点: " + dto.getName());
                         });
@@ -209,15 +210,10 @@ public class NodeService {
 
     // ==================== 删除节点 ====================
 
-    /**
-     * 删除单个节点
-     */
     @Transactional("neo4jTransactionManager")
-    public void deleteNode(String nodeId) {
-        NodeEntity node = nodeRepository.findByNodeId(nodeId)
-                .orElseThrow(() -> new IllegalArgumentException("节点不存在: " + nodeId));
-        Integer graphId = node.getGraphId();
-        nodeRepository.delete(node);
+    public void deleteNode(Integer graphId, String nodeId) {
+        NodeEntity node = requireNodeInGraph(graphId, nodeId);
+        nodeRepository.detachDeleteByGraphIdAndNodeId(graphId, node.getNodeId());
         updateGraphNodeCount(graphId);
     }
 
@@ -245,6 +241,36 @@ public class NodeService {
         if (!graphRepository.existsById(graphId)) {
             throw new IllegalArgumentException("图谱不存在: " + graphId);
         }
+    }
+
+    private String normalizeNodeName(String name) {
+        String normalized = name == null ? null : name.trim();
+        if (normalized == null || normalized.isEmpty()) {
+            throw new IllegalArgumentException("节点名称不能为空");
+        }
+        return normalized;
+    }
+
+    private NodeEntity buildNode(Integer graphId, NodeDto dto, String nodeName) {
+        NodeEntity node = new NodeEntity();
+        node.setNodeId(java.util.UUID.randomUUID().toString());
+        node.setGraphId(graphId);
+        node.setName(nodeName);
+        node.setType(dto.getType());
+        node.setDescription(dto.getDescription());
+        node.setOutDegree(0);
+        node.setInDegree(0);
+        node.setTotalDegree(0);
+        return node;
+    }
+
+    private NodeEntity requireNodeInGraph(Integer graphId, String nodeId) {
+        NodeEntity node = nodeRepository.findByNodeId(nodeId)
+                .orElseThrow(() -> new IllegalArgumentException("节点不存在: " + nodeId));
+        if (!Objects.equals(node.getGraphId(), graphId)) {
+            throw new IllegalArgumentException("节点不属于当前图谱");
+        }
+        return node;
     }
 
     private void updateGraphNodeCount(Integer graphId) {

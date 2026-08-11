@@ -17,7 +17,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -60,3 +60,9 @@ app:
     # 本地开发：使用相对路径 uploads（在项目运行目录下）
     # 服务器部署：通过环境变量 APP_UPLOAD_BASE_PATH 覆盖，如 /data/uploads
     base-path: ${APP_UPLOAD_BASE_PATH:uploads}
+
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: lax

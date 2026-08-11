@@ -1,12 +1,14 @@
 package com.sdu.kgplatform.controller;
 
 import com.sdu.kgplatform.common.SecurityUtils;
+import com.sdu.kgplatform.dto.GraphOrphanCleanupResult;
 import com.sdu.kgplatform.entity.Post;
 import com.sdu.kgplatform.entity.Role;
 import com.sdu.kgplatform.entity.User;
 import com.sdu.kgplatform.repository.PostRepository;
 import com.sdu.kgplatform.repository.UserRepository;
 import com.sdu.kgplatform.service.AdminService;
+import com.sdu.kgplatform.service.GraphService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -31,13 +34,16 @@ public class AdminController {
     private final AdminService adminService;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final GraphService graphService;
 
     public AdminController(AdminService adminService,
                            PostRepository postRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           GraphService graphService) {
         this.adminService = adminService;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.graphService = graphService;
     }
 
     /**
@@ -50,7 +56,19 @@ public class AdminController {
         Map<String, Object> response = new HashMap<>();
         try {
             Page<Post> postPage = postRepository.findAll(
-                    PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "uploadTime")));
+                    PageRequest.of(normalizePage(page), normalizeSize(size), Sort.by(Sort.Direction.DESC, "uploadTime")));
+
+            List<Integer> authorIds = postPage.getContent().stream()
+                    .map(Post::getAuthorId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+            Map<Integer, String> authorNames = new HashMap<>();
+            userRepository.findAllById(authorIds).forEach(author -> {
+                if (author.getUserName() != null) {
+                    authorNames.put(author.getUserId(), author.getUserName());
+                }
+            });
 
             List<Map<String, Object>> postsWithAuthor = new ArrayList<>();
             for (Post post : postPage.getContent()) {
@@ -64,10 +82,7 @@ public class AdminController {
                 postMap.put("isPinned", post.getIsPinned());
                 postMap.put("authorId", post.getAuthorId());
                 postMap.put("category", post.getCategory());
-
-                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
-                    postMap.put("authorName", author.getUserName());
-                });
+                postMap.put("authorName", authorNames.getOrDefault(post.getAuthorId(), "未知用户"));
 
                 postsWithAuthor.add(postMap);
             }
@@ -84,11 +99,25 @@ public class AdminController {
     }
 
     /**
-     * 获取所有用户列表
+     * 获取用户列表（分页，避免一次性暴露全部用户实体）
      */
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getAllUsers());
+    public ResponseEntity<Map<String, Object>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<User> userPage = adminService.searchUsers("", "ALL", page, size);
+        List<Map<String, Object>> userList = userPage.getContent().stream()
+                .map(this::toAdminUserMap)
+                .collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("users", userList);
+        result.put("totalElements", userPage.getTotalElements());
+        result.put("totalPages", userPage.getTotalPages());
+        result.put("currentPage", normalizePage(page));
+        result.put("size", userPage.getSize());
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -102,26 +131,16 @@ public class AdminController {
             @RequestParam(defaultValue = "20") int size) {
         try {
             Page<User> userPage = adminService.searchUsers(keyword, filter, page, size);
-            List<Map<String, Object>> userList = userPage.getContent().stream().map(u -> {
-                Map<String, Object> m = new HashMap<>();
-                m.put("userId", u.getUserId());
-                m.put("userName", u.getUserName());
-                m.put("email", u.getEmail());
-                m.put("avatar", u.getAvatar());
-                m.put("role", u.getRole() != null ? u.getRole().name() : null);
-                m.put("userStatus", u.getUserStatus() != null ? u.getUserStatus().name() : null);
-                m.put("bannedUntil", u.getBannedUntil());
-                m.put("createdAt", u.getCreatedAt());
-                m.put("lastLoginAt", u.getLastLoginAt());
-                return m;
-            }).collect(Collectors.toList());
+            List<Map<String, Object>> userList = userPage.getContent().stream()
+                    .map(this::toAdminUserMap)
+                    .collect(Collectors.toList());
 
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("users", userList);
             result.put("totalElements", userPage.getTotalElements());
             result.put("totalPages", userPage.getTotalPages());
-            result.put("currentPage", page);
+            result.put("currentPage", normalizePage(page));
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -207,5 +226,41 @@ public class AdminController {
     public ResponseEntity<?> deleteUser(@PathVariable Integer userId) {
         adminService.deleteUser(userId);
         return ResponseEntity.ok(Map.of("success", true, "message", "用户已删除"));
+    }
+
+    @PostMapping("/graphs/cleanup-neo4j-orphans")
+    public ResponseEntity<?> cleanupNeo4jOrphans() {
+        GraphOrphanCleanupResult result = graphService.cleanupNeo4jOrphans();
+        return ResponseEntity.ok(Map.of(
+                "success", result.isSuccess(),
+                "validGraphCount", result.getValidGraphCount(),
+                "deletedNodeCount", result.getDeletedNodeCount(),
+                "deletedRelationshipCount", result.getDeletedRelationshipCount(),
+                "warnings", result.getWarnings()));
+    }
+
+    private int normalizePage(int page) {
+        return Math.max(page, 0);
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            return 20;
+        }
+        return Math.min(size, 100);
+    }
+
+    private Map<String, Object> toAdminUserMap(User user) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", user.getUserId());
+        data.put("userName", user.getUserName());
+        data.put("email", user.getEmail());
+        data.put("avatar", user.getAvatar());
+        data.put("role", user.getRole() != null ? user.getRole().name() : null);
+        data.put("userStatus", user.getUserStatus() != null ? user.getUserStatus().name() : null);
+        data.put("bannedUntil", user.getBannedUntil());
+        data.put("createdAt", user.getCreatedAt());
+        data.put("lastLoginAt", user.getLastLoginAt());
+        return data;
     }
 }

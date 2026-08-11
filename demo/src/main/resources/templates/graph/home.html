@@ -1,129 +1,105 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{layout/base}">
-
+      layout:decorate="~{layout/base}">
 <head>
     <title>首页</title>
-
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/home.css}">
     </th:block>
 </head>
-
 <body>
-    <div layout:fragment="content">
-        <!-- Hero Search Section -->
-        <section class="hero bg-gradient-to-br from-base-100 to-base-200 py-24">
-            <div class="hero-content text-center max-w-4xl mx-auto px-8">
-                <div class="w-full">
-                    <h1 id="i6rdk" class="text-5xl font-bold text-base-content mb-6 leading-tight">
-                        GraphWisdom智汇星图
+<div layout:fragment="content">
+    <section class="hero py-16 md:py-24 border-b border-base-300">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="grid home-hero-grid gap-10 items-center">
+                <div class="space-y-6">
+                    <span class="badge badge-outline badge-primary">知识图谱平台</span>
+                    <h1 class="text-4xl md:text-6xl font-bold text-base-content leading-tight">
+                        GraphWisdom
                     </h1>
-                    <p class="text-xl text-base-content/70 mb-12 max-w-2xl mx-auto leading-relaxed">
-                        发现知识的连接，探索智慧的网络
+                    <p class="text-lg text-base-content/70 max-w-2xl">
+                        当前版本先恢复运行骨架。首页、登录、认证链路已接回，图谱与社区能力会逐步按计划恢复。
                     </p>
-
-                    <!-- Search Container -->
-                    <div class="relative max-w-3xl mx-auto mb-8">
-                        <div class="join w-full shadow-soft">
-                            <input type="text" placeholder="搜索知识图谱..." id="searchInput" autocomplete="off"
-                                class="input input-bordered join-item flex-1 text-lg focus-primary h-14 academic-border">
-                            <button class="btn btn-primary join-item px-8 h-14" onclick="performSearch()">
-                                <span class="iconify" data-icon="heroicons:magnifying-glass" data-width="20"></span>
-                                <span class="hidden md:inline ml-2">搜索</span>
-                            </button>
-                        </div>
-
-                        <!-- Search Suggestions Dropdown -->
-                        <div id="searchSuggestions"
-                            class="absolute top-full left-0 right-0 mt-2 bg-base-100 rounded-box shadow-lg academic-border z-50 hidden">
-                            <div class="p-3">
-                                <div
-                                    class="text-sm text-base-content/60 px-3 py-2 font-medium border-b academic-border">
-                                    搜索建议
-                                </div>
-                                <div id="suggestionsList" class="space-y-1 pt-2"></div>
-                            </div>
+                    <div class="join w-full max-w-2xl relative">
+                        <input id="searchInput" type="text" class="input input-bordered join-item flex-1 search-focus"
+                               placeholder="搜索图谱、主题或关键词">
+                        <button class="btn btn-primary join-item" onclick="performSearch()">搜索</button>
+                        <div id="searchSuggestions" class="hidden absolute left-0 right-0 top-full mt-2 bg-base-100 border border-base-300 rounded-box shadow-soft z-20">
+                            <div id="suggestionsList" class="p-2"></div>
                         </div>
                     </div>
-
-
+                    <div class="flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline" onclick="searchTag('知识图谱')">知识图谱</button>
+                        <button class="btn btn-sm btn-outline" onclick="searchTag('人工智能')">人工智能</button>
+                        <button class="btn btn-sm btn-outline" onclick="searchTag('医学知识')">医学知识</button>
+                    </div>
+                </div>
+                <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-soft">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 rounded-box bg-base-200">
+                            <div class="text-sm text-base-content/60">当前阶段</div>
+                            <div class="text-xl font-semibold mt-2">骨架恢复</div>
+                        </div>
+                        <div class="p-4 rounded-box bg-base-200">
+                            <div class="text-sm text-base-content/60">已恢复</div>
+                            <div class="text-xl font-semibold mt-2">编译与认证</div>
+                        </div>
+                        <div class="p-4 rounded-box bg-base-200">
+                            <div class="text-sm text-base-content/60">下一步</div>
+                            <div class="text-xl font-semibold mt-2">图谱接口</div>
+                        </div>
+                        <div class="p-4 rounded-box bg-base-200">
+                            <div class="text-sm text-base-content/60">状态</div>
+                            <div class="text-xl font-semibold mt-2">可继续修复</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Recommended Graphs Section -->
-        <section class="py-24 px-8 bg-base-100">
-            <div class="max-w-7xl mx-auto">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-base-content mb-6">推荐图谱</h2>
-                    <p class="text-xl text-base-content/70 max-w-2xl mx-auto leading-relaxed">
-                        精选优质知识图谱，助您快速发现感兴趣的内容
-                    </p>
+    <section class="py-14 bg-base-100">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold">推荐图谱</h2>
+                    <p id="recommendedGraphsMeta" class="text-base-content/60 mt-2">正在加载公开图谱...</p>
                 </div>
-
-                <!-- Recommendation Tabs + Domain Filter -->
-                <div class="flex flex-col items-center gap-4 mb-12">
-                    <div class="tabs tabs-boxed bg-base-200 p-1" id="homeRecommendTabs">
-                        <a class="tab tab-lg tab-active gap-2" data-tab="hot" onclick="switchHomeTab('hot')">
-                            <span class="iconify" data-icon="heroicons:fire" data-width="18"></span>
-                            热门
-                        </a>
-                        <a class="tab tab-lg gap-2" data-tab="latest" onclick="switchHomeTab('latest')">
-                            <span class="iconify" data-icon="heroicons:clock" data-width="18"></span>
-                            最新
-                        </a>
-                        <a class="tab tab-lg gap-2" data-tab="recommend" onclick="switchHomeTab('recommend')">
-                            <span class="iconify" data-icon="heroicons:star" data-width="18"></span>
-                            推荐
-                        </a>
-                    </div>
-                    <div class="dropdown">
-                        <button tabindex="0" class="btn btn-outline btn-sm gap-2 academic-border">
-                            <span class="iconify" data-icon="heroicons:funnel" data-width="16"></span>
-                            领域筛选
-                            <span class="iconify" data-icon="heroicons:chevron-down" data-width="16"></span>
-                        </button>
-                        <ul id="homeDomainFilter" tabindex="0"
-                            class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-48 mt-1 academic-border">
-                            <li><a onclick="applyFilter('domain', 'all')">全部领域</a></li>
-                            <!-- 动态加载分类 -->
-                        </ul>
+                <a th:href="@{/graph/graph_list.html}" class="btn btn-outline btn-sm">查看全部</a>
+            </div>
+            <div id="recommendedGraphsGrid" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                <div class="card bg-base-100 border border-base-300 shadow-soft">
+                    <div class="card-body">
+                        <h3 class="card-title">平台骨架修复中</h3>
+                        <p class="text-sm text-base-content/70">当前首页已接回，图谱接口正在下一阶段恢复。</p>
                     </div>
                 </div>
-
-                <!-- Graph Cards Grid -->
-                <div id="recommendedGraphsGrid"
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 academic-grid">
-                    <div class="col-span-full flex flex-col items-center justify-center py-16">
-                        <span class="loading loading-spinner loading-lg text-primary"></span>
-                        <p class="mt-4 text-base-content/60">加载推荐图谱...</p>
+                <div class="card bg-base-100 border border-base-300 shadow-soft">
+                    <div class="card-body">
+                        <h3 class="card-title">认证链路已恢复</h3>
+                        <p class="text-sm text-base-content/70">登录、注册、个人资料基础服务已补齐。</p>
                     </div>
                 </div>
-
-                <!-- View More Button -->
-                <div class="text-center mt-16">
-                    <a href="/graph/graph_list.html" class="btn btn-outline btn-lg px-8 py-3 academic-border">
-                        <span class="iconify" data-icon="heroicons:squares-plus" data-width="20"></span>
-                        <span class="ml-2">查看更多图谱</span>
-                    </a>
+                <div class="card bg-base-100 border border-base-300 shadow-soft">
+                    <div class="card-body">
+                        <h3 class="card-title">模板骨架已恢复</h3>
+                        <p class="text-sm text-base-content/70">公共头部、脚本和入口页面不再是空白模板。</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 border border-base-300 shadow-soft">
+                    <div class="card-body">
+                        <h3 class="card-title">接口恢复进行中</h3>
+                        <p class="text-sm text-base-content/70">GraphController 和 NodeController 是下一批修复重点。</p>
+                    </div>
                 </div>
             </div>
-        </section>
-    </div>
+            <div id="recommendedGraphsPager" class="home-pager mt-8"></div>
+        </div>
+    </section>
 
     <th:block layout:fragment="js">
-        <script th:src="@{/assets/static/libs/25_6/holder.js}"></script>
         <script th:src="@{/js/home.js}"></script>
-
-        <script>
-            setTimeout(() => {
-                if (typeof Holder !== 'undefined') {
-                    Holder.run({ domain: "placehold.co" });
-                }
-            }, 100);
-        </script>
     </th:block>
+</div>
 </body>
-
 </html>

@@ -27,6 +27,16 @@
     transition: all 0.15s ease-in-out;
 }
 
+.graph-filter-grid {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+    .graph-filter-grid {
+        grid-template-columns: minmax(0, 1fr) 260px;
+    }
+}
+
 /* Graph card */
 .graph-card {
     transition: all 0.2s ease-in-out;
@@ -149,8 +159,31 @@
     color: var(--color-error);
 }
 
+.favorite-btn.favorited .iconify {
+    color: var(--color-error) !important;
+}
+
 .favorite-btn:hover {
     transform: scale(1.1);
+}
+
+.graph-pager {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.graph-pager .join {
+    flex-wrap: nowrap;
+}
+
+.graph-pager .btn {
+    min-width: 2.5rem;
+}
+
+.graph-pager-ellipsis {
+    pointer-events: none;
 }
 
 /* Range slider */

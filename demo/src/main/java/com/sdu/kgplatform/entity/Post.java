@@ -11,7 +11,15 @@ import java.time.LocalDateTime;
  * 帖子实体类 - 对应数据库 post 表
  */
 @Entity
-@Table(name = "post")
+@Table(name = "post", indexes = {
+        @Index(name = "idx_post_status_upload", columnList = "post_status, upload_time"),
+        @Index(name = "idx_post_status_category", columnList = "post_status, category"),
+        @Index(name = "idx_post_status_like", columnList = "post_status, like_count"),
+        @Index(name = "idx_post_author_upload", columnList = "author_id, upload_time"),
+        @Index(name = "idx_post_author_status", columnList = "author_id, post_status"),
+        @Index(name = "idx_post_graph_status", columnList = "graph_id, post_status"),
+        @Index(name = "idx_post_pinned_status", columnList = "is_pinned, post_status")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

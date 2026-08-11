@@ -202,7 +202,7 @@
 
         if (!form || !submitBtn) return;
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const requiredFields = form.querySelectorAll('input[required], textarea[required]');
@@ -227,50 +227,49 @@
             submitBtn.classList.add('btn-loading');
             submitBtn.disabled = true;
 
-            // 收集表单数据
-            const payload = {
-                feedbackType: feedbackType.value,
-                subject: form.querySelector('[name="subject"]').value.trim(),
-                content: form.querySelector('[name="content"]').value.trim(),
-                email: form.querySelector('[name="email"]').value.trim()
-            };
+            try {
+                const payload = {
+                    feedbackType: document.getElementById('feedbackType')?.value || 'other',
+                    subject: form.querySelector('[name="subject"]')?.value.trim() || '',
+                    content: form.querySelector('[name="content"]')?.value.trim() || '',
+                    email: form.querySelector('[name="email"]')?.value.trim() || ''
+                };
 
-            fetch('/api/feedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => {
-                submitBtn.classList.remove('btn-loading');
-                submitBtn.disabled = false;
-
-                if (data.success) {
-                    showSuccessMessage();
-                    form.reset();
-                    selectedFiles = [];
-                    document.getElementById('fileList').innerHTML = '';
-
-                    // Reset dropdown
-                    const dropdown = document.querySelector('.custom-dropdown');
-                    if (dropdown) {
-                        const selectedText = dropdown.querySelector('.selected-text');
-                        selectedText.innerHTML = '请选择反馈类型';
-                        selectedText.classList.add('placeholder');
-                        dropdown.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
-                    }
-
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                    showNotification(data.error || '提交失败，请稍后重试', 'error');
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.success === false) {
+                    throw new Error(result.error || '提交失败，请稍后重试');
                 }
-            })
-            .catch(err => {
+
+                if (selectedFiles.length > 0) {
+                    showNotification('反馈已提交，当前版本暂未上传附件', 'info');
+                }
+                showSuccessMessage();
+                form.reset();
+                selectedFiles = [];
+                document.getElementById('fileList').innerHTML = '';
+
+                // Reset dropdown
+                const dropdown = document.querySelector('.custom-dropdown');
+                if (dropdown) {
+                    const selectedText = dropdown.querySelector('.selected-text');
+                    selectedText.innerHTML = '请选择反馈类型';
+                    selectedText.classList.add('placeholder');
+                    dropdown.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                showNotification(error.message || '提交失败，请稍后重试', 'error');
+            } finally {
                 submitBtn.classList.remove('btn-loading');
                 submitBtn.disabled = false;
-                showNotification('网络错误，请稍后重试', 'error');
-                console.error('反馈提交失败:', err);
-            });
+            }
         });
     }
 

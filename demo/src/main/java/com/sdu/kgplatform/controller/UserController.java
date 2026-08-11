@@ -2,11 +2,15 @@ package com.sdu.kgplatform.controller;
 
 import com.sdu.kgplatform.dto.UserProfileDto;
 import com.sdu.kgplatform.entity.User;
+import com.sdu.kgplatform.entity.UserFollow;
+import com.sdu.kgplatform.entity.UserFollowId;
 import com.sdu.kgplatform.repository.UserRepository;
+import com.sdu.kgplatform.repository.UserFollowRepository;
 import com.sdu.kgplatform.security.CustomOAuth2User;
 import com.sdu.kgplatform.security.CustomUserDetails;
 import com.sdu.kgplatform.service.AdminService;
 import com.sdu.kgplatform.service.EmailVerificationService;
+import com.sdu.kgplatform.service.PostService;
 import com.sdu.kgplatform.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,9 +22,11 @@ import org.springframework.web.bind.annotation.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping("/user")
@@ -31,19 +37,25 @@ public class UserController {
     private final UserService userService;
     private final AdminService adminService;
     private final UserRepository userRepository;
+    private final UserFollowRepository userFollowRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+    private final PostService postService;
 
     public UserController(UserService userService,
                           AdminService adminService,
                           UserRepository userRepository,
+                          UserFollowRepository userFollowRepository,
                           PasswordEncoder passwordEncoder,
-                          EmailVerificationService emailVerificationService) {
+                          EmailVerificationService emailVerificationService,
+                          PostService postService) {
         this.userService = userService;
         this.adminService = adminService;
         this.userRepository = userRepository;
+        this.userFollowRepository = userFollowRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailVerificationService = emailVerificationService;
+        this.postService = postService;
     }
 
     /**
@@ -175,6 +187,60 @@ public class UserController {
         }
     }
 
+    @GetMapping("/api/users/{id}/follow/status")
+    @ResponseBody
+    public ResponseEntity<?> followStatus(@PathVariable Integer id) {
+        Integer currentUserId = resolveCurrentUserId();
+        boolean following = currentUserId != null && userFollowRepository.existsById(new UserFollowId(currentUserId, id));
+        return ResponseEntity.ok(Map.of("success", true, "following", following));
+    }
+
+    @PostMapping("/api/users/{id}/follow")
+    @ResponseBody
+    public ResponseEntity<?> toggleFollow(@PathVariable Integer id) {
+        Integer currentUserId = resolveCurrentUserId();
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
+        if (currentUserId.equals(id)) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "不能关注自己"));
+        }
+        if (userRepository.findById(id).isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "error", "用户不存在"));
+        }
+
+        UserFollowId followId = new UserFollowId(currentUserId, id);
+        boolean following = !userFollowRepository.existsById(followId);
+        if (following) {
+            userFollowRepository.save(new UserFollow(followId, LocalDateTime.now()));
+        } else {
+            userFollowRepository.deleteById(followId);
+        }
+        return ResponseEntity.ok(Map.of("success", true, "following", following));
+    }
+
+    @GetMapping("/api/user/favorites")
+    @ResponseBody
+    public ResponseEntity<?> getPostFavorites(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Integer currentUserId = resolveCurrentUserId();
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "error", "未登录"));
+        }
+
+        Page<Map<String, Object>> favorites = postService.getFavoritePostSummaries(currentUserId, page, size);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "favorites", favorites.getContent(),
+                "content", favorites.getContent(),
+                "totalElements", favorites.getTotalElements(),
+                "totalPages", favorites.getTotalPages(),
+                "page", favorites.getNumber(),
+                "size", favorites.getSize()));
+    }
+
     /**
      * 用户自助注销账号
      */
@@ -264,5 +330,20 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "修改失败: " + e.getMessage()));
         }
+    }
+
+    private Integer resolveCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomOAuth2User oAuth2User) {
+            return oAuth2User.getUserId();
+        }
+        if (principal instanceof CustomUserDetails userDetails) {
+            return userDetails.getUserId();
+        }
+        return null;
     }
 }

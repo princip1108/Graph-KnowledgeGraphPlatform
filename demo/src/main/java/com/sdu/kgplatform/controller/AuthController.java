@@ -133,7 +133,7 @@ public class AuthController {
         if (!userService.existsByEmail(email.trim())) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "该邮箱未注册"));
         }
-        boolean valid = emailVerificationService.verifyCode(email.trim(), code.trim());
+        boolean valid = emailVerificationService.isCodeValid(email.trim(), code.trim());
         if (valid) {
             return ResponseEntity.ok(Map.of("success", true));
         } else {
@@ -148,14 +148,21 @@ public class AuthController {
     @ResponseBody
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
         String email = body.get("email");
+        String code = body.get("code");
         String newPassword = body.get("newPassword");
 
-        if (email == null || newPassword == null
-                || email.trim().isEmpty() || newPassword.trim().isEmpty()) {
+        if (email == null || code == null || newPassword == null
+                || email.trim().isEmpty() || code.trim().isEmpty() || newPassword.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "参数不完整"));
         }
         if (newPassword.length() < 8 || newPassword.length() > 20) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "密码长度应为8-20位"));
+        }
+        if (!userService.existsByEmail(email.trim())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "该邮箱未注册"));
+        }
+        if (!emailVerificationService.verifyCode(email.trim(), code.trim())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "验证码错误或已过期"));
         }
 
         try {
